@@ -1,0 +1,697 @@
+jue 09 abr 2026 17:50:05 -04: Building file
+Rootfs:   /run/media/glats/maquilinux
+Workspace: /home/glats/Work/maquilinux
+
+Montando filesystems virtuales...
+Executing(%mkbuilddir): /bin/sh -e /var/tmp/rpm-tmp.R8Hfg7
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.U95gLy
++ umask 022
++ cd /workspace/BUILD/file-5.46-build
++ cd /workspace/BUILD/file-5.46-build
++ rm -rf file-5.46
++ /usr/lib/rpm/rpmuncompress -x /workspace/SOURCES/file-5.46.tar.gz
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd file-5.46
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.o5tCt6
++ umask 022
++ cd /workspace/BUILD/file-5.46-build
++ cd file-5.46
++ ./configure --prefix=/usr --libdir=/usr/lib/x86_64-linux-gnu
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether make supports nested variables... (cached) yes
+checking for builtin ELF support... yes
+checking for ELF core file support... yes
+checking for zlib support... 
+checking for bzlib support... 
+checking for xzlib support... 
+checking for zstdlib support... 
+checking for lzlib support... 
+checking for lrziplib support... 
+checking for libseccomp support... 
+checking for file formats in man section 5... no
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to enable C11 features... none needed
+checking whether gcc understands -c and -o together... yes
+checking whether make supports the include directive... yes (GNU style)
+checking dependency style of gcc... gcc3
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking for wchar.h... yes
+checking for minix/config.h... no
+checking for sys/param.h... yes
+checking for vfork.h... no
+checking whether it is safe to define __EXTENSIONS__... yes
+checking whether _XOPEN_SOURCE should be defined... no
+checking whether byte ordering is bigendian... no
+checking whether ln -s works... yes
+checking how to print strings... printf
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by gcc... /usr/bin/ld
+checking if the linker (/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+checking the name lister (/usr/bin/nm -B) interface... BSD nm
+checking the maximum length of command line arguments... 1572864
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /usr/bin/ld option to reload object files... -r
+checking for file... file
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking command to parse /usr/bin/nm -B output from gcc object... ok
+checking for sysroot... no
+checking for a working dd... /usr/bin/dd
+checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+checking for mt... no
+checking if : is a manifest tool... no
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if gcc supports -fno-rtti -fno-exceptions... no
+checking for gcc option to produce PIC... -fPIC -DPIC
+checking if gcc PIC flag -fPIC -DPIC works... yes
+checking if gcc static flag -static works... yes
+checking if gcc supports -c -o file.o... yes
+checking if gcc supports -c -o file.o... (cached) yes
+checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking whether the -Werror option is usable... yes
+checking for simple visibility declarations... yes
+checking for sys/mkdev.h... no
+checking for sys/sysmacros.h... yes
+checking for sys/wait.h that is POSIX.1 compatible... yes
+checking for stdint.h... (cached) yes
+checking for fcntl.h... yes
+checking for inttypes.h... (cached) yes
+checking for unistd.h... (cached) yes
+checking for byteswap.h... yes
+checking for spawn.h... yes
+checking for utime.h... yes
+checking for wchar.h... (cached) yes
+checking for wctype.h... yes
+checking for getopt.h... yes
+checking for err.h... yes
+checking for xlocale.h... no
+checking for sys/bswap.h... no
+checking for sys/mman.h... yes
+checking for sys/stat.h... (cached) yes
+checking for sys/types.h... (cached) yes
+checking for sys/utime.h... no
+checking for sys/time.h... yes
+checking for sys/sysmacros.h... (cached) yes
+checking for sys/ioctl.h... yes
+checking for zlib.h... yes
+checking for bzlib.h... yes
+checking for lzma.h... yes
+checking for zstd.h... yes
+checking for zstd_errors.h... yes
+checking for lzlib.h... no
+checking for Lrzip.h... no
+checking for sig_t... yes
+checking for off_t... yes
+checking for size_t... yes
+checking for struct stat.st_rdev... yes
+checking for struct tm.tm_gmtoff... yes
+checking whether struct tm is in sys/time.h or time.h... time.h
+checking for gcc options needed to detect all undeclared functions... none needed
+checking for struct tm.tm_zone... yes
+checking for tm_zone in struct tm... yes
+checking whether tzname is declared... yes
+checking for tzname... yes
+checking for tm_isdst in struct tm... yes
+checking whether daylight is declared... yes
+checking for daylight... yes
+checking for gcc option to enable large file support... none needed
+checking for gcc option for timestamps after 2038... none needed
+checking for declarations of fseeko and ftello... yes
+checking for mbstate_t... yes
+checking for struct option in getopt... yes
+checking for pid_t... yes
+checking for uint8_t... yes
+checking for uint16_t... yes
+checking for uint32_t... yes
+checking for int32_t... yes
+checking for uint64_t... yes
+checking for int64_t... yes
+checking for intptr_t... yes
+checking for uintptr_t... yes
+checking for getpagesize... yes
+checking for fork... yes
+checking for vfork... yes
+checking for working mmap... yes
+checking for working fork... yes
+checking for working vfork... (cached) yes
+checking whether mbrtowc and mbstate_t are properly declared... yes
+checking for gcc compiler warnings... yes
+checking for strndup... yes
+checking for mkstemp... yes
+checking for mkostemp... yes
+checking for utimes... yes
+checking for utime... yes
+checking for wcwidth... yes
+checking for strtof... yes
+checking for newlocale... yes
+checking for uselocale... yes
+checking for freelocale... yes
+checking for memmem... yes
+checking for pipe2... yes
+checking for posix_spawnp... yes
+checking for getopt_long... yes
+checking for asprintf... yes
+checking for vasprintf... yes
+checking for strlcpy... yes
+checking for strlcat... yes
+checking for getline... yes
+checking for ctime_r... yes
+checking for asctime_r... yes
+checking for localtime_r... yes
+checking for gmtime_r... yes
+checking for pread... yes
+checking for strcasestr... yes
+checking for fmtcheck... no
+checking for dprintf... yes
+checking for gzopen in -lz... yes
+checking for BZ2_bzCompressInit in -lbz2... yes
+checking for lzma_stream_decoder in -llzma... yes
+checking for ZSTD_createDStream in -lzstd... yes
+checking for LZ_decompress_open in -llz... no
+checking for lrzip_new in -llrzip... no
+checking for seccomp_init in -lseccomp... no
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating magic/Makefile
+config.status: creating tests/Makefile
+config.status: creating doc/Makefile
+config.status: creating python/Makefile
+config.status: creating libmagic.pc
+config.status: creating config.h
+config.status: executing depfiles commands
+config.status: executing libtool commands
++ make -j8
+make  all-recursive
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46'
+Making all in src
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+sed -e "s/X.YY/$(echo 5.46 | tr -d .)/" < ../src/magic.h.in > magic.h
+make  all-am
+make[3]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+  CC       file.o
+  CC       seccomp.o
+  CC       buffer.lo
+  CC       magic.lo
+  CC       apprentice.lo
+  CC       softmagic.lo
+  CC       ascmagic.lo
+  CC       encoding.lo
+  CC       compress.lo
+  CC       is_csv.lo
+  CC       is_json.lo
+  CC       is_simh.lo
+  CC       is_tar.lo
+  CC       readelf.lo
+  CC       print.lo
+  CC       fsmagic.lo
+  CC       funcs.lo
+  CC       apptype.lo
+  CC       der.lo
+  CC       cdf.lo
+  CC       cdf_time.lo
+  CC       readcdf.lo
+  CC       fmtcheck.lo
+  CCLD     libmagic.la
+  CCLD     file
+make[3]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+Making all in magic
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+../src/file -C -m magic
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+Making all in tests
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+Making all in doc
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+sed -e s@__CSECTION__@1@g \
+    -e s@__FSECTION__@4@g \
+    -e s@__VERSION__@5.46@g \
+    -e s@__MAGIC__@/usr/share/misc/magic@g ./file.man > file.1
+sed -e s@__CSECTION__@1@g \
+    -e s@__FSECTION__@4@g \
+    -e s@__VERSION__@5.46@g \
+    -e s@__MAGIC__@/usr/share/misc/magic@g ./magic.man > magic.4
+sed -e s@__CSECTION__@1@g \
+    -e s@__FSECTION__@4@g \
+    -e s@__VERSION__@5.46@g \
+    -e s@__MAGIC__@/usr/share/misc/magic@g ./libmagic.man > libmagic.3
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+Making all in python
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46'
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46'
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.vC6dwI
++ umask 022
++ cd /workspace/BUILD/file-5.46-build
++ /usr/bin/rm -rf /workspace/BUILD/file-5.46-build/BUILDROOT
++ /usr/bin/mkdir -p /workspace/BUILD/file-5.46-build
++ /usr/bin/mkdir /workspace/BUILD/file-5.46-build/BUILDROOT
++ cd file-5.46
++ rm -rf /workspace/BUILD/file-5.46-build/BUILDROOT
++ make DESTDIR=/workspace/BUILD/file-5.46-build/BUILDROOT install
+Making install in src
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make  install-am
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make[3]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu'
+ /bin/sh ../libtool   --mode=install /usr/bin/install -c   libmagic.la '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu'
+libtool: install: /usr/bin/install -c .libs/libmagic.so.1.0.0 /workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu/libmagic.so.1.0.0
+libtool: install: (cd /workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu && { ln -s -f libmagic.so.1.0.0 libmagic.so.1 || { rm -f libmagic.so.1 && ln -s libmagic.so.1.0.0 libmagic.so.1; }; })
+libtool: install: (cd /workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu && { ln -s -f libmagic.so.1.0.0 libmagic.so || { rm -f libmagic.so && ln -s libmagic.so.1.0.0 libmagic.so; }; })
+libtool: install: /usr/bin/install -c .libs/libmagic.lai /workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu/libmagic.la
+libtool: warning: remember to run 'libtool --finish /usr/lib/x86_64-linux-gnu'
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/bin'
+  /bin/sh ../libtool   --mode=install /usr/bin/install -c file '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/bin'
+libtool: install: /usr/bin/install -c .libs/file /workspace/BUILD/file-5.46-build/BUILDROOT/usr/bin/file
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/include'
+ /usr/bin/install -c -m 644 magic.h '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/include'
+make[3]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+Making install in magic
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+make[2]: Nothing to be done for 'install-exec-am'.
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/misc'
+ /usr/bin/install -c -m 644 magic.mgc '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/misc'
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+Making install in tests
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make[2]: Nothing to be done for 'install-exec-am'.
+make[2]: Nothing to be done for 'install-data-am'.
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+Making install in doc
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+make[2]: Nothing to be done for 'install-exec-am'.
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man1'
+ /usr/bin/install -c -m 644 file.1 '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man1'
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man3'
+ /usr/bin/install -c -m 644 libmagic.3 '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man3'
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man4'
+ /usr/bin/install -c -m 644 magic.4 '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man4'
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/share/man/man5'
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+Making install in python
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[2]: Nothing to be done for 'install-exec-am'.
+make[2]: Nothing to be done for 'install-data-am'.
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46'
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46'
+ /usr/bin/mkdir -p '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu/pkgconfig'
+ /usr/bin/install -c -m 644 libmagic.pc '/workspace/BUILD/file-5.46-build/BUILDROOT/usr/lib/x86_64-linux-gnu/pkgconfig'
+make[2]: Nothing to be done for 'install-data-am'.
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46'
++ cd /workspace/BUILD/file-5.46-build/BUILDROOT
++ find . -type f -o -type l
++ sed 's|^\.||'
+Reading /workspace/BUILD/file-5.46-build/SPECPARTS/rpm-debuginfo.specpart
+Executing(%check): /bin/sh -e /var/tmp/rpm-tmp.cB4AMD
++ umask 022
++ cd /workspace/BUILD/file-5.46-build
++ cd file-5.46
++ make check
+Making check in src
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make  check-am
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make[2]: Nothing to be done for 'check-am'.
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/src'
+Making check in magic
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+make[1]: Nothing to be done for 'check'.
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/magic'
+Making check in tests
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make  test
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+  CC       test-test.o
+  CCLD     test
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make  check-local
+make[2]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+set -e; \
+for i in ../tests/*.testfile; do \
+	t=${i%%.testfile}; \
+	echo Running test: $t; \
+	m=; \
+	for j in $(eval echo ${t}\*.magic); do \
+		if [ -f "$j" ]; then \
+			if [ -z "$m" ]; then \
+				m=$j; \
+			else \
+				m=$m:$j; \
+			fi \
+		fi \
+	done; \
+	if [ -z "$m" ]; then \
+		m=../magic/magic; \
+	fi; \
+	f=-e; \
+	if [ -f ${t}.flags ]; then \
+		f=$f$(cat ${t}.flags); \
+	fi; \
+	echo TZ=UTC MAGIC=$m ./test $f $i ${t}.result; \
+	TZ=UTC MAGIC=$m ./test $f $i ${t}.result; \
+done
+Running test: ../tests/CVE-2014-1943
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/CVE-2014-1943.testfile ../tests/CVE-2014-1943.result
+../tests/CVE-2014-1943.testfile: Apple Driver Map, blocksize 0
+Running test: ../tests/HWP2016.hwp
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/HWP2016.hwp.testfile ../tests/HWP2016.hwp.result
+../tests/HWP2016.hwp.testfile: Hancom HWP (Hangul Word Processor) file, version 5.0
+Running test: ../tests/HWP2016.hwpx.zip
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/HWP2016.hwpx.zip.testfile ../tests/HWP2016.hwpx.zip.result
+../tests/HWP2016.hwpx.zip.testfile: Hancom HWP (Hangul Word Processor) file, HWPX
+Running test: ../tests/HWP97.hwp
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/HWP97.hwp.testfile ../tests/HWP97.hwp.result
+../tests/HWP97.hwp.testfile: Hancom HWP (Hangul Word Processor) file, version 3.0
+Running test: ../tests/JW07022A.mp3
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/JW07022A.mp3.testfile ../tests/JW07022A.mp3.result
+../tests/JW07022A.mp3.testfile: Audio file with ID3 version 2.2.0, contains: MPEG ADTS, layer III, v1, 96 kbps, 44.1 kHz, Monaural
+Running test: ../tests/android-vdex-1
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/android-vdex-1.testfile ../tests/android-vdex-1.result
+../tests/android-vdex-1.testfile: Android vdex file, verifier deps version: 021, dex section version: 002, number of dex files: 4, verifier deps size: 106328
+Running test: ../tests/android-vdex-2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/android-vdex-2.testfile ../tests/android-vdex-2.result
+../tests/android-vdex-2.testfile: Android vdex file, being processed by dex2oat, verifier deps version: 019, dex section version: 002, number of dex files: 1, verifier deps size: 1016
+Running test: ../tests/arj
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/arj.testfile ../tests/arj.result
+../tests/arj.testfile: ARJ archive data, v11, slash-switched, created 5 1980+48, original name: example_m0.arj, os: Unix
+Running test: ../tests/bcachefs
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/bcachefs.testfile ../tests/bcachefs.result
+../tests/bcachefs.testfile: bcachefs, UUID=46bd306f-80ad-4cd0-af4f-147e7d85f393, label "Label", version 13, min version 13, device 0/UUID=72a60ede-4cb6-4374-aa70-cb38a50af5ef, 1 devices
+Running test: ../tests/bcachefs2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/bcachefs2.testfile ../tests/bcachefs2.result
+../tests/bcachefs2.testfile: bcachefs, UUID=4fa11b1e-75e6-4210-9167-34e1769c0fe1, label "Label", version 26, min version 26, device 0/UUID=0a3643b7-c515-47f8-a0ea-91fc38d043d1, 1 devices (unclean)
+Running test: ../tests/cl8m8ocofedso
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/cl8m8ocofedso.testfile ../tests/cl8m8ocofedso.result
+../tests/cl8m8ocofedso.testfile: Audio file with ID3 version 2.4.0, contains: MPEG ADTS, layer III, v1, 192 kbps, 44.1 kHz, JntStereo
+Running test: ../tests/cmd1
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/cmd1.testfile ../tests/cmd1.result
+../tests/cmd1.testfile: a /usr/bin/cmd1 script, ASCII text executable
+Running test: ../tests/cmd2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/cmd2.testfile ../tests/cmd2.result
+../tests/cmd2.testfile: a /usr/bin/cmd2 script, ASCII text executable
+Running test: ../tests/cmd3
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/cmd3.testfile ../tests/cmd3.result
+../tests/cmd3.testfile: a /usr/bin/cmd3 script executable (binary data)
+Running test: ../tests/cmd4
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/cmd4.testfile ../tests/cmd4.result
+../tests/cmd4.testfile: a /usr/bin/cmd4 script executable (binary data)
+Running test: ../tests/dsd64-dff
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/dsd64-dff.testfile ../tests/dsd64-dff.result
+../tests/dsd64-dff.testfile: DSDIFF audio bitstream data, 1 bit, mono, "DSD 64" 2822400 Hz, no compression, ID3 version 2.0.0
+Running test: ../tests/dsd64-dsf
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/dsd64-dsf.testfile ../tests/dsd64-dsf.result
+../tests/dsd64-dsf.testfile: DSF audio bitstream data, 1 bit, mono, "DSD 64" 2822400 Hz, no compression, ID3 version 2.3.0
+Running test: ../tests/escapevel
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/escapevel.testfile ../tests/escapevel.result
+../tests/escapevel.testfile: Zip data (MIME type "application/vnd.nz.gen.geek_central.ti5x"?)
+Running test: ../tests/ext4
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/ext4.testfile ../tests/ext4.result
+../tests/ext4.testfile: Linux rev 1.0 ext4 filesystem data, UUID=d32bbb08-3a76-4510-a064-3045f887dbdf (extents) (64bit) (large files) (huge files)
+Running test: ../tests/fit-map-data
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/fit-map-data.testfile ../tests/fit-map-data.result
+../tests/fit-map-data.testfile: FIT Map data, unit id 65536, serial 3879446968, Sat May 31 10:00:34 2014, manufacturer 1 (garmin), product 1632, type 4 (Activity)
+Running test: ../tests/gedcom
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/gedcom.testfile ../tests/gedcom.result
+../tests/gedcom.testfile: GEDCOM genealogy text version 5.5, ASCII text
+Running test: ../tests/gpkg-1-zst
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/gpkg-1-zst.testfile ../tests/gpkg-1-zst.result
+../tests/gpkg-1-zst.testfile: Gentoo GLEP 78 (GPKG) binary package for "inkscape-1.2.1-r2-1" using zstd compression
+Running test: ../tests/hddrawcopytool
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/hddrawcopytool.testfile ../tests/hddrawcopytool.result
+../tests/hddrawcopytool.testfile: HDD Raw Copy Tool 1.10 - HD model: ST500DM0 02-1BD142 serial: 51D20233A7C0
+Running test: ../tests/hello-racket_rkt
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/hello-racket_rkt.testfile ../tests/hello-racket_rkt.result
+../tests/hello-racket_rkt.testfile: Racket bytecode (version 8.5)
+Running test: ../tests/issue311docx
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/issue311docx.testfile ../tests/issue311docx.result
+../tests/issue311docx.testfile: Microsoft Word 2007+
+Running test: ../tests/issue359xlsx
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/issue359xlsx.testfile ../tests/issue359xlsx.result
+../tests/issue359xlsx.testfile: Microsoft Excel 2007+
+Running test: ../tests/jpeg-text
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/jpeg-text.testfile ../tests/jpeg-text.result
+../tests/jpeg-text.testfile: ASCII text, with no line terminators
+Running test: ../tests/json1
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json1.testfile ../tests/json1.result
+../tests/json1.testfile: JSON text data
+Running test: ../tests/json2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json2.testfile ../tests/json2.result
+../tests/json2.testfile: JSON text data
+Running test: ../tests/json3
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json3.testfile ../tests/json3.result
+../tests/json3.testfile: JSON text data
+Running test: ../tests/json4
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json4.testfile ../tests/json4.result
+../tests/json4.testfile: JSON text data
+Running test: ../tests/json5
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json5.testfile ../tests/json5.result
+../tests/json5.testfile: ASCII text
+Running test: ../tests/json6
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json6.testfile ../tests/json6.result
+../tests/json6.testfile: JSON text data
+Running test: ../tests/json7
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json7.testfile ../tests/json7.result
+../tests/json7.testfile: ASCII text
+Running test: ../tests/json8
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/json8.testfile ../tests/json8.result
+../tests/json8.testfile: JSON text data
+Running test: ../tests/jsonlines1
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/jsonlines1.testfile ../tests/jsonlines1.result
+../tests/jsonlines1.testfile: New Line Delimited JSON text data
+Running test: ../tests/keyman-0
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/keyman-0.testfile ../tests/keyman-0.result
+../tests/keyman-0.testfile: Keyman Compiled Keyboard File version 0x1100 KMX+ Data
+Running test: ../tests/keyman-1
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/keyman-1.testfile ../tests/keyman-1.result
+../tests/keyman-1.testfile: Keyman Compiled Keyboard File version 0x600
+Running test: ../tests/keyman-2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/keyman-2.testfile ../tests/keyman-2.result
+../tests/keyman-2.testfile: Keyman Compiled Package File
+Running test: ../tests/matilde.arm
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/matilde.arm.testfile ../tests/matilde.arm.result
+../tests/matilde.arm.testfile: Adaptive Multi-Rate Codec (GSM telephony)
+Running test: ../tests/multiple
+TZ=UTC MAGIC=../tests/multiple-A.magic:../tests/multiple-B.magic ./test -ek ../tests/multiple.testfile ../tests/multiple.result
+../tests/multiple-A.magic, 3: Warning: using regular magic file `../tests/multiple-B.magic'
+../tests/multiple.testfile: Viva File 2.0\012- RTF1.0\012- Test File 1.0\012- ABCD File, ASCII text, with no line terminators
+Running test: ../tests/pcjr
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pcjr.testfile ../tests/pcjr.result
+../tests/pcjr.testfile: PCjr Cartridge image
+Running test: ../tests/pgp-binary-key-v2-phil
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v2-phil.testfile ../tests/pgp-binary-key-v2-phil.result
+../tests/pgp-binary-key-v2-phil.testfile: OpenPGP Public Key Version 2, Created Fri May 21 05:20:00 1993, RSA (Encrypt or Sign, 1024 bits); User ID; Signature; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v3-lutz
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v3-lutz.testfile ../tests/pgp-binary-key-v3-lutz.result
+../tests/pgp-binary-key-v3-lutz.testfile: OpenPGP Public Key Version 3, Created Mon Mar 17 11:14:30 1997, RSA (Encrypt or Sign, 1127 bits); User ID; Signature; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v4-dsa
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v4-dsa.testfile ../tests/pgp-binary-key-v4-dsa.result
+../tests/pgp-binary-key-v4-dsa.testfile: OpenPGP Public Key Version 4, Created Mon Apr  7 22:23:01 1997, DSA (1024 bits); User ID; Signature; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v4-ecc-no-userid-secret
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v4-ecc-no-userid-secret.testfile ../tests/pgp-binary-key-v4-ecc-no-userid-secret.result
+../tests/pgp-binary-key-v4-ecc-no-userid-secret.testfile: OpenPGP Secret Key Version 4, Created Wed Aug 26 20:52:13 2020, EdDSA; Signature; Secret Subkey; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v4-ecc-secret-key
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v4-ecc-secret-key.testfile ../tests/pgp-binary-key-v4-ecc-secret-key.result
+../tests/pgp-binary-key-v4-ecc-secret-key.testfile: OpenPGP Secret Key Version 4, Created Sat Aug 22 14:07:46 2020, EdDSA; User ID; Signature; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v4-rsa-key
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v4-rsa-key.testfile ../tests/pgp-binary-key-v4-rsa-key.result
+../tests/pgp-binary-key-v4-rsa-key.testfile: OpenPGP Secret Key Version 4, Created Sat Aug 22 14:05:57 2020, RSA (Encrypt or Sign, 3072 bits); User ID; Signature; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v4-rsa-no-userid-secret
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v4-rsa-no-userid-secret.testfile ../tests/pgp-binary-key-v4-rsa-no-userid-secret.result
+../tests/pgp-binary-key-v4-rsa-no-userid-secret.testfile: OpenPGP Secret Key Version 4, Created Sat Aug 22 20:13:52 2020, RSA (Encrypt or Sign, 3072 bits); Signature; Secret Subkey; OpenPGP Certificate
+Running test: ../tests/pgp-binary-key-v4-rsa-secret-key
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pgp-binary-key-v4-rsa-secret-key.testfile ../tests/pgp-binary-key-v4-rsa-secret-key.result
+../tests/pgp-binary-key-v4-rsa-secret-key.testfile: OpenPGP Secret Key Version 4, Created Sat Aug 22 14:05:57 2020, RSA (Encrypt or Sign, 3072 bits); User ID; Signature; OpenPGP Certificate
+Running test: ../tests/pnm1
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pnm1.testfile ../tests/pnm1.result
+../tests/pnm1.testfile: Netpbm image data, size = 2 x 2, greymap, ASCII text
+Running test: ../tests/pnm2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pnm2.testfile ../tests/pnm2.result
+../tests/pnm2.testfile: Netpbm image data, size = 2 x 2, rawbits, greymap
+Running test: ../tests/pnm3
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/pnm3.testfile ../tests/pnm3.result
+../tests/pnm3.testfile: Netpbm image data, size = 10 x 20, pixmap, ASCII text
+Running test: ../tests/regex-eol
+TZ=UTC MAGIC=../tests/regex-eol.magic ./test -e ../tests/regex-eol.testfile ../tests/regex-eol.result
+../tests/regex-eol.testfile: Ansible Vault text, version 1.1, using AES256 encryption
+Running test: ../tests/registry-pol
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/registry-pol.testfile ../tests/registry-pol.result
+../tests/registry-pol.testfile: Group Policy Registry Policy, Version=1
+Running test: ../tests/rpm-v3.0-bin-aarch64
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/rpm-v3.0-bin-aarch64.testfile ../tests/rpm-v3.0-bin-aarch64.result
+../tests/rpm-v3.0-bin-aarch64.testfile: RPM v3.0 bin AArch64
+Running test: ../tests/rpm-v3.0-bin-powerpc64
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/rpm-v3.0-bin-powerpc64.testfile ../tests/rpm-v3.0-bin-powerpc64.result
+../tests/rpm-v3.0-bin-powerpc64.testfile: RPM v3.0 bin PowerPC64
+Running test: ../tests/rpm-v3.0-bin-s390x
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/rpm-v3.0-bin-s390x.testfile ../tests/rpm-v3.0-bin-s390x.result
+../tests/rpm-v3.0-bin-s390x.testfile: RPM v3.0 bin S/390x
+Running test: ../tests/rpm-v3.0-bin-x86_64
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/rpm-v3.0-bin-x86_64.testfile ../tests/rpm-v3.0-bin-x86_64.result
+../tests/rpm-v3.0-bin-x86_64.testfile: RPM v3.0 bin i386/x86_64
+Running test: ../tests/rpm-v3.0-src
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/rpm-v3.0-src.testfile ../tests/rpm-v3.0-src.result
+../tests/rpm-v3.0-src.testfile: RPM v3.0 src
+Running test: ../tests/searchbug
+TZ=UTC MAGIC=../tests/searchbug.magic ./test -e ../tests/searchbug.testfile ../tests/searchbug.result
+../tests/searchbug.testfile: Testfmt (0) found_ABC followed_by 0x31 at_offset 11 (64) found_ABC followed_by 0x32 at_offset 75
+Running test: ../tests/uf2
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/uf2.testfile ../tests/uf2.result
+../tests/uf2.testfile: UF2 firmware image, family ESP32-S2, base address 00000000, 4829 total blocks
+Running test: ../tests/utf16xmlsvg
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/utf16xmlsvg.testfile ../tests/utf16xmlsvg.result
+../tests/utf16xmlsvg.testfile: SVG Scalable Vector Graphics image, Unicode text, UTF-16, little-endian text
+Running test: ../tests/xclbin
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/xclbin.testfile ../tests/xclbin.result
+../tests/xclbin.testfile: AMD/Xilinx accelerator AXLF (xclbin) file, 46226070 bytes, created Fri Mar 25 00:51:37 2022, shell "xilinx_u55c_gen3x16_xdma_3_202210_1", uuid e106e953-cf90-4024-e075-282d1a7d820b, 11 sections
+Running test: ../tests/zstd-v0.2-FF
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.2-FF.testfile ../tests/zstd-v0.2-FF.result
+../tests/zstd-v0.2-FF.testfile: Zstandard compressed data (v0.2)
+Running test: ../tests/zstd-v0.3-FF
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.3-FF.testfile ../tests/zstd-v0.3-FF.result
+../tests/zstd-v0.3-FF.testfile: Zstandard compressed data (v0.3)
+Running test: ../tests/zstd-v0.4-FF
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.4-FF.testfile ../tests/zstd-v0.4-FF.result
+../tests/zstd-v0.4-FF.testfile: Zstandard compressed data (v0.4)
+Running test: ../tests/zstd-v0.5-FF
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.5-FF.testfile ../tests/zstd-v0.5-FF.result
+../tests/zstd-v0.5-FF.testfile: Zstandard compressed data (v0.5)
+Running test: ../tests/zstd-v0.6-FF
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.6-FF.testfile ../tests/zstd-v0.6-FF.result
+../tests/zstd-v0.6-FF.testfile: Zstandard compressed data (v0.6)
+Running test: ../tests/zstd-v0.7-21
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.7-21.testfile ../tests/zstd-v0.7-21.result
+../tests/zstd-v0.7-21.testfile: Zstandard compressed data (v0.7), Dictionary ID: 1
+Running test: ../tests/zstd-v0.7-22
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.7-22.testfile ../tests/zstd-v0.7-22.result
+../tests/zstd-v0.7-22.testfile: Zstandard compressed data (v0.7), Dictionary ID: 513
+Running test: ../tests/zstd-v0.8-01
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-01.testfile ../tests/zstd-v0.8-01.result
+../tests/zstd-v0.8-01.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 2
+Running test: ../tests/zstd-v0.8-02
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-02.testfile ../tests/zstd-v0.8-02.result
+../tests/zstd-v0.8-02.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 770
+Running test: ../tests/zstd-v0.8-03
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-03.testfile ../tests/zstd-v0.8-03.result
+../tests/zstd-v0.8-03.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 84148994
+Running test: ../tests/zstd-v0.8-16
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-16.testfile ../tests/zstd-v0.8-16.result
+../tests/zstd-v0.8-16.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 770
+Running test: ../tests/zstd-v0.8-20
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-20.testfile ../tests/zstd-v0.8-20.result
+../tests/zstd-v0.8-20.testfile: Zstandard compressed data (v0.8+), Dictionary ID: None
+Running test: ../tests/zstd-v0.8-21
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-21.testfile ../tests/zstd-v0.8-21.result
+../tests/zstd-v0.8-21.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 1
+Running test: ../tests/zstd-v0.8-22
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-22.testfile ../tests/zstd-v0.8-22.result
+../tests/zstd-v0.8-22.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 513
+Running test: ../tests/zstd-v0.8-23
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-23.testfile ../tests/zstd-v0.8-23.result
+../tests/zstd-v0.8-23.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 67305985
+Running test: ../tests/zstd-v0.8-F4
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-F4.testfile ../tests/zstd-v0.8-F4.result
+../tests/zstd-v0.8-F4.testfile: Zstandard compressed data (v0.8+), Dictionary ID: None
+Running test: ../tests/zstd-v0.8-FF
+TZ=UTC MAGIC=../magic/magic ./test -e ../tests/zstd-v0.8-FF.testfile ../tests/zstd-v0.8-FF.result
+../tests/zstd-v0.8-FF.testfile: Zstandard compressed data (v0.8+), Dictionary ID: 67305985
+make[2]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/tests'
+Making check in doc
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+make[1]: Nothing to be done for 'check'.
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/doc'
+Making check in python
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[1]: Nothing to be done for 'check'.
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46/python'
+make[1]: Entering directory '/workspace/BUILD/file-5.46-build/file-5.46'
+make[1]: Leaving directory '/workspace/BUILD/file-5.46-build/file-5.46'
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Processing files: file-5.46-1.m264.x86_64
+Provides: file = 5.46-1.m264 file(x86-64) = 5.46-1.m264 libmagic.so.1()(64bit)
+Requires(rpmlib): rpmlib(LargeFiles) <= 4.12.0-1
+Requires: libbz2.so.1.0()(64bit) libc.so.6()(64bit) libc.so.6(GLIBC_2.14)(64bit) libc.so.6(GLIBC_2.15)(64bit) libc.so.6(GLIBC_2.2.5)(64bit) libc.so.6(GLIBC_2.3)(64bit) libc.so.6(GLIBC_2.3.4)(64bit) libc.so.6(GLIBC_2.33)(64bit) libc.so.6(GLIBC_2.34)(64bit) libc.so.6(GLIBC_2.38)(64bit) libc.so.6(GLIBC_2.4)(64bit) libc.so.6(GLIBC_2.9)(64bit) liblzma.so.5()(64bit) liblzma.so.5(XZ_5.0)(64bit) libm.so.6()(64bit) libmagic.so.1()(64bit) libz.so.1()(64bit) libzstd.so.1()(64bit) rtld(GNU_HASH)
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /workspace/BUILD/file-5.46-build/BUILDROOT
+Wrote: /workspace/SRPMS/file-5.46-1.m264.src.rpm
+Wrote: /workspace/RPMS/x86_64/file-5.46-1.m264.x86_64.rpm
+Executing(rmbuild): /bin/sh -e /var/tmp/rpm-tmp.n2Kgup
++ umask 022
++ cd /workspace/BUILD/file-5.46-build
++ test -d /workspace/BUILD/file-5.46-build
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w /workspace/BUILD/file-5.46-build
++ rm -rf /workspace/BUILD/file-5.46-build
++ RPM_EC=0
+++ jobs -p
++ exit 0

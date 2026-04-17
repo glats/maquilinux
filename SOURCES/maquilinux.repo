@@ -1,0 +1,6 @@
+[maquilinux]
+name=Maquilinux $releasever - $basearch
+baseurl=https://repo.glats.org/linux/maquilinux/$releasever/$basearch/stable
+enabled=1
+gpgcheck=0
+sslverify=0

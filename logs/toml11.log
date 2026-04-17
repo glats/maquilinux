@@ -1,0 +1,182 @@
+jue 09 abr 2026 17:35:41 -04: Building toml11
+Rootfs:   /run/media/glats/maquilinux
+Workspace: /home/glats/Work/maquilinux
+
+Montando filesystems virtuales...
+Building target platforms: noarch
+Building for target noarch
+Executing(%mkbuilddir): /bin/sh -e /var/tmp/rpm-tmp.ClXY6B
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.DDvqvz
++ umask 022
++ cd /workspace/BUILD/toml11-4.4.0-build
++ cd /workspace/BUILD/toml11-4.4.0-build
++ rm -rf toml11-4.4.0
++ /usr/lib/rpm/rpmuncompress -x /workspace/SOURCES/toml11-v4.4.0.tar.gz
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd toml11-4.4.0
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.MXvADN
++ umask 022
++ cd /workspace/BUILD/toml11-4.4.0-build
++ cd toml11-4.4.0
++ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=/usr/lib/x86_64-linux-gnu -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/toml11 -DTOML11_BUILD_TESTS=OFF -DTOML11_BUILD_EXAMPLES=OFF -DTOML11_BUILD_TOML_TESTS=OFF -DTOML11_INSTALL=ON
+-- The CXX compiler identification is GNU 15.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Deprecation Warning at CMakeLists.txt:25 (cmake_policy):
+  The OLD behavior for policy CMP0127 will be removed from a future version
+  of CMake.
+
+  The cmake-policies(7) manual explains that the OLD behaviors of all
+  policies are deprecated and that a policy should be set to OLD only under
+  specific short-term circumstances.  Projects should be ported to the NEW
+  behavior and not rely on setting a policy to OLD.
+
+
+-- Performing Test TOML11_COMPILER_SUPPORTS_WALL
+-- Performing Test TOML11_COMPILER_SUPPORTS_WALL - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WEXTRA
+-- Performing Test TOML11_COMPILER_SUPPORTS_WEXTRA - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WPEDANTIC
+-- Performing Test TOML11_COMPILER_SUPPORTS_WPEDANTIC - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WERROR
+-- Performing Test TOML11_COMPILER_SUPPORTS_WERROR - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION
+-- Performing Test TOML11_COMPILER_SUPPORTS_WSIGN_CONVERSION - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WCONVERSION
+-- Performing Test TOML11_COMPILER_SUPPORTS_WCONVERSION - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_COND
+-- Performing Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_COND - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES
+-- Performing Test TOML11_COMPILER_SUPPORTS_WDUPLICATED_BRANCHES - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WLOGICAL_OP
+-- Performing Test TOML11_COMPILER_SUPPORTS_WLOGICAL_OP - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION
+-- Performing Test TOML11_COMPILER_SUPPORTS_WDOUBLE_PROMOTION - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS
+-- Performing Test TOML11_COMPILER_SUPPORTS_WRANGE_LOOP_ANALYSIS - Failed
+-- Performing Test TOML11_COMPILER_SUPPORTS_WUNDEF
+-- Performing Test TOML11_COMPILER_SUPPORTS_WUNDEF - Success
+-- Performing Test TOML11_COMPILER_SUPPORTS_WSHADOW
+-- Performing Test TOML11_COMPILER_SUPPORTS_WSHADOW - Success
+-- Configuring done (1.9s)
+-- Generating done (0.0s)
+-- Build files have been written to: /workspace/BUILD/toml11-4.4.0-build/toml11-4.4.0/build
++ cmake --build build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.lP5Gnd
++ umask 022
++ cd /workspace/BUILD/toml11-4.4.0-build
++ /usr/bin/rm -rf /workspace/BUILD/toml11-4.4.0-build/BUILDROOT
++ /usr/bin/mkdir -p /workspace/BUILD/toml11-4.4.0-build
++ /usr/bin/mkdir /workspace/BUILD/toml11-4.4.0-build/BUILDROOT
++ cd toml11-4.4.0
++ rm -rf /workspace/BUILD/toml11-4.4.0-build/BUILDROOT
++ cmake --install build --prefix /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr
+-- Install configuration: "Release"
+-- Installing: /usr/lib/x86_64-linux-gnu/cmake/toml11/toml11Config.cmake
+-- Installing: /usr/lib/x86_64-linux-gnu/cmake/toml11/toml11ConfigVersion.cmake
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/color.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/comments.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/compat.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/context.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/conversion.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/datetime.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/error_info.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/exception.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/find.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/format.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/from.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/get.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/into.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/literal.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/location.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/ordered_map.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/parser.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/region.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/result.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/scanner.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/serializer.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/skip.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/source_location.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/spec.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/storage.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/syntax.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/traits.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/types.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/utility.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/value.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/value_t.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/version.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/visit.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/color_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/comments_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/datetime_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/error_info_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/format_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/literal_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/location_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/region_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/scanner_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/source_location_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/syntax_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/fwd/value_t_fwd.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/color_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/comments_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/datetime_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/error_info_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/format_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/literal_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/location_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/region_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/scanner_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/source_location_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/syntax_impl.hpp
+-- Installing: /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/include/toml11/impl/value_t_impl.hpp
+-- Installing: /usr/lib/x86_64-linux-gnu/cmake/toml11/toml11Targets.cmake
++ install -vdm 755 /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/share/doc/toml11
+install: creating directory '/workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/share'
+install: creating directory '/workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/share/doc'
+install: creating directory '/workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/share/doc/toml11'
++ install -pm644 README.md README_ja.md LICENSE /workspace/BUILD/toml11-4.4.0-build/BUILDROOT/usr/share/doc/toml11/
++ cd /workspace/BUILD/toml11-4.4.0-build/BUILDROOT
++ '[' -d ./usr/share/doc/toml11 ']'
++ find ./usr/share/doc/toml11 -type f -o -type l
++ sed 's|^\.||'
++ '[' -d ./usr/include ']'
++ find ./usr/include -type f -o -type l
++ sed 's|^\.||'
++ '[' -d ./usr/lib/x86_64-linux-gnu/cmake ']'
+Processing files: toml11-4.4.0-1.m264.noarch
+Provides: toml11 = 4.4.0-1.m264
+Requires(rpmlib): rpmlib(LargeFiles) <= 4.12.0-1
+Processing files: toml11-devel-4.4.0-1.m264.noarch
+Provides: toml11-devel = 4.4.0-1.m264
+Requires(rpmlib): rpmlib(LargeFiles) <= 4.12.0-1
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /workspace/BUILD/toml11-4.4.0-build/BUILDROOT
+Wrote: /workspace/SRPMS/toml11-4.4.0-1.m264.src.rpm
+Wrote: /workspace/RPMS/noarch/toml11-devel-4.4.0-1.m264.noarch.rpm
+Wrote: /workspace/RPMS/noarch/toml11-4.4.0-1.m264.noarch.rpm
+Executing(rmbuild): /bin/sh -e /var/tmp/rpm-tmp.gMxIGA
++ umask 022
++ cd /workspace/BUILD/toml11-4.4.0-build
++ test -d /workspace/BUILD/toml11-4.4.0-build
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w /workspace/BUILD/toml11-4.4.0-build
++ rm -rf /workspace/BUILD/toml11-4.4.0-build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+
+Desmontando...
+Listo.
+jue 09 abr 2026 17:35:44 -04: SUCCESS

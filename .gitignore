@@ -1,0 +1,27 @@
+# Build artifacts
+BUILD/
+BUILDROOT/
+RPMS/
+SRPMS/
+
+# Source tarballs (upstream releases)
+SOURCES/*.tar.gz
+SOURCES/*.tar.xz
+SOURCES/*.tar.bz2
+SOURCES/*.tgz
+SOURCES/*.patch
+SOURCES/*.diff
+
+# Keep SOURCES directory
+!SOURCES/.gitkeep
+
+# Editor/IDE
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

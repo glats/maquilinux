@@ -1,0 +1,196 @@
+jue 09 abr 2026 18:37:40 -04: Building dracut
+Rootfs:   /run/media/glats/maquilinux
+Workspace: /home/glats/Work/maquilinux
+
+Montando filesystems virtuales...
+Executing(%mkbuilddir): /bin/sh -e /var/tmp/rpm-tmp.vBXYgn
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.TSqbfP
++ umask 022
++ cd /workspace/BUILD/dracut-110-build
++ cd /workspace/BUILD/dracut-110-build
++ rm -rf dracut-ng-110
++ /usr/lib/rpm/rpmuncompress -x /workspace/SOURCES/110.tar.gz
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd dracut-ng-110
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.LTNUdj
++ umask 022
++ cd /workspace/BUILD/dracut-110-build
++ cd dracut-ng-110
++ export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
++ PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
++ ./configure --prefix=/usr --sysconfdir=/etc --libdir=/usr/lib --disable-dracut-cpio --disable-documentation
+Disabling JSON support: libsystemd >= 257 required
++ make -j8
+cc -c -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2  -DCONFIG_WEAKDEP   src/install/dracut-install.c -o src/install/dracut-install.o
+cc -c -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2  -DCONFIG_WEAKDEP   src/install/hashmap.c -o src/install/hashmap.o
+cc -c -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2  -DCONFIG_WEAKDEP   src/install/log.c -o src/install/log.o
+cc -c -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2  -DCONFIG_WEAKDEP   src/install/strv.c -o src/install/strv.o
+cc -c -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2  -DCONFIG_WEAKDEP   src/install/util.c -o src/install/util.o
+cc -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2    src/skipcpio/skipcpio.c   -o src/skipcpio/skipcpio
+cc -O2 -g -Wall -std=gnu99 -D_FILE_OFFSET_BITS=64 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2    src/util/util.c   -o src/util/util
+cp -a src/util/util dracut-util
+cc  -o src/install/dracut-install src/install/dracut-install.o src/install/hashmap.o src/install/log.o src/install/strv.o src/install/util.o  -lc -L/usr/lib/x86_64-linux-gnu -lkmod 
+ln -fs src/install/dracut-install dracut-install
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.3kfO2b
++ umask 022
++ cd /workspace/BUILD/dracut-110-build
++ /usr/bin/rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT
++ /usr/bin/mkdir -p /workspace/BUILD/dracut-110-build
++ /usr/bin/mkdir /workspace/BUILD/dracut-110-build/BUILDROOT
++ cd dracut-ng-110
++ make install DESTDIR=/workspace/BUILD/dracut-110-build/BUILDROOT DRACUT_FULL_VERSION=110-1
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/bin
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/etc
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/man/man1 /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/man/man5 /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/man/man7 /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/man/man8
+install -m 0755 dracut.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/bin/dracut
+sed -i 's;^\(DRACUT_VERSION\)=".*"$;\1="110-1";' /workspace/BUILD/dracut-110-build/BUILDROOT/usr/bin/dracut
+install -m 0755 dracut-catimages.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/bin/dracut-catimages
+install -m 0755 lsinitrd.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/bin/lsinitrd
+install -m 0644 dracut.conf /workspace/BUILD/dracut-110-build/BUILDROOT/etc/dracut.conf
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/etc/dracut.conf.d
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut.conf.d
+install -m 0755 dracut-functions.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut-functions.sh
+ln -fs dracut-functions.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut-functions
+install -m 0755 dracut-logger.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut-logger.sh
+install -m 0755 dracut-initramfs-restore.sh /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut-initramfs-restore
+for module in modules.d/*; do \
+	if test -L "$module"; then cp -d "$module" "/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d"; continue; fi; \
+	install -m 0755 -d "$module" "/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/$module"; \
+	for file in "$module"/*; do \
+		mode=0755; test -x "$file" || mode=0644; \
+		install -m "$mode" "$file" "/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/$file"; \
+	done; \
+done
+for conf in fips/10-fips.conf generic/11-generic.conf hostonly/10-hostonly.conf ima/10-ima.conf no-network/10-no-network.conf rescue/10-rescue.conf ; do \
+	install -D -m 0644 "dracut.conf.d/$conf" "/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut.conf.d/$conf"; \
+done
+for i in  ; do \
+	install -m 0644 dracut.conf.d/$i/* /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut.conf.d/ ;\
+done
+rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/70test*
+rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut.conf.d/test*
+if [ -n "/usr/lib/systemd/system" ]; then \
+	mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system; \
+	ln -srf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/77dracut-systemd/dracut-shutdown-onfailure.service /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/dracut-shutdown-onfailure.service; \
+	ln -srf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/77dracut-systemd/dracut-shutdown.service /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/dracut-shutdown.service; \
+	mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/sysinit.target.wants; \
+	ln -sf ../dracut-shutdown.service \
+	/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/sysinit.target.wants/dracut-shutdown.service; \
+	mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/initrd.target.wants; \
+	for i in \
+	    dracut-cmdline.service \
+	    dracut-mount.service \
+	    dracut-pre-mount.service \
+	    dracut-pre-pivot.service \
+	    dracut-pre-trigger.service \
+	    dracut-pre-udev.service \
+	    ; do \
+		ln -srf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/77dracut-systemd/$i /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system; \
+		ln -sf ../$i \
+		/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/initrd.target.wants/$i; \
+	done; \
+	ln -srf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/77initqueue/dracut-initqueue.service /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system; \
+	ln -sf ../dracut-initqueue.service \
+	/workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd/system/initrd.target.wants/dracut-initqueue.service; \
+fi
+if [ -f src/install/dracut-install ]; then \
+	install -m 0755 src/install/dracut-install /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut-install; \
+fi
+if [ -f src/skipcpio/skipcpio ]; then \
+	install -m 0755 src/skipcpio/skipcpio /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/skipcpio; \
+fi
+if [ -f dracut-util ]; then \
+	install -m 0755 dracut-util /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/dracut-util; \
+fi
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/kernel/install.d
+install -m 0755 install.d/50-dracut.install /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/kernel/install.d/50-dracut.install
+install -m 0755 install.d/51-dracut-rescue.install /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/kernel/install.d/51-dracut-rescue.install
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/bash-completion/completions
+install -m 0644 shell-completion/bash/dracut /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/bash-completion/completions/dracut
+install -m 0644 shell-completion/bash/lsinitrd /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/bash-completion/completions/lsinitrd
+mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/pkgconfig
+install -m 0644 dracut.pc /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/pkgconfig/dracut.pc
+rm -r /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/[0-9][0-9]network-legacy
+if ! [ -n "/usr/lib/systemd/system" ]; then \
+	rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/test/TEST-[0-9][0-9]-*SYSTEMD* ;\
+	rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/*systemd* /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/man/man8/*.service.* ; \
+	for i in bluetooth connman dbus* fido2 lvmmerge lvmthinpool-monitor memstrack pcsc pkcs11 rngd squash* tpm2-tss; do \
+		rm -r /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/[0-9][0-9]${i}; \
+	done \
+fi
+for f in cio_ignore cms dasd dasd_mod dcssblk zfcp zipl znet; do \
+	rm -r /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/dracut/modules.d/[0-9][0-9]${f}; \
+done
++ mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/etc/dracut.conf.d
++ cat
++ rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT/usr/lib/systemd
++ rm -rf /workspace/BUILD/dracut-110-build/BUILDROOT/etc/systemd
++ /usr/lib/rpm/brp-compress /usr
++ /usr/lib/rpm/brp-strip /usr/bin/strip
++ /usr/lib/rpm/brp-strip-static-archive /usr/bin/strip
++ /usr/lib/rpm/brp-strip-comment-note /usr/bin/strip /usr/bin/objdump
++ /usr/lib/rpm/brp-remove-la-files
+Reading /workspace/BUILD/dracut-110-build/SPECPARTS/rpm-debuginfo.specpart
+Processing files: dracut-110-1.x86_64
+Executing(%doc): /bin/sh -e /var/tmp/rpm-tmp.NSZ81H
++ umask 022
++ cd /workspace/BUILD/dracut-110-build
++ cd dracut-ng-110
++ DOCDIR=/workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/doc/dracut-110
++ export LC_ALL=C.UTF-8
++ LC_ALL=C.UTF-8
+/var/tmp/rpm-tmp.NSZ81H: line 34: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): No such file or directory
++ export DOCDIR
++ /usr/bin/mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/doc/dracut-110
++ cp -pr /workspace/BUILD/dracut-110-build/dracut-ng-110/README.md /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/doc/dracut-110
++ cp -pr /workspace/BUILD/dracut-110-build/dracut-ng-110/NEWS.md /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/doc/dracut-110
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%license): /bin/sh -e /var/tmp/rpm-tmp.jCDGAU
++ umask 022
++ cd /workspace/BUILD/dracut-110-build
++ cd dracut-ng-110
++ LICENSEDIR=/workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/licenses/dracut-110
++ export LC_ALL=C.UTF-8
++ LC_ALL=C.UTF-8
+/var/tmp/rpm-tmp.jCDGAU: line 34: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8): No such file or directory
++ export LICENSEDIR
++ /usr/bin/mkdir -p /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/licenses/dracut-110
++ cp -pr /workspace/BUILD/dracut-110-build/dracut-ng-110/COPYING /workspace/BUILD/dracut-110-build/BUILDROOT/usr/share/licenses/dracut-110
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Provides: config(dracut) = 110-1 dracut = 110-1 dracut(x86-64) = 110-1 pkgconfig(dracut) = 110
+Requires(interp): /bin/sh /bin/sh
+Requires(rpmlib): rpmlib(LargeFiles) <= 4.12.0-1
+Requires(post): /bin/sh
+Requires(postun): /bin/sh
+Requires: /bin/bash /bin/sh /usr/bin/pkg-config libc.so.6()(64bit) libc.so.6(GLIBC_2.14)(64bit) libc.so.6(GLIBC_2.2.5)(64bit) libc.so.6(GLIBC_2.23)(64bit) libc.so.6(GLIBC_2.27)(64bit) libc.so.6(GLIBC_2.3)(64bit) libc.so.6(GLIBC_2.3.4)(64bit) libc.so.6(GLIBC_2.33)(64bit) libc.so.6(GLIBC_2.34)(64bit) libc.so.6(GLIBC_2.38)(64bit) libc.so.6(GLIBC_2.4)(64bit) libc.so.6(GLIBC_2.7)(64bit) libc.so.6(GLIBC_2.8)(64bit) libkmod.so.2()(64bit) libkmod.so.2(LIBKMOD_22)(64bit) libkmod.so.2(LIBKMOD_33)(64bit) libkmod.so.2(LIBKMOD_5)(64bit) rtld(GNU_HASH)
+Recommends: device-mapper squashfs-tools
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /workspace/BUILD/dracut-110-build/BUILDROOT
+Wrote: /workspace/SRPMS/dracut-110-1.src.rpm
+Wrote: /workspace/RPMS/x86_64/dracut-110-1.x86_64.rpm
+Executing(rmbuild): /bin/sh -e /var/tmp/rpm-tmp.etmZ3s
++ umask 022
++ cd /workspace/BUILD/dracut-110-build
++ test -d /workspace/BUILD/dracut-110-build
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w /workspace/BUILD/dracut-110-build
++ rm -rf /workspace/BUILD/dracut-110-build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+
+Desmontando...
+Listo.
+jue 09 abr 2026 18:37:46 -04: SUCCESS

@@ -1,0 +1,202 @@
+jue 09 abr 2026 17:36:07 -04: Building maquilinux
+Rootfs:   /run/media/glats/maquilinux
+Workspace: /home/glats/Work/maquilinux
+
+Montando filesystems virtuales...
+Building target platforms: noarch
+Building for target noarch
+Executing(%mkbuilddir): /bin/sh -e /var/tmp/rpm-tmp.9CVZJe
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.vM0OUn
++ umask 022
++ cd /workspace/BUILD/maquilinux-1-build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.y7brlS
++ umask 022
++ cd /workspace/BUILD/maquilinux-1-build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.SU3aOj
++ umask 022
++ cd /workspace/BUILD/maquilinux-1-build
++ /usr/bin/rm -rf /workspace/BUILD/maquilinux-1-build/BUILDROOT
++ /usr/bin/mkdir -p /workspace/BUILD/maquilinux-1-build
++ /usr/bin/mkdir /workspace/BUILD/maquilinux-1-build/BUILDROOT
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/boot /workspace/BUILD/maquilinux-1-build/BUILDROOT/dev /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc /workspace/BUILD/maquilinux-1-build/BUILDROOT/home /workspace/BUILD/maquilinux-1-build/BUILDROOT/media /workspace/BUILD/maquilinux-1-build/BUILDROOT/mnt /workspace/BUILD/maquilinux-1-build/BUILDROOT/opt /workspace/BUILD/maquilinux-1-build/BUILDROOT/proc /workspace/BUILD/maquilinux-1-build/BUILDROOT/run /workspace/BUILD/maquilinux-1-build/BUILDROOT/srv /workspace/BUILD/maquilinux-1-build/BUILDROOT/sys /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr /workspace/BUILD/maquilinux-1-build/BUILDROOT/var
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/boot'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/dev'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/home'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/media'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/mnt'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/opt'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/proc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/run'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/srv'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/sys'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var'
++ install -vdm 700 /workspace/BUILD/maquilinux-1-build/BUILDROOT/root
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/root'
++ install -vdm 1777 /workspace/BUILD/maquilinux-1-build/BUILDROOT/tmp
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/tmp'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/ld.so.conf.d /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/opt /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/profile.d /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/skel /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/sysconfig
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/ld.so.conf.d'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/opt'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/profile.d'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/skel'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/sysconfig'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/yum.repos.d
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/yum.repos.d'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/dnf/vars
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/dnf'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/dnf/vars'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/media/floppy /workspace/BUILD/maquilinux-1-build/BUILDROOT/media/cdrom
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/media/floppy'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/media/cdrom'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/bin /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/include /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/sbin /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/src /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/bin /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/include /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/lib /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/sbin /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/src
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/bin'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/include'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/sbin'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/src'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/bin'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/include'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/lib'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/sbin'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/src'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib64
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib64'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/i386-linux-gnu
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/i386-linux-gnu'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/x86_64-linux-gnu
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/x86_64-linux-gnu'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/locale
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/locale'
++ ln -sv i386-linux-gnu /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/lib32
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib/lib32' -> 'i386-linux-gnu'
++ ln -sv /usr/lib/i386-linux-gnu /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib32
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/lib32' -> '/usr/lib/i386-linux-gnu'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/color /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/dict /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/doc /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/info /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/locale /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/color /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/dict /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/doc /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/info /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/locale /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/color'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/dict'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/doc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/info'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/locale'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/color'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/dict'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/doc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/info'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/locale'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/misc /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/terminfo /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/zoneinfo /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/misc /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/terminfo /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/zoneinfo
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/misc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/terminfo'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/zoneinfo'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/misc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/terminfo'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/zoneinfo'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/libexec
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/libexec'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man1 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man2 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man3 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man4 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man5 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man6 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man7 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man8 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man1 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man2 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man3 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man4 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man5 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man6 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man7 /workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man8
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man1'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man2'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man3'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man4'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man5'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man6'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man7'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/share/man/man8'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man1'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man2'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man3'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man4'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man5'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man6'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man7'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/usr/local/share/man/man8'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/spool
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/spool'
++ install -vdm 1777 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/tmp
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/tmp'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/spool/mail
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/spool/mail'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/opt
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/opt'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/cache
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/cache'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lib
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lib'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lib/misc /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lib/rpm
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lib/misc'
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lib/rpm'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/local
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/local'
++ ln -sv usr/bin /workspace/BUILD/maquilinux-1-build/BUILDROOT/bin
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/bin' -> 'usr/bin'
++ ln -sv usr/lib /workspace/BUILD/maquilinux-1-build/BUILDROOT/lib
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/lib' -> 'usr/lib'
++ ln -sv usr/sbin /workspace/BUILD/maquilinux-1-build/BUILDROOT/sbin
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/sbin' -> 'usr/sbin'
++ install -vdm 755 /workspace/BUILD/maquilinux-1-build/BUILDROOT/lib64
+install: creating directory '/workspace/BUILD/maquilinux-1-build/BUILDROOT/lib64'
++ ln -sv ../run /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/run
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/run' -> '../run'
++ ln -sv ../run/lock /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lock
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/lock' -> '../run/lock'
++ ln -sv spool/mail /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/mail
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/mail' -> 'spool/mail'
++ ln -sv ../proc/self/mounts /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/mtab
+'/workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/mtab' -> '../proc/self/mounts'
++ touch /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/btmp /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/lastlog /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/faillog /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/wtmp
++ chgrp -v 13 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/lastlog
+changed group of '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/lastlog' from root to 13
++ chmod -v 664 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/lastlog
+mode of '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/lastlog' changed from 0644 (rw-r--r--) to 0664 (rw-rw-r--)
++ chmod -v 600 /workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/btmp
+mode of '/workspace/BUILD/maquilinux-1-build/BUILDROOT/var/log/btmp' changed from 0644 (rw-r--r--) to 0600 (rw-------)
++ cat
++ cat
++ cat
++ cat
++ cat
++ cat
++ cat
++ cat
++ echo 1
++ cat
++ install -Dm 644 /workspace/SOURCES/maquilinux.repo /workspace/BUILD/maquilinux-1-build/BUILDROOT/etc/yum.repos.d/maquilinux.repo
++ echo 26.4
+Processing files: maquilinux-1-1.m264.noarch
+warning: absolute symlink: /usr/lib32 -> /usr/lib/i386-linux-gnu
+Provides: config(maquilinux) = 1-1.m264 group(adm) group(audio) group(bin) group(cdrom) group(daemon) group(dialout) group(disk) group(floppy) group(input) group(kmem) group(kvm) group(lp) group(mail) group(messagebus) group(nogroup) group(root) group(sys) group(tape) group(tty) group(users) group(utmp) group(uuidd) group(video) group(wheel) maquilinux = 1-1.m264 user(bin) user(daemon) user(messagebus) user(nobody) user(root) user(uuidd)
+Requires(interp): /bin/sh
+Requires(rpmlib): rpmlib(LargeFiles) <= 4.12.0-1
+Requires(pre): /bin/sh group(utmp)
+Requires(postun): group(utmp)
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /workspace/BUILD/maquilinux-1-build/BUILDROOT
+Wrote: /workspace/SRPMS/maquilinux-1-1.m264.src.rpm
+Wrote: /workspace/RPMS/noarch/maquilinux-1-1.m264.noarch.rpm
+Executing(rmbuild): /bin/sh -e /var/tmp/rpm-tmp.m5DPqy
++ umask 022
++ cd /workspace/BUILD/maquilinux-1-build
++ test -d /workspace/BUILD/maquilinux-1-build
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w /workspace/BUILD/maquilinux-1-build
++ rm -rf /workspace/BUILD/maquilinux-1-build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+
+RPM build warnings:
+    absolute symlink: /usr/lib32 -> /usr/lib/i386-linux-gnu
+
+Desmontando...
+Listo.
+jue 09 abr 2026 17:36:07 -04: SUCCESS

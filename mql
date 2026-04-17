@@ -1,0 +1,331 @@
+#!/usr/bin/env bash
+# mql - Maqui Linux Development CLI
+# Unified command-line interface for the Maqui Linux development system
+
+set -euo pipefail
+
+# Script location (project root)
+MQL_PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export MQL_PROJECT_ROOT
+
+# ============================================================================
+# Configuration loading
+# Order of precedence (highest to lowest):
+#   1. Environment variables already set by the caller
+#   2. mql.local  (gitignored, user overrides)
+#   3. mql.conf   (committed, project defaults)
+# ============================================================================
+
+_load_config() {
+    # Preserve any environment variables already set before loading config
+    local pre_lfs="${MQL_LFS:-}"
+    local pre_disk="${MQL_DISK:-}"
+    local pre_releasever="${MQL_RELEASEVER:-}"
+    local pre_repo_dest="${MQL_REPO_DEST:-}"
+    local pre_repo_url="${MQL_REPO_URL:-}"
+    local pre_kernel="${MQL_KERNEL_VERSION:-}"
+
+    # Load project defaults
+    if [[ -f "$MQL_PROJECT_ROOT/mql.conf" ]]; then
+        # shellcheck source=/dev/null
+        source "$MQL_PROJECT_ROOT/mql.conf"
+    fi
+
+    # Load user overrides (gitignored)
+    if [[ -f "$MQL_PROJECT_ROOT/mql.local" ]]; then
+        # shellcheck source=/dev/null
+        source "$MQL_PROJECT_ROOT/mql.local"
+    fi
+
+    # Restore env vars that were set before (env always wins)
+    [[ -n "$pre_lfs" ]]        && MQL_LFS="$pre_lfs"
+    [[ -n "$pre_disk" ]]       && MQL_DISK="$pre_disk"
+    [[ -n "$pre_releasever" ]] && MQL_RELEASEVER="$pre_releasever"
+    [[ -n "$pre_repo_dest" ]]  && MQL_REPO_DEST="$pre_repo_dest"
+    [[ -n "$pre_repo_url" ]]   && MQL_REPO_URL="$pre_repo_url"
+    [[ -n "$pre_kernel" ]]     && MQL_KERNEL_VERSION="$pre_kernel"
+
+    # Export all MQL_ variables so child processes see them
+    export MQL_LFS MQL_DISK MQL_RELEASEVER MQL_REPO_DEST MQL_REPO_URL \
+           MQL_JOBS MQL_RPMBUILD_OPTS MQL_RELEASE_DIR MQL_KERNEL_VERSION
+}
+
+# Auto-detect mount point if MQL_LFS is not mounted but disk is accessible
+_autodetect_mount() {
+    local lfs="${MQL_LFS:-/mnt/maquilinux}"
+    local disk="${MQL_DISK:-/dev/sdd1}"
+
+    # Already mounted at expected location
+    if mountpoint -q "$lfs" 2>/dev/null; then
+        return 0
+    fi
+
+    # Check common auto-mount locations (udisks2)
+    local label
+    label=$(blkid -s LABEL -o value "$disk" 2>/dev/null || echo "maquilinux")
+
+    for candidate in \
+        "/run/media/${USER}/${label}" \
+        "/run/media/root/${label}" \
+        "/media/${label}" \
+        "/media/${USER}/${label}"
+    do
+        if mountpoint -q "$candidate" 2>/dev/null; then
+            log_warn "Disk found at $candidate (not $lfs)"
+            log_info "Set MQL_LFS=$candidate in mql.local or export MQL_LFS=$candidate"
+            export MQL_LFS="$candidate"
+            return 0
+        fi
+    done
+
+    return 0  # Not mounted, let individual commands handle it
+}
+
+# ============================================================================
+# Load config before loading common library
+# ============================================================================
+
+_load_config
+
+# Load common library (uses MQL_LFS from config)
+source "$MQL_PROJECT_ROOT/lib/common.sh"
+
+# Auto-detect if needed
+_autodetect_mount
+
+# ============================================================================
+# Help
+# ============================================================================
+
+show_help() {
+    local lfs="${MQL_LFS:-/mnt/maquilinux}"
+    cat << EOF
+mql - Maqui Linux Development CLI
+
+USAGE: mql <command> [options] [arguments]
+
+COMMANDS:
+  chroot                Enter the overlay chroot
+    --reset             Discard overlay changes
+    --persist <name>    Save snapshot of current overlay
+    --promote           Merge overlay into base
+    --exec "<cmd>"      Run command in chroot without entering
+
+  build <spec>          Build an RPM inside the chroot
+    --arch <arch>       Target architecture (x86_64, i686)
+    --both              Build both 64-bit and 32-bit
+    --all               Build all specs (mlfs-runner)
+    info <spec>         Show spec information
+
+  install <spec>        Install RPM into chroot
+
+  repo                  Repository management
+    update              Regenerate repo metadata (createrepo_c)
+    list                List packages in local repo
+    sync                Publish to production repo
+
+  release               Generate release artifacts
+    rootfs              Generate rootfs from RPMs
+    rootfs --target <path>  Generate rootfs into specific directory
+    tarball             Package rootfs as .tar.xz
+    iso                 Generate bootable live ISO
+
+  test                  Testing
+    vm                  Boot in QEMU VM
+    smoke               Run smoke tests
+    verify              Verify LFS independence
+
+  status                Show development environment status
+  config                Show active configuration
+  help                  Show this help message
+
+CONFIGURATION:
+  Edit mql.local (gitignored) to override defaults from mql.conf.
+  All MQL_* variables can also be set as environment variables.
+
+  Key variables:
+    MQL_LFS=$lfs
+    MQL_DISK=${MQL_DISK:-/dev/sdd1}
+    MQL_RELEASEVER=${MQL_RELEASEVER:-26.4}
+    MQL_REPO_DEST=${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/26.4}
+
+EXAMPLES:
+  mql chroot                           # Enter interactive chroot
+  mql chroot --exec "rpm -qa"          # Run single command in chroot
+  mql build openrc --both              # Build openrc for 64+32 bit
+  mql install openrc                   # Install RPM in chroot
+  MQL_LFS=/run/media/glats/maquilinux mql status   # Override mount point
+
+For full documentation:
+  docs/MANUAL-NIX.md
+  docs/MANUAL-STANDALONE.md
+EOF
+}
+
+# ============================================================================
+# Status
+# ============================================================================
+
+show_status() {
+    local lfs="${MQL_LFS:-/mnt/maquilinux}"
+
+    log_info "Development Status"
+    echo "  MQL_LFS = $lfs"
+    echo ""
+
+    # Check disk mount
+    if mountpoint -q "$lfs" 2>/dev/null; then
+        log_ok "Disk mounted at $lfs"
+        df -h "$lfs" | tail -1
+    else
+        log_warn "Disk not mounted at $lfs"
+        log_info "Mount with: sudo mount ${MQL_DISK:-/dev/sdd1} $lfs"
+        log_info "Or set MQL_LFS to where the disk is currently mounted"
+    fi
+    echo ""
+
+    # Check overlay structure
+    if [[ -d "$lfs/base" && -d "$lfs/merged" ]]; then
+        log_ok "Overlay structure ready"
+        echo "  Base:      $(du -sh "$lfs/base" 2>/dev/null | cut -f1)"
+        echo "  Upper:     $(du -sh "$lfs/layers/upper" 2>/dev/null | cut -f1)"
+        echo "  Snapshots: $(ls "$lfs/layers/snapshots/" 2>/dev/null | wc -l)"
+    elif [[ -d "$lfs" ]]; then
+        log_warn "Disk mounted but overlay not set up (run setup first)"
+    else
+        log_warn "Overlay structure not set up"
+    fi
+    echo ""
+
+    # Check chroot active
+    if mountpoint -q "$lfs/merged" 2>/dev/null; then
+        log_ok "Chroot is currently active (merged mounted)"
+    fi
+
+    # Check RPMs
+    local rpm_count
+    rpm_count=$(find "$MQL_PROJECT_ROOT/RPMS" -name "*.rpm" 2>/dev/null | wc -l)
+    log_info "Local RPMs: $rpm_count"
+
+    if [[ -f "$MQL_PROJECT_ROOT/RPMS/x86_64/repodata/repomd.xml" ]]; then
+        log_ok "Repo metadata exists"
+    else
+        log_warn "Repo metadata missing (run: mql repo update)"
+    fi
+    echo ""
+
+    # Check specs
+    local spec_count
+    spec_count=$(ls "$MQL_PROJECT_ROOT/SPECS/"*.spec 2>/dev/null | wc -l)
+    log_info "Specs available: $spec_count"
+}
+
+# Show active configuration
+show_config() {
+    log_info "Active Configuration"
+    echo ""
+    echo "  MQL_PROJECT_ROOT = $MQL_PROJECT_ROOT"
+    echo "  MQL_LFS          = ${MQL_LFS:-/mnt/maquilinux}"
+    echo "  MQL_DISK         = ${MQL_DISK:-/dev/sdd1}"
+    echo "  MQL_RELEASEVER   = ${MQL_RELEASEVER:-26.4}"
+    echo "  MQL_REPO_DEST    = ${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/26.4}"
+    echo "  MQL_REPO_URL     = ${MQL_REPO_URL:-https://repo.glats.org/linux/maquilinux}"
+    echo "  MQL_JOBS         = ${MQL_JOBS:-$(nproc)}"
+    echo "  MQL_KERNEL_VER   = ${MQL_KERNEL_VERSION:-6.17.9}"
+    echo ""
+    echo "  Config files loaded:"
+    [[ -f "$MQL_PROJECT_ROOT/mql.conf" ]]  && echo "    mql.conf  (project defaults)" || echo "    mql.conf  (not found)"
+    [[ -f "$MQL_PROJECT_ROOT/mql.local" ]] && echo "    mql.local (user overrides)"   || echo "    mql.local (not present, create to override)"
+}
+
+# ============================================================================
+# Main dispatcher
+# ============================================================================
+
+main() {
+    if [[ $# -eq 0 ]]; then
+        show_help
+        exit 0
+    fi
+
+    local cmd="${1:-}"
+    shift || true
+
+    case "$cmd" in
+        help|--help|-h)
+            show_help
+            ;;
+
+        status)
+            show_status
+            ;;
+
+        config)
+            show_config
+            ;;
+
+        chroot)
+            source "$MQL_PROJECT_ROOT/lib/chroot.sh"
+            mql_chroot "$@"
+            ;;
+
+        build)
+            source "$MQL_PROJECT_ROOT/lib/build.sh"
+            if [[ "${1:-}" == "info" ]]; then
+                shift
+                show_spec_info "$@"
+            else
+                mql_build "$@"
+            fi
+            ;;
+
+        install)
+            source "$MQL_PROJECT_ROOT/lib/build.sh"
+            mql_install "$@"
+            ;;
+
+        repo)
+            source "$MQL_PROJECT_ROOT/lib/repo.sh"
+            local subcmd="${1:-}"
+            shift || true
+            case "$subcmd" in
+                update) mql_repo_update "$@" ;;
+                list)   mql_repo_list "$@"   ;;
+                sync)   mql_repo_sync "$@"   ;;
+                *) log_error "Unknown repo subcommand: $subcmd"; exit 1 ;;
+            esac
+            ;;
+
+        release)
+            source "$MQL_PROJECT_ROOT/lib/iso.sh"
+            local subcmd="${1:-}"
+            shift || true
+            case "$subcmd" in
+                rootfs)  mql_release_rootfs "$@"  ;;
+                tarball) mql_release_tarball "$@" ;;
+                iso)     mql_release_iso "$@"     ;;
+                *) log_error "Unknown release subcommand: $subcmd"; exit 1 ;;
+            esac
+            ;;
+
+        test)
+            source "$MQL_PROJECT_ROOT/lib/vm.sh"
+            local subcmd="${1:-}"
+            shift || true
+            case "$subcmd" in
+                vm)     mql_test_vm "$@"     ;;
+                smoke)  mql_test_smoke "$@"  ;;
+                verify) mql_test_verify "$@" ;;
+                *) log_error "Unknown test subcommand: $subcmd"; exit 1 ;;
+            esac
+            ;;
+
+        *)
+            log_error "Unknown command: $cmd"
+            echo "Run 'mql help' for usage."
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

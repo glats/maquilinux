@@ -1,0 +1,65 @@
+jue 09 abr 2026 17:34:21 -04: Building iana-etc
+Rootfs:   /run/media/glats/maquilinux
+Workspace: /home/glats/Work/maquilinux
+
+Montando filesystems virtuales...
+Building target platforms: noarch
+Building for target noarch
+Executing(%mkbuilddir): /bin/sh -e /var/tmp/rpm-tmp.wbYbQy
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.M02ARB
++ umask 022
++ cd /workspace/BUILD/iana-etc-20251120-build
++ rm -rf iana-etc-20251120
++ /usr/lib/rpm/rpmuncompress -x /workspace/SOURCES/iana-etc-20251120.tar.gz
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd iana-etc-20251120
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ cd /workspace/BUILD/iana-etc-20251120-build
++ rm -rf iana-etc-20251120
++ /usr/lib/rpm/rpmuncompress -x /workspace/SOURCES/iana-etc-20251120.tar.gz
++ STATUS=0
++ '[' 0 -ne 0 ']'
++ cd iana-etc-20251120
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.dfoedn
++ umask 022
++ cd /workspace/BUILD/iana-etc-20251120-build
++ cd iana-etc-20251120
++ RPM_EC=0
+++ jobs -p
++ exit 0
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.oz5aJz
++ umask 022
++ cd /workspace/BUILD/iana-etc-20251120-build
++ /usr/bin/rm -rf /workspace/BUILD/iana-etc-20251120-build/BUILDROOT
++ /usr/bin/mkdir -p /workspace/BUILD/iana-etc-20251120-build
++ /usr/bin/mkdir /workspace/BUILD/iana-etc-20251120-build/BUILDROOT
++ cd iana-etc-20251120
++ mkdir -pv /workspace/BUILD/iana-etc-20251120-build/BUILDROOT/etc
+mkdir: created directory '/workspace/BUILD/iana-etc-20251120-build/BUILDROOT/etc'
++ cp -v services protocols /workspace/BUILD/iana-etc-20251120-build/BUILDROOT/etc/
+'services' -> '/workspace/BUILD/iana-etc-20251120-build/BUILDROOT/etc/services'
+'protocols' -> '/workspace/BUILD/iana-etc-20251120-build/BUILDROOT/etc/protocols'
+Processing files: iana-etc-20251120-1.m264.noarch
+Provides: config(iana-etc) = 20251120-1.m264 iana-etc = 20251120-1.m264
+Requires(rpmlib): rpmlib(LargeFiles) <= 4.12.0-1
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /workspace/BUILD/iana-etc-20251120-build/BUILDROOT
+Wrote: /workspace/SRPMS/iana-etc-20251120-1.m264.src.rpm
+Wrote: /workspace/RPMS/noarch/iana-etc-20251120-1.m264.noarch.rpm
+Executing(rmbuild): /bin/sh -e /var/tmp/rpm-tmp.WrsnkM
++ umask 022
++ cd /workspace/BUILD/iana-etc-20251120-build
++ test -d /workspace/BUILD/iana-etc-20251120-build
++ /usr/bin/chmod -Rf a+rX,u+w,g-w,o-w /workspace/BUILD/iana-etc-20251120-build
++ rm -rf /workspace/BUILD/iana-etc-20251120-build
++ RPM_EC=0
+++ jobs -p
++ exit 0
+
+Desmontando...
+Listo.
+jue 09 abr 2026 17:34:22 -04: SUCCESS

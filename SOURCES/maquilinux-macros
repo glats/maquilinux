@@ -1,0 +1,19 @@
+# Maquilinux build macros - overrides for cross-compilation from non-FHS hosts
+# This file is auto-included when building from NixOS or other systems
+
+%_buildshell		/run/media/glats/maquilinux/bin/bash
+%__rm			/run/media/glats/maquilinux/usr/bin/rm
+%__cp			/run/media/glats/maquilinux/usr/bin/cp
+%__mv			/run/media/glats/maquilinux/usr/bin/mv
+%__mkdir		/run/media/glats/maquilinux/usr/bin/mkdir
+%__install		/run/media/glats/maquilinux/usr/bin/install
+%__chmod		/run/media/glats/maquilinux/usr/bin/chmod
+%__chown		/run/media/glats/maquilinux/usr/bin/chown
+%__sed			/run/media/glats/maquilinux/usr/bin/sed
+%__awk			/run/media/glats/maquilinux/usr/bin/gawk
+%__cat			/run/media/glats/maquilinux/usr/bin/cat
+%__gzip			/run/media/glats/maquilinux/usr/bin/gzip
+%__bzip2		/run/media/glats/maquilinux/usr/bin/bzip2
+%__xz			/run/media/glats/maquilinux/usr/bin/xz
+%__tar			/run/media/glats/maquilinux/usr/bin/tar
+%__ln_s			ln -s
