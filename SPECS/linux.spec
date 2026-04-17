@@ -64,6 +64,10 @@ make defconfig
   --enable CDROM \
   --enable BLK_DEV_SR \
   --enable LOOP \
+  --enable BLK_DEV_DM \
+  --enable DM_BUFIO \
+  --enable DM_SNAPSHOT \
+  --enable DM_MIRROR \
   --disable DEBUG_INFO
 
 make olddefconfig
