@@ -48,6 +48,22 @@ make defconfig
   --enable SERIAL_8250 \
   --enable SERIAL_8250_CONSOLE \
   --enable IA32_EMULATION \
+  --enable OVERLAY_FS \
+  --enable OVERLAY_FS_REDIRECT_DIR \
+  --enable OVERLAY_FS_INDEX \
+  --enable OVERLAY_FS_XINO_AUTO \
+  --enable OVERLAY_FS_METACOPY \
+  --enable SQUASHFS \
+  --enable SQUASHFS_ZLIB \
+  --enable SQUASHFS_LZ4 \
+  --enable SQUASHFS_LZO \
+  --enable SQUASHFS_XZ \
+  --enable SQUASHFS_ZSTD \
+  --enable SQUASHFS_EMBEDDED \
+  --enable ISO9660_FS \
+  --enable CDROM \
+  --enable BLK_DEV_SR \
+  --enable LOOP \
   --disable DEBUG_INFO
 
 make olddefconfig
