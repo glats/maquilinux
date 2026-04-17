@@ -3,6 +3,16 @@ BUILD/
 BUILDROOT/
 RPMS/
 SRPMS/
+logs/
+temp/
+usr/
+staging/
+
+# Generated ISO files
+*.iso
+iso/boot/vmlinuz
+iso/boot/initramfs*.img
+iso/LiveOS/
 
 # Source tarballs (upstream releases)
 SOURCES/*.tar.gz
