@@ -1,0 +1,102 @@
+name: Build ISO
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    runs-on: [self-hosted, maquilinux]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Get version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF" ]; then
+            VERSION="26.4-$(date +%Y%m%d)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building ISO version: $VERSION"
+      
+      - name: Prepare ISO directory
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          ROOTFS="/run/media/glats/maquilinux"
+          ISODIR="$WORKSPACE/iso"
+          
+          mkdir -p "$ISODIR"
+          
+          # Copy kernel and initramfs
+          cp "$ROOTFS/boot/vmlinuz-"* "$ISODIR/vmlinuz" || true
+          
+          # Generate initramfs
+          sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c \
+            "dracut --no-hostonly --force /tmp/initramfs.img" || true
+          cp "$ROOTFS/tmp/initramfs.img" "$ISODIR/initramfs.img" || true
+      
+      - name: Create squashfs
+        run: |
+          ROOTFS="/run/media/glats/maquilinux"
+          WORKSPACE="/home/glats/Work/maquilinux"
+          
+          # Create squashfs from rootfs (excluding some dirs)
+          mksquashfs "$ROOTFS" "$WORKSPACE/iso/rootfs.squashfs" \
+            -comp zstd -Xcompression-level 19 \
+            -e "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" "$ROOTFS/run" "$ROOTFS/tmp" \
+            || true
+      
+      - name: Create ISO
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Create basic bootable ISO with grub
+          mkdir -p "$WORKSPACE/iso/boot/grub"
+          
+          cat > "$WORKSPACE/iso/boot/grub/grub.cfg" << 'EOF'
+          set default=0
+          set timeout=10
+          
+          menuentry "Maqui Linux $VERSION" {
+            linux /vmlinuz root=/dev/ram0
+            initrd /initramfs.img
+          }
+          EOF
+          
+          # Generate ISO
+          grub-mkrescue -o "$WORKSPACE/maquilinux-${VERSION}-x86_64.iso" "$WORKSPACE/iso" 2>&1 || true
+      
+      - name: Generate checksums
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          cd "$WORKSPACE"
+          sha256sum "maquilinux-${VERSION}-x86_64.iso" > "maquilinux-${VERSION}-x86_64.iso.sha256"
+          sha512sum "maquilinux-${VERSION}-x86_64.iso" > "maquilinux-${VERSION}-x86_64.iso.sha512"
+      
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iso
+          path: |
+            maquilinux-${{ steps.version.outputs.version }}-x86_64.iso
+            maquilinux-${{ steps.version.outputs.version }}-x86_64.iso.sha*
+          retention-days: 90
+      
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            maquilinux-${{ steps.version.outputs.version }}-x86_64.iso
+            maquilinux-${{ steps.version.outputs.version }}-x86_64.iso.sha*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
