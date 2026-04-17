@@ -46,7 +46,7 @@ jobs:
           WORKSPACE="/home/glats/Work/maquilinux"
           
           # Create squashfs from rootfs (excluding some dirs)
-          mksquashfs "$ROOTFS" "$WORKSPACE/iso/rootfs.squashfs" \
+          nix shell nixpkgs#squashfs-tools -c mksquashfs "$ROOTFS" "$WORKSPACE/iso/rootfs.squashfs" \
             -comp zstd -Xcompression-level 19 \
             -e "$ROOTFS/proc" "$ROOTFS/sys" "$ROOTFS/dev" "$ROOTFS/run" "$ROOTFS/tmp" \
             || true
@@ -70,7 +70,7 @@ jobs:
           EOF
           
           # Generate ISO
-          grub-mkrescue -o "$WORKSPACE/maquilinux-${VERSION}-x86_64.iso" "$WORKSPACE/iso" 2>&1 || true
+          nix shell nixpkgs#grub2 nixpkgs#xorriso -c grub-mkrescue -o "$WORKSPACE/maquilinux-${VERSION}-x86_64.iso" "$WORKSPACE/iso" 2>&1 || true
       
       - name: Generate checksums
         run: |
