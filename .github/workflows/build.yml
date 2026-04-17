@@ -1,0 +1,102 @@
+name: Build RPMs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'SPECS/*.spec'
+      - 'SOURCES/*'
+  workflow_dispatch:
+    inputs:
+      specs:
+        description: 'Specs to build (comma-separated, empty = all changed)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: [self-hosted, maquilinux]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Detect changed specs
+        id: detect
+        run: |
+          if [ -n "${{ github.event.inputs.specs }}" ]; then
+            # Manual dispatch with specific specs
+            SPECS=$(echo "${{ github.event.inputs.specs }}" | tr ',' ' ')
+          else
+            # Auto-detect changed specs from commit
+            SPECS=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | sed 's|SPECS/||; s|\.spec$||' || true)
+          fi
+          echo "specs=$SPECS" >> $GITHUB_OUTPUT
+          echo "Detected specs: $SPECS"
+      
+      - name: Build RPMs
+        if: steps.detect.outputs.specs != ''
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          ROOTFS="/run/media/glats/maquilinux"
+          
+          for spec in ${{ steps.detect.outputs.specs }}; do
+            echo "Building $spec..."
+            sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c \
+              "cd /workspace && rpmbuild -ba SPECS/${spec}.spec --define '_topdir /workspace' --nodeps" || true
+          done
+      
+      - name: Sign RPMs
+        if: steps.detect.outputs.specs != ''
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          
+          # Sign new RPMs
+          for rpm in $WORKSPACE/RPMS/x86_64/*.rpm; do
+            if [ -f "$rpm" ]; then
+              nix shell nixpkgs#rpm -c rpmsign \
+                --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
+                --define '__gpg /run/current-system/sw/bin/gpg' \
+                --addsign "$rpm" 2>&1 || true
+            fi
+          done
+      
+      - name: Update repo
+        if: steps.detect.outputs.specs != ''
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          REPO="/srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable"
+          
+          # Copy new RPMs to repo
+          sudo cp $WORKSPACE/RPMS/x86_64/*.rpm "$REPO/" 2>/dev/null || true
+          
+          # Regenerate repo metadata
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$REPO"
+      
+      - name: Update rootfs
+        if: steps.detect.outputs.specs != ''
+        run: |
+          WORKSPACE="/home/glats/Work/maquilinux"
+          ROOTFS="/run/media/glats/maquilinux"
+          
+          # Install new RPMs in rootfs
+          for rpm in $WORKSPACE/RPMS/x86_64/*.rpm; do
+            if [ -f "$rpm" ]; then
+              pkg=$(basename "$rpm" | sed 's/-[0-9].*//')
+              sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c \
+                "rpm -Uvh --nodeps --noscripts --nosignature /workspace/RPMS/x86_64/$(basename $rpm) --dbpath /var/lib/rpm" || true
+            fi
+          done
+          
+          # Run ldconfig
+          sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c "ldconfig"
+      
+      - name: Upload artifacts
+        if: steps.detect.outputs.specs != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpms
+          path: RPMS/x86_64/*.rpm
+          retention-days: 7
