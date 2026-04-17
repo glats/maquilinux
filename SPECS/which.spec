@@ -1,6 +1,6 @@
 Name:           which
 Version:        2.23
-Release:        1.m264%{?dist}
+Release:        2.m264%{?dist}
 Summary:        Shows the full path of shell commands
 
 %define debug_package        %{nil}
