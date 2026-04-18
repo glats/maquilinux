@@ -117,9 +117,10 @@ These 7 packages enable Maqui Linux to build itself and generate releases:
 ## CI/CD and Operations
 
 | Topic | Document | Key Points |
-|-------|----------|------------|
+|--------|----------|------------|
 | Self-hosted runner | `docs/agents/runner-setup.md` | NixOS or standalone Linux, any machine |
 | Rootfs backups | `docs/agents/backup-system.md` | Museum style, never delete, archive to cold storage |
+| Standalone developer | `docs/agents/standalone-developer.md` | Download rootfs, work locally, push optional |
 | Key workflows | `bootstrap-rust.yml` (6hr timeout), `build.yml` (5-30 min) | Automatic backup before risky builds |
 
 Quick reference (adapt `<your-runner-host>` to your setup):
@@ -157,6 +158,9 @@ gh api repos/glats/maquilinux/actions/runners | \
 | `docs/DEVELOPMENT-SYSTEM-PLAN.md` | Full architecture, overlay system, CLI design, build pipeline, dracut-ng/initramfs, ISO pipeline, repo structure, implementation phases, self-hosting roadmap, rootfs lifecycle |
 | `docs/MANUAL-NIX.md` | Developer manual for NixOS/Nix users: `nix develop`, disk setup, daily workflow, building, repo management, testing, releases, NixOS host config, troubleshooting |
 | `docs/MANUAL-STANDALONE.md` | Developer manual without Nix: tool installation per distro, manual chroot procedure, self-hosting setup, same workflow/build/release sections |
+| `docs/agents/runner-setup.md` | Self-hosted GitHub Actions runner: NixOS or any Linux, configuration, troubleshooting |
+| `docs/agents/backup-system.md` | Rootfs backup strategy: museum style, incremental backups, cold storage, restoration |
+| `docs/agents/standalone-developer.md` | Download pre-built rootfs from maquiroot.glats.org, local development without runner, push optional |
 | `docs/DEVELOPMENT.md` | Contribution workflow, CODEOWNERS, branch protection, CI/CD overview |
 | `docs/PIPELINES.md` | GitHub Actions and GitLab CI pipeline details |
 | `docs/DECISION-FRAMEWORK.md` | Mandatory research and presentation process before any tool/library decision |
