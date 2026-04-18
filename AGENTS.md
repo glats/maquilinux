@@ -65,9 +65,19 @@ Show active config: `mql config`
 
 ## `mql` CLI Quick Reference
 
+**With Nix (recommended):**
+```bash
+nix develop                      # Enter Nix dev shell
+# Inside nix shell:
+mql chroot                       Enter overlay chroot
 ```
-nix develop                      Enter Nix dev shell (optional)
 
+**Without Nix (standalone):**
+See `docs/MANUAL-STANDALONE.md` for tool installation per distro.
+All `mql` commands work the same after prerequisites are installed.
+
+**Common commands (both):**
+```
 mql chroot                       Enter overlay chroot
 mql chroot --exec "<cmd>"        Run command in chroot
 mql chroot --reset               Discard overlay changes
@@ -108,13 +118,14 @@ These 7 packages enable Maqui Linux to build itself and generate releases:
 
 | Topic | Document | Key Points |
 |-------|----------|------------|
-| Self-hosted runner | `docs/agents/runner-thinkcentre.md` | thinkcentre-builder, NixOS, `nix run .#runner` |
+| Self-hosted runner | `docs/agents/runner-thinkcentre.md` | thinkcentre-builder, NixOS OR standalone Linux |
 | Rootfs backups | `docs/agents/backup-system.md` | Museum style, never delete, archive to cold storage |
 | Key workflows | `bootstrap-rust.yml` (6hr timeout), `build.yml` (5-30 min) | Automatic backup before risky builds |
 
 Quick reference:
 ```bash
-# Start/restart runner (uses flake, no hardcoded paths)
+# === NixOS Way (recommended) ===
+# Start/restart runner
 ssh thinkcentre.local "cd ~/Work/maquilinux && \
   tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
   tmux new-session -d -s github-runner 'nix run .#runner'"
@@ -122,7 +133,13 @@ ssh thinkcentre.local "cd ~/Work/maquilinux && \
 # Check runner environment
 nix run .#runner-status
 
-# Create backup
+# === Standalone Way (any Linux) ===
+# Install dependencies first (see docs/agents/runner-thinkcentre.md)
+ssh thinkcentre.local "tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
+  tmux new-session -d -s github-runner '/home/glats/bin/Runner.Listener run'"
+
+# === Common operations ===
+# Create backup (works both ways)
 mql backup create pre-<operation>-tag
 
 # View runner logs
