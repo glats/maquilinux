@@ -119,6 +119,12 @@ COMMANDS:
 
   install <spec>        Install RPM into chroot
 
+  backup                Backup and restore rootfs
+    create [tag]        Create backup with optional tag
+    list                List available backups
+    restore [tag|file]  Restore backup (destructive)
+    prune [days]        Delete backups older than days
+
   repo                  Repository management
     update              Regenerate repo metadata (createrepo_c)
     list                List packages in local repo
@@ -154,6 +160,7 @@ EXAMPLES:
   mql chroot --exec "rpm -qa"          # Run single command in chroot
   mql build openrc --both              # Build openrc for 64+32 bit
   mql install openrc                   # Install RPM in chroot
+  mql backup create pre-rust           # Create backup before risky changes
   MQL_LFS=/run/media/glats/maquilinux mql status   # Override mount point
 
 For full documentation:
@@ -282,6 +289,11 @@ main() {
         install)
             source "$MQL_PROJECT_ROOT/lib/build.sh"
             mql_install "$@"
+            ;;
+
+        backup)
+            source "$MQL_PROJECT_ROOT/lib/backup.sh"
+            mql_backup "$@"
             ;;
 
         repo)

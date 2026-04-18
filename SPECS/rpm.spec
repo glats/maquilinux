@@ -1,6 +1,6 @@
 Name:           rpm
 Version:        6.0.1
-Release:        2.m264%{?dist}
+Release:        3.m264%{?dist}
 Summary:        The RPM Package Manager
 
 ExclusiveArch:  x86_64
@@ -42,6 +42,7 @@ BuildRequires:  libcap
 BuildRequires:  acl
 BuildRequires:  attr
 BuildRequires:  elfutils
+BuildRequires:  rpm-sequoia-devel
 
 %description
 RPM is the RPM Package Manager.
@@ -61,7 +62,7 @@ cmake .. \
     -DWITH_AUDIT=OFF \
     -DWITH_SELINUX=OFF \
     -DWITH_DBUS=OFF \
-    -DWITH_SEQUOIA=OFF \
+    -DWITH_SEQUOIA=ON \
     -DWITH_OPENSSL=ON \
     -DENABLE_SQLITE=ON \
     -DENABLE_TESTSUITE=OFF \
@@ -99,5 +100,10 @@ test -s %{_builddir}/rpm-files.list
 %defattr(-,root,root)
 
 %changelog
+* Fri Apr 18 2026 Your Name <email@example.com> - 6.0.1-3.m264
+- Rebuilt with Sequoia OpenPGP support (rpm-sequoia-devel)
+- Added BuildRequires: rpm-sequoia-devel
+- Enabled -DWITH_SEQUOIA=ON
+
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 6.0.1-1.m264
 - Initial packaging of rpm 6.0.1 for Maquilinux using a multiarch library layout (x86_64 libs in /usr/lib/x86_64-linux-gnu).
