@@ -35,3 +35,6 @@ SOURCES/*.diff
 # OS
 .DS_Store
 Thumbs.db
+# Session files
+session-*.md
+spec-summary.md

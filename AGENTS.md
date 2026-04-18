@@ -76,6 +76,9 @@ mql chroot --promote             Merge overlay into base
 mql build <spec>                 Build RPM
 mql build <spec> --both          Build 64+32 bit
 mql install <spec>               Install RPM in chroot
+mql backup create [tag]          Create rootfs backup (museum style)
+mql backup list                  List all backups with metadata
+mql backup restore <name>        Restore from backup
 mql repo update                  Regenerate repo metadata
 mql repo sync                    Publish to repo.glats.org
 mql release rootfs               Generate rootfs from RPMs
@@ -100,6 +103,27 @@ These 7 packages enable Maqui Linux to build itself and generate releases:
 | `mtools.spec` | EFI image creation | UEFI boot support |
 
 **Status:** ✅ All packages built and installed in base rootfs (2026-04-02)
+
+## CI/CD and Operations
+
+| Topic | Document | Key Points |
+|-------|----------|------------|
+| Self-hosted runner | `docs/agents/runner-thinkcentre.md` | thinkcentre-builder, NixOS, LD_LIBRARY_PATH, session restart |
+| Rootfs backups | `docs/agents/backup-system.md` | Museum style, never delete, archive to cold storage |
+| Key workflows | `bootstrap-rust.yml` (6hr timeout), `build.yml` (5-30 min) | Automatic backup before risky builds |
+
+Quick reference:
+```bash
+# Restart runner
+ssh thinkcentre.local "tmux kill-session -t github-runner; sleep 1; \
+  tmux new-session -d -s github-runner 'bash -c \"export LD_LIBRARY_PATH=\$(nix eval --raw nixpkgs#stdenv.cc.cc.lib)/lib:\$(nix eval --raw nixpkgs#zlib)/lib; ~/bin/Runner.Listener run\"'"
+
+# Create backup
+mql backup create pre-<operation>-tag
+
+# View runner logs
+ssh thinkcentre.local "tmux capture-pane -t github-runner -p | tail -20"
+```
 
 ## Documentation Index
 
