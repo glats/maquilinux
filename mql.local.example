@@ -1,0 +1,51 @@
+# mql.local - Local configuration for Maqui Linux build environment
+# 
+# Copy this to mql.local and adjust to your system:
+#   cp mql.local.example mql.local
+#   nano mql.local
+#
+# Variables here override mql.conf but are NOT committed to git.
+
+# ============================================================================
+# CRITICAL: Path to Maqui Linux disk mount
+# ============================================================================
+# The overlay filesystem uses this as the base layer.
+# Common auto-mount locations:
+#   - GNOME/UDisks2: /run/media/$USER/maquilinux
+#   - Traditional:    /media/maquilinux
+#   - Manual mount:     /mnt/maquilinux
+#
+# MQL_LFS=/run/media/USERNAME/maquilinux
+
+# ============================================================================
+# Optional: Rootfs backup location
+# ============================================================================
+# Default: $HOME/maqui-backups
+# Can be on external disk, NFS, etc.
+#
+# MQL_BACKUP_DIR=/mnt/external/maqui-backups
+# MQL_ARCHIVE_DIR=/mnt/nas/maqui-archive
+
+# ============================================================================
+# Optional: Disk device (for mount/unmount operations)
+# ============================================================================
+# Only needed if using mql disk mount/unmount commands
+#
+# MQL_DISK=/dev/sdX1
+
+# ============================================================================
+# Example configurations for common setups
+# ============================================================================
+
+# --- Setup A: GNOME auto-mounted USB disk ---
+# MQL_LFS=/run/media/$USER/maquilinux
+
+# --- Setup B: Manual mount at /mnt ---
+# MQL_LFS=/mnt/maquilinux
+
+# --- Setup C: External USB on traditional mount ---
+# MQL_LFS=/media/maquilinux
+
+# --- Setup D: Build server with NFS home ---
+# MQL_LFS=/mnt/maquilinux
+# MQL_BACKUP_DIR=/mnt/maquilinux-backups

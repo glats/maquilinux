@@ -118,32 +118,36 @@ These 7 packages enable Maqui Linux to build itself and generate releases:
 
 | Topic | Document | Key Points |
 |-------|----------|------------|
-| Self-hosted runner | `docs/agents/runner-thinkcentre.md` | thinkcentre-builder, NixOS OR standalone Linux |
+| Self-hosted runner | `docs/agents/runner-setup.md` | NixOS or standalone Linux, any machine |
 | Rootfs backups | `docs/agents/backup-system.md` | Museum style, never delete, archive to cold storage |
 | Key workflows | `bootstrap-rust.yml` (6hr timeout), `build.yml` (5-30 min) | Automatic backup before risky builds |
 
-Quick reference:
+Quick reference (adapt `<your-runner-host>` to your setup):
 ```bash
 # === NixOS Way (recommended) ===
 # Start/restart runner
-ssh thinkcentre.local "cd ~/Work/maquilinux && \
+ssh <your-runner-host> "cd ~/Work/maquilinux && \
   tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
   tmux new-session -d -s github-runner 'nix run .#runner'"
 
 # Check runner environment
-nix run .#runner-status
+ssh <your-runner-host> "cd ~/Work/maquilinux && nix run .#runner-status"
 
 # === Standalone Way (any Linux) ===
-# Install dependencies first (see docs/agents/runner-thinkcentre.md)
-ssh thinkcentre.local "tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
-  tmux new-session -d -s github-runner '/home/glats/bin/Runner.Listener run'"
+# See docs/agents/runner-setup.md for dependencies per distro
+ssh <your-runner-host> "tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
+  tmux new-session -d -s github-runner '~/bin/Runner.Listener run'"
 
 # === Common operations ===
-# Create backup (works both ways)
-mql backup create pre-<operation>-tag
+# Create backup
+ssh <your-runner-host> "cd ~/Work/maquilinux && ./mql backup create pre-<tag>"
 
 # View runner logs
-ssh thinkcentre.local "tmux capture-pane -t github-runner -p | tail -20"
+ssh <your-runner-host> "tmux capture-pane -t github-runner -p | tail -20"
+
+# Check runner status from GitHub
+gh api repos/glats/maquilinux/actions/runners | \
+  jq -r '.runners[] | "\(.name): \(.status)"'
 ```
 
 ## Documentation Index
