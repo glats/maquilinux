@@ -108,15 +108,19 @@ These 7 packages enable Maqui Linux to build itself and generate releases:
 
 | Topic | Document | Key Points |
 |-------|----------|------------|
-| Self-hosted runner | `docs/agents/runner-thinkcentre.md` | thinkcentre-builder, NixOS, LD_LIBRARY_PATH, session restart |
+| Self-hosted runner | `docs/agents/runner-thinkcentre.md` | thinkcentre-builder, NixOS, `nix run .#runner` |
 | Rootfs backups | `docs/agents/backup-system.md` | Museum style, never delete, archive to cold storage |
 | Key workflows | `bootstrap-rust.yml` (6hr timeout), `build.yml` (5-30 min) | Automatic backup before risky builds |
 
 Quick reference:
 ```bash
-# Restart runner
-ssh thinkcentre.local "tmux kill-session -t github-runner; sleep 1; \
-  tmux new-session -d -s github-runner 'bash -c \"export LD_LIBRARY_PATH=\$(nix eval --raw nixpkgs#stdenv.cc.cc.lib)/lib:\$(nix eval --raw nixpkgs#zlib)/lib; ~/bin/Runner.Listener run\"'"
+# Start/restart runner (uses flake, no hardcoded paths)
+ssh thinkcentre.local "cd ~/Work/maquilinux && \
+  tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
+  tmux new-session -d -s github-runner 'nix run .#runner'"
+
+# Check runner environment
+nix run .#runner-status
 
 # Create backup
 mql backup create pre-<operation>-tag

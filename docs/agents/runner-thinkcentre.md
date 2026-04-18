@@ -10,14 +10,26 @@
 # Check runner status
 gh api repos/glats/maquilinux/actions/runners | \
   jq -r '.runners[] | "\(.name): \(.status) (\(.labels | map(.name) | join(", ")))"'
+
+# Check runner library environment
+nix run .#runner-status
 ```
 
-## Restart Runner
+## Start/Restart Runner
+
+The runner is now managed via the flake. No hardcoded LD_LIBRARY_PATH needed:
 
 ```bash
-ssh thinkcentre.local "tmux kill-session -t github-runner; \
+ssh thinkcentre.local "cd ~/Work/maquilinux && \
+  tmux kill-session -t github-runner 2>/dev/null; \
   sleep 1; \
-  tmux new-session -d -s github-runner \"\\\"bash -c 'export LD_LIBRARY_PATH=\$(nix eval --raw nixpkgs#stdenv.cc.cc.lib)/lib:\$(nix eval --raw nixpkgs#zlib)/lib:\$(nix eval --raw nixpkgs#icu)/lib; cd ~ && ./bin/Runner.Listener run'\\\"\""
+  tmux new-session -d -s github-runner 'nix run .#runner'"
+```
+
+Or manually:
+```bash
+ssh thinkcentre.local
+nix run ~/Work/maquilinux#runner
 ```
 
 ## View Logs
@@ -41,14 +53,12 @@ ssh thinkcentre.local "tmux kill-session -t github-runner; \
 # 3. New token
 TOKEN=$(gh api repos/glats/maquilinux/actions/runners/registration-token --method POST | jq -r '.token')
 
-# 4. Configure
-ssh thinkcentre.local "cd ~ && nix shell nixpkgs#stdenv.cc.cc.lib \
-  nixpkgs#zlib nixpkgs#openssl nixpkgs#icu nixpkgs#bash --command bash -c \
-  'export LD_LIBRARY_PATH=\$(nix eval --raw nixpkgs#stdenv.cc.cc.lib)/lib:\
-\$(nix eval --raw nixpkgs#zlib)/lib:\$(nix eval --raw nixpkgs#icu)/lib; \
-  ./bin/Runner.Listener configure --url https://github.com/glats/maquilinux \
-  --token $TOKEN --name thinkcentre-builder --work _work --unattended \
-  --labels maquilinux'"
+# 4. Configure (uses nix develop for proper environment)
+ssh thinkcentre.local "cd ~/Work/maquilinux && \
+  nix develop -c bash -c './bin/Runner.Listener configure \
+    --url https://github.com/glats/maquilinux \
+    --token $TOKEN --name thinkcentre-builder --work _work --unattended \
+    --labels maquilinux'"
 ```
 
 ## Key Workflows
