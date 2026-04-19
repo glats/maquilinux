@@ -48,8 +48,12 @@ jobs:
       
       - name: Cleanup previous artifacts
         run: |
-          # Remove files owned by root from previous builds
+          # Remove ALL files owned by root from previous chroot builds
+          # The chroot creates files as root in BUILD/, BUILDROOT/, RPMS/
+          sudo rm -rf "$GITHUB_WORKSPACE/BUILD" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/BUILDROOT" || true
           sudo rm -rf "$GITHUB_WORKSPACE/RPMS" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/SRPMS" || true
           sudo rm -rf "$GITHUB_WORKSPACE/SOURCES"/*.tar.* || true
           rm -rf "$GITHUB_WORKSPACE/.git/config.lock" || true
           echo "✅ Cleanup complete"
