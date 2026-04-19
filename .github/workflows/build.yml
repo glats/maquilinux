@@ -170,6 +170,23 @@ jobs:
           fi
           echo "✅ Disk: ${FREE_GB}GB free"
       
+      - name: Setup build tools in chroot
+        if: steps.list.outputs.specs != ''
+        run: |
+          echo "🔧 Checking for rpmbuild in chroot..."
+          
+          # Check if rpmbuild exists in chroot
+          if ./scripts/run-in-chroot.sh test -x /usr/bin/rpmbuild 2>/dev/null; then
+            echo "✅ rpmbuild already installed"
+          else
+            echo "⚠️  rpmbuild not found, installing rpm package..."
+            # Install rpm package from local repo which contains rpmbuild
+            ./scripts/run-in-chroot.sh dnf install -y rpm || {
+              echo "❌ Failed to install rpm package (contains rpmbuild)"
+              exit 1
+            }
+          fi
+      
       - name: Fetch sources and build
         if: steps.list.outputs.specs != ''
         run: |
