@@ -21,7 +21,7 @@ on:
 
 jobs:
   build:
-    name: Build RPM packages in order
+    name: Build RPM packages
     runs-on: [self-hosted, maquilinux]
     timeout-minutes: 360
     
@@ -34,6 +34,7 @@ jobs:
       - name: Load configuration
         run: |
           source mql.conf 2>/dev/null || true
+          source mql.local 2>/dev/null || true
           echo "MQL_LFS=${MQL_LFS:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
       
       - name: Verify overlay mounted
@@ -52,47 +53,25 @@ jobs:
             SPECS="${{ github.event.inputs.specs }}"
             TAG="${{ github.event.inputs.tag }}"
           else
-            # Auto: simple detection (one at a time for safety)
-            SPEC=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | head -1 | sed 's|SPECS/||; s|\.spec$||')
-            SPECS="$SPEC"
+            # Auto: detect changed specs from last commit
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | sed 's|SPECS/||; s|\.spec$||' | tr '\n' ',' | sed 's/,$//')
+            if [ -n "$CHANGED" ]; then
+              SPECS="$CHANGED"
+            else
+              echo "No specs changed in last commit"
+              exit 0
+            fi
             TAG="auto-$(date +%Y%m%d-%H%M%S)"
-          fi
-          
-          if [ -z "$SPECS" ]; then
-            echo "No specs to build"
-            exit 0
           fi
           
           echo "specs=$SPECS" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "📋 Build order: $SPECS"
       
-      - name: Check if Rust bootstrap needed
-        id: rust-check
-        run: |
-          SPECS="${{ steps.list.outputs.specs }}"
-          if echo "$SPECS" | grep -q "rust"; then
-            echo "rust_needed=true" >> $GITHUB_OUTPUT
-            echo "🦀 Rust detected - will download stage0 binary"
-          else
-            echo "rust_needed=false" >> $GITHUB_OUTPUT
-          fi
-      
-      - name: Cache and download Rust stage0
-        if: steps.rust-check.outputs.rust_needed == 'true'
-        uses: actions/cache@v4
-        with:
-          path: SOURCES/rustc-1.75.0-x86_64-unknown-linux-gnu.tar.xz
-          key: rust-stage0-1.75.0
-      
-      - name: Download Rust stage0 (if not cached)
-        if: steps.rust-check.outputs.rust_needed == 'true'
-        run: ./scripts/download-rust-stage0.sh
-      
       - name: Backup before build
         if: steps.list.outputs.specs != ''
         run: |
-          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-${{ steps.list.outputs.tag }}" || true
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
       
       - name: Check disk space
         if: steps.list.outputs.specs != ''
@@ -104,18 +83,18 @@ jobs:
           fi
           echo "✅ Disk: ${FREE_GB}GB free"
       
-      - name: Build specs in exact order
+      - name: Fetch sources and build
         if: steps.list.outputs.specs != ''
         run: |
           IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
           
           for spec in "${SPECS[@]}"; do
-            spec=$(echo "$spec" | xargs)  # trim
+            spec=$(echo "$spec" | xargs)  # trim whitespace
             [ -z "$spec" ] && continue
             
             echo ""
             echo "=========================================="
-            echo "🔨 Building: $spec"
+            echo "📦 Processing: $spec"
             echo "=========================================="
             
             # Verify spec exists
@@ -124,16 +103,19 @@ jobs:
               exit 1
             fi
             
-            # Build x86_64
-            echo "Building x86_64..."
+            # Fetch sources (on host, chroot has no internet)
+            echo "🔽 Fetching sources..."
+            ./scripts/fetch-spec-sources.sh "$spec"
+            
+            # Build for both architectures
+            echo "🔨 Building x86_64..."
             ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch x86_64
             
-            # Build i686  
-            echo "Building i686..."
+            echo "🔨 Building i686..."
             ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch i686
             
-            # Install to rootfs
-            echo "Installing to rootfs..."
+            # Install to rootfs for dependencies
+            echo "📥 Installing to rootfs..."
             for rpm in RPMS/x86_64/${spec}-[0-9]*.rpm RPMS/i686/${spec}-[0-9]*.rpm; do
               if [ -f "$rpm" ]; then
                 ./scripts/run-in-chroot.sh rpm -Uvh --nodeps --noscripts --nosignature "/workspace/$rpm" --dbpath /var/lib/rpm || true
@@ -156,7 +138,7 @@ jobs:
             fi
           done
       
-      - name: Update repo
+      - name: Update local repo
         if: steps.list.outputs.specs != ''
         run: |
           sudo cp RPMS/x86_64/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ 2>/dev/null || true
@@ -167,25 +149,23 @@ jobs:
       - name: Sync to repo.glats.org
         if: steps.list.outputs.specs != '' && success()
         run: |
-          echo "🔄 Syncing repository to rog (repo.glats.org)..."
-          # Sync x86_64 repo
+          echo "🔄 Syncing to repo.glats.org..."
           rsync -avz --delete \
             /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ \
             rog:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
-          # Sync i686 repo
           rsync -avz --delete \
             /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ \
             rog:/srv/repo/linux/maquilinux/26.4/i686/stable/
-          echo "✅ Repository synced to repo.glats.org"
+          echo "✅ Synced to repo.glats.org"
       
       - name: Success backup
         if: success() && steps.list.outputs.specs != ''
         run: |
-          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-${{ steps.list.outputs.tag }}" || true
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
           echo "✅ Build complete"
       
       - name: Failure notification
         if: failure() && steps.list.outputs.specs != ''
         run: |
           echo "❌ Build failed"
-          echo "Restore: mql backup restore pre-${{ steps.list.outputs.tag }}"
+          echo "Restore: mql backup restore pre-build-${{ steps.list.outputs.tag }}"
