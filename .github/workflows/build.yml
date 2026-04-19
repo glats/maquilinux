@@ -29,7 +29,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 2  # Need HEAD~1 for detecting changed specs
       
       - name: Load configuration
         run: |
