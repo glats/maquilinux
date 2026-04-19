@@ -118,4 +118,9 @@ export LANG="${LANG:-en_US.UTF-8}"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # Execute in chroot
-exec "$CHROOT_CMD" "$CHROOT_TARGET" "$@"
+# chroot requires root privileges
+if [[ $EUID -eq 0 ]]; then
+    exec "$CHROOT_CMD" "$CHROOT_TARGET" "$@"
+else
+    exec sudo "$CHROOT_CMD" "$CHROOT_TARGET" "$@"
+fi
