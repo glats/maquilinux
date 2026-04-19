@@ -22,12 +22,33 @@
 
 set -euo pipefail
 
+# Find sudo (NixOS fix: /run/wrappers/bin/sudo has setuid bit)
+find_sudo() {
+    for path in /run/wrappers/bin/sudo /usr/bin/sudo /bin/sudo; do
+        if [[ -x "$path" ]]; then
+            echo "$path"
+            return
+        fi
+    done
+    # Fallback to PATH
+    if command -v sudo &> /dev/null; then
+        echo "sudo"
+    else
+        echo ""
+    fi
+}
+SUDO_CMD="$(find_sudo)"
+if [[ -z "$SUDO_CMD" ]]; then
+    echo "[chroot] ERROR: sudo not found" >&2
+    exit 1
+fi
+
 # Find workspace root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE="$(dirname "$SCRIPT_DIR")"
 
 # Load configuration
-MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
+MQL_DISK="${MQL_DISK:-${MQL_ROOT:-/run/media/glats/maquilinux}}"
 if [[ -f "$WORKSPACE/mql.local" ]]; then
     source "$WORKSPACE/mql.local" 2>/dev/null || true
 fi
@@ -35,8 +56,8 @@ if [[ -f "$WORKSPACE/mql.conf" ]]; then
     source "$WORKSPACE/mql.conf" 2>/dev/null || true
 fi
 
-# Support both MQL_DISK (new) and MQL_LFS (legacy)
-CHROOT_TARGET="${MQL_DISK:-$MQL_LFS}/merged"
+# Support MQL_ROOT, MQL_DISK, and legacy MQL_LFS
+CHROOT_TARGET="${MQL_ROOT:-${MQL_DISK:-$MQL_LFS}}/merged"
 WORKSPACE_IN_CHROOT="/workspace"
 
 # Verify chroot is ready (mounts must be done externally)
@@ -122,5 +143,5 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 if [[ $EUID -eq 0 ]]; then
     exec "$CHROOT_CMD" "$CHROOT_TARGET" "$@"
 else
-    exec sudo "$CHROOT_CMD" "$CHROOT_TARGET" "$@"
+    exec "$SUDO_CMD" "$CHROOT_CMD" "$CHROOT_TARGET" "$@"
 fi
