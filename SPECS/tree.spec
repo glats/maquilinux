@@ -13,7 +13,7 @@ Summary:        List directory contents in a tree-like format
 
 License:        GPL-2.0-or-later
 URL:            http://mama.indstate.edu/users/ice/tree/
-Source0:        http://mama.indstate.edu/users/ice/tree/src/tree-2.2.1.tgz
+Source0:        https://github.com/Old-Man-Programmer/tree/archive/refs/tags/2.2.1.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  make
@@ -27,7 +27,7 @@ turn. Upon completion of listing all files/directories found, tree
 returns the total number of files and/or directories listed.
 
 %prep
-%setup -q
+%setup -q -n tree-%{version}
 
 %build
 make \
