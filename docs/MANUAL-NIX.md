@@ -585,11 +585,14 @@ Running `sudo mql release iso` or `sudo mql test vm` from inside `nix develop`
 fails with `xorriso: command not found` because `sudo` resets PATH and drops
 Nix store paths.
 
-**Fix:** Always pass the current PATH through sudo:
+**Fix:** Use `sudo -E` to preserve environment, or run `mql` directly (it uses `sudo` internally when needed):
 
 ```bash
-sudo env "PATH=$PATH" mql release iso
-sudo env "PATH=$PATH" mql test vm
+# For chroot operations (preferred):
+./scripts/run-in-chroot.sh <command>
+
+# For release operations that need root:
+sudo -E mql release iso
 ```
 
 ### RPM install and dependency resolution

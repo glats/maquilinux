@@ -176,9 +176,9 @@ gh api repos/glats/maquilinux/actions/runners | \
    `mql chroot --exec "dnf install /mnt/repo/<pkg>-*.rpm"`
    Legacy: `--nodeps` was required for LFS-era libraries (now fixed with proper specs).
 
-2. **`sudo env "PATH=$PATH"` inside `nix develop`.** Plain `sudo mql` resets
-   PATH and loses Nix tools (`xorriso`, `mksquashfs`, `qemu-system-x86_64`).
-   Use: `sudo env "PATH=$PATH" mql release iso`
+2. **`scripts/run-in-chroot.sh` for chroot commands.** Use the wrapper script
+   which handles Nix PATH, bind mounts, and network setup automatically.
+   Example: `./scripts/run-in-chroot.sh dnf install /workspace/RPMS/pkg.rpm`
 
 3. **`mql chroot --promote` requires interactive confirmation.** It cannot be
    scripted silently. Manual alternative:

@@ -52,6 +52,22 @@ ensure_chroot() {
             exit 1
         }
     fi
+
+    # Setup network for chroot (copies host DNS config)
+    if [[ -f /etc/resolv.conf ]] && [[ ! -f "$CHROOT_TARGET/etc/resolv.conf" ]]; then
+        cp /etc/resolv.conf "$CHROOT_TARGET/etc/resolv.conf"
+        echo "[chroot] Network configured (resolv.conf copied)"
+    fi
+
+    # Ensure proc is mounted (needed by some build tools)
+    if ! mountpoint -q "$CHROOT_TARGET/proc" 2>/dev/null; then
+        mount -t proc proc "$CHROOT_TARGET/proc" 2>/dev/null || true
+    fi
+
+    # Ensure dev is mounted
+    if ! mountpoint -q "$CHROOT_TARGET/dev" 2>/dev/null; then
+        mount --bind /dev "$CHROOT_TARGET/dev" 2>/dev/null || true
+    fi
 }
 
 # Preserve Nix tools PATH for commands that need them

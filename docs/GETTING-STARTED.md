@@ -153,12 +153,15 @@ You should see:
 Type `exit` to leave the chroot. All mounts clean up automatically.
 
 > **Note about sudo inside `nix develop`:** If you need to run `mql` with
-> `sudo` from inside `nix develop`, use:
+> `sudo` from inside `nix develop`, use `sudo -E` to preserve PATH:
 > ```bash
-> sudo env "PATH=$PATH" mql release iso
+> sudo -E mql release iso
 > ```
 > Plain `sudo mql` resets PATH and loses all Nix-provided tools (`xorriso`,
-> `mksquashfs`, `qemu-system-x86_64`). This bites everyone at least once.
+> `mksquashfs`, `qemu-system-x86_64`).
+>
+> **Better approach:** For chroot operations, use `./scripts/run-in-chroot.sh`
+> which handles PATH, bind mounts, and network setup automatically.
 
 ### 3.2 Path B — Standalone
 
@@ -306,7 +309,11 @@ are available automatically inside `nix develop`.
 **Nix path (inside `nix develop`):**
 
 ```bash
-sudo env "PATH=$PATH" mql release iso
+# For chroot operations:
+./scripts/run-in-chroot.sh <command>
+
+# For release operations that need root:
+sudo -E mql release iso
 ```
 
 **Standalone:**
@@ -330,7 +337,7 @@ The full pipeline:
 **Nix path:**
 
 ```bash
-sudo env "PATH=$PATH" mql test vm
+sudo -E mql test vm
 ```
 
 **Standalone:**
@@ -436,11 +443,14 @@ even though `which xorriso` works.
 
 **Cause:** `sudo` resets PATH by default, dropping Nix store paths.
 
-**Fix:** Always use `sudo env "PATH=$PATH"` from inside `nix develop`:
+**Fix:** Use `sudo -E` to preserve environment, or use the chroot wrapper script:
 
 ```bash
-sudo env "PATH=$PATH" mql release iso
-sudo env "PATH=$PATH" mql test vm
+# For chroot operations (recommended):
+./scripts/run-in-chroot.sh dnf install /workspace/RPMS/x86_64/mypackage-*.rpm
+
+# For release operations that need root:
+sudo -E mql release iso
 ```
 
 ### RPM install fails with missing dependencies
