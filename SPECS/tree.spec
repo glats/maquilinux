@@ -38,15 +38,13 @@ make \
 %install
 install -D -m 0755 tree %{buildroot}%{_bindir}/tree
 install -D -m 0644 doc/tree.1 %{buildroot}%{_mandir}/man1/tree.1
-install -D -m 0644 doc/tree.1.fr %{buildroot}%{_mandir}/fr/man1/tree.1
-install -D -m 0644 doc/tree.1.es %{buildroot}%{_mandir}/es/man1/tree.1
 
 %files
 %license LICENSE
-%doc README CHANGES
+%doc README
 %{_bindir}/tree
 %{_mandir}/man1/tree.1*
 
 %changelog
-* Sat Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 2.2.1-1.m264
+* Fri Apr 18 2026 Maqui Linux <security@maqui-linux.org> - 2.2.1-1.m264
 - Initial build for Maqui Linux 26.4
