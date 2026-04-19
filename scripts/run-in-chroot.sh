@@ -92,6 +92,25 @@ fi
 # Verify setup
 verify_chroot
 
+# Find chroot command
+CHROOT_CMD=$(command -v chroot || echo "")
+if [[ -z "$CHROOT_CMD" ]]; then
+    # Try common locations
+    for path in /run/current-system/sw/bin/chroot /usr/sbin/chroot /sbin/chroot; do
+        if [[ -x "$path" ]]; then
+            CHROOT_CMD="$path"
+            break
+        fi
+    done
+fi
+
+if [[ -z "$CHROOT_CMD" ]]; then
+    echo "[chroot] ERROR: chroot command not found in PATH" >&2
+    echo "[chroot] PATH=$PATH" >&2
+    echo "[chroot] Install util-linux or coreutils package" >&2
+    exit 1
+fi
+
 # Set environment
 export HOME="/root"
 export TERM="${TERM:-xterm}"
@@ -99,4 +118,4 @@ export LANG="${LANG:-en_US.UTF-8}"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # Execute in chroot
-exec chroot "$CHROOT_TARGET" "$@"
+exec "$CHROOT_CMD" "$CHROOT_TARGET" "$@"

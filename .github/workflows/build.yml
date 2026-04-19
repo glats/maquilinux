@@ -82,6 +82,27 @@ jobs:
           
           echo "✅ Chroot mounts ready"
       
+      - name: Verify tools available
+        run: |
+          echo "🔧 Checking required tools..."
+          
+          # Check chroot (from util-linux)
+          if ! command -v chroot &> /dev/null; then
+            echo "❌ chroot not found. Install util-linux:"
+            echo "   nix shell nixpkgs#util-linux"
+            exit 1
+          fi
+          echo "✅ chroot: $(which chroot)"
+          
+          # Check other critical tools
+          for tool in rpmbuild sudo; do
+            if command -v $tool &> /dev/null; then
+              echo "✅ $tool: $(which $tool)"
+            else
+              echo "⚠️  $tool: not in PATH (may be in chroot)"
+            fi
+          done
+      
       - name: Determine build list
         id: list
         run: |
