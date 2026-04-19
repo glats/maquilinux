@@ -163,29 +163,18 @@ jobs:
         if: success() && steps.list.outputs.specs != ''
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
-          echo "✅ Build complete"
-      
-      - name: Sync rootfs backups to maquiroot.glats.org
-        if: success() && steps.list.outputs.specs != ''
-        run: |
-          echo "🔄 Syncing rootfs backups to maquiroot.glats.org..."
-          # Ensure directory exists
-          ssh rog "mkdir -p /srv/glats/nginx/maquiroot/{incoming,latest}"
-          
-          # Sync post-build backups (successful builds)
-          rsync -avz --include='maquilinux-*-*-post-*.tar.xz' --include='*.meta' --exclude='*' \
-            ~/maqui-backups/ \
-            rog:/srv/glats/nginx/maquiroot/incoming/
-          
-          # Also sync latest as 'latest' symlink target
-          LATEST=$(ls -t ~/maqui-backups/maquilinux-*-post-*.tar.xz 2>/dev/null | head -1)
-          if [ -n "$LATEST" ]; then
-            echo "Latest backup: $(basename $LATEST)"
-            rsync -avz "$LATEST" rog:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz
-            rsync -avz "${LATEST}.meta" rog:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz.meta 2>/dev/null || true
-          fi
-          
-          echo "✅ Backups synced to maquiroot.glats.org"
+          echo ""
+          echo "✅ Build complete!"
+          echo ""
+          echo "📋 Local backups created:"
+          ls -lh ~/maqui-backups/maquilinux-*-${{ steps.list.outputs.tag }}*.tar.xz 2>/dev/null || true
+          echo ""
+          echo "🚀 To publish to maquiroot.glats.org:"
+          echo "  gh workflow run promote.yml -f backup_tag=\"post-build-${{ steps.list.outputs.tag }}\""
+          echo ""
+          echo "⚠️  Test before promoting! Enter chroot and verify:"
+          echo "  ./mql chroot --restore post-build-${{ steps.list.outputs.tag }}"
+          echo "  ./mql chroot"
       
       - name: Failure notification
         if: failure() && steps.list.outputs.specs != ''
