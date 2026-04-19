@@ -25,132 +25,96 @@ jobs:
     runs-on: [self-hosted, maquilinux]
     timeout-minutes: 360
     
-    # Ensure NixOS wrappers are available for sudo
     env:
+      # NixOS: ensure wrappers bin is first for sudo with setuid
       PATH: "/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
     
     steps:
-      - name: Setup NixOS environment
+      - name: Verify runner environment
         run: |
-          # NixOS-specific: ensure wrappers bin is in PATH for sudo
-          if [[ -d /run/wrappers/bin ]]; then
-            echo "/run/wrappers/bin" >> $GITHUB_PATH
-            echo "✅ NixOS wrappers path added"
+          # Verify sudo works (required for chroot)
+          if ! sudo -n true 2>/dev/null; then
+            echo "❌ Sudo requires password - configure passwordless sudo for runner user"
+            exit 1
           fi
+          echo "✅ Sudo ready"
           
-          # Verify sudo works without password
-          if sudo -n true 2>/dev/null; then
-            echo "✅ Sudo configured (no password required)"
-          else
-            echo "⚠️  Sudo may require password - builds might fail"
+          # Verify chroot command available
+          if ! command -v chroot &> /dev/null; then
+            echo "❌ chroot not found - install util-linux"
+            exit 1
           fi
+          echo "✅ chroot: $(which chroot)"
       
-      - name: Cleanup previous build artifacts
+      - name: Cleanup previous artifacts
         run: |
-          # Remove files that might be owned by root from previous chroot builds
-          # This prevents checkout permission errors on self-hosted runners
-          sudo rm -rf RPMS/ || true
-          sudo rm -rf SOURCES/*.tar.* || true
-          rm -rf .git/config.lock || true
+          # Remove files owned by root from previous builds
+          sudo rm -rf "$GITHUB_WORKSPACE/RPMS" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/SOURCES"/*.tar.* || true
+          rm -rf "$GITHUB_WORKSPACE/.git/config.lock" || true
           echo "✅ Cleanup complete"
       
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Need HEAD~1 for detecting changed specs
-          clean: true
+          fetch-depth: 2
       
       - name: Load configuration
         run: |
-          # Source config files from workspace
           source "$GITHUB_WORKSPACE/mql.conf" 2>/dev/null || true
           source "$GITHUB_WORKSPACE/mql.local" 2>/dev/null || true
-          
-          # Use MQL_DISK (rootfs disk mount point), fallback to standard path
           echo "MQL_DISK=${MQL_DISK:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
-          echo "📍 MQL_DISK set to: ${MQL_DISK:-/run/media/glats/maquilinux}"
       
-      - name: Verify overlay mounted
+      - name: Verify overlay and setup chroot
         run: |
+          # Verify overlay mounted
           if ! mountpoint -q "$MQL_DISK/merged" 2>/dev/null; then
             echo "❌ Overlay not mounted at $MQL_DISK/merged"
+            echo "Mount with: sudo mount -t overlay overlay -o lowerdir=$MQL_DISK/base,upperdir=$MQL_DISK/layers/upper,workdir=$MQL_DISK/layers/work $MQL_DISK/merged"
             exit 1
           fi
-          echo "✅ Overlay mounted at $MQL_DISK/merged"
-      
-      - name: Setup chroot mounts
-        run: |
-          echo "🔧 Setting up chroot mounts..."
+          echo "✅ Overlay mounted"
+          
+          # Verify rpmbuild in chroot (rootfs must have it)
+          if [[ ! -x "$MQL_DISK/merged/usr/bin/rpmbuild" ]]; then
+            echo "❌ rpmbuild not found in chroot - rootfs must have rpm package installed"
+            exit 1
+          fi
+          echo "✅ rpmbuild available in chroot"
           
           # Bind mount workspace into chroot
           sudo mkdir -p "$MQL_DISK/merged/workspace"
           if ! mountpoint -q "$MQL_DISK/merged/workspace" 2>/dev/null; then
             sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_DISK/merged/workspace"
             echo "✅ Workspace bind-mounted"
-          else
-            echo "✅ Workspace already mounted"
           fi
           
-          # Copy DNS config for network access
-          if [[ -f /etc/resolv.conf ]] && [[ ! -f "$MQL_DISK/merged/etc/resolv.conf" ]]; then
-            sudo cp /etc/resolv.conf "$MQL_DISK/merged/etc/resolv.conf"
-            echo "✅ DNS config copied"
-          fi
-          
-          # Mount proc (needed by some build tools)
+          # Mount virtual filesystems for chroot
           if ! mountpoint -q "$MQL_DISK/merged/proc" 2>/dev/null; then
             sudo mount -t proc proc "$MQL_DISK/merged/proc" || true
-            echo "✅ proc mounted"
           fi
-          
-          # Mount dev
           if ! mountpoint -q "$MQL_DISK/merged/dev" 2>/dev/null; then
             sudo mount --bind /dev "$MQL_DISK/merged/dev" || true
-            echo "✅ dev mounted"
           fi
           
-          echo "✅ Chroot mounts ready"
-      
-      - name: Verify tools available
-        run: |
-          echo "🔧 Checking required tools..."
-          
-          # Check chroot (from util-linux)
-          if ! command -v chroot &> /dev/null; then
-            echo "❌ chroot not found. Install util-linux:"
-            echo "   nix shell nixpkgs#util-linux"
-            exit 1
-          fi
-          echo "✅ chroot: $(which chroot)"
-          
-          # Check other critical tools
-          for tool in rpmbuild sudo; do
-            if command -v $tool &> /dev/null; then
-              echo "✅ $tool: $(which $tool)"
-            else
-              echo "⚠️  $tool: not in PATH (may be in chroot)"
-            fi
-          done
+          echo "✅ Chroot environment ready"
       
       - name: Determine build list
         id: list
         run: |
           if [ -n "${{ github.event.inputs.specs }}" ]; then
-            # Manual: use exact list provided
             SPECS="${{ github.event.inputs.specs }}"
             TAG="${{ github.event.inputs.tag }}"
           else
-            # Auto: detect changed specs from last commit
             CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | sed 's|SPECS/||; s|\.spec$||' | tr '\n' ',' | sed 's/,$//')
             if [ -n "$CHANGED" ]; then
               SPECS="$CHANGED"
             else
-              echo "No specs changed in last commit"
+              echo "No specs changed"
               exit 0
             fi
             TAG="auto-$(date +%Y%m%d-%H%M%S)"
           fi
-          
           echo "specs=$SPECS" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "📋 Build order: $SPECS"
@@ -164,28 +128,8 @@ jobs:
         if: steps.list.outputs.specs != ''
         run: |
           FREE_GB=$(df -BG "$MQL_DISK" | tail -1 | awk '{print $4}' | sed 's/G//')
-          if [[ "$FREE_GB" -lt 10 ]]; then
-            echo "❌ Need 10GB free, have ${FREE_GB}GB"
-            exit 1
-          fi
+          [[ "$FREE_GB" -lt 10 ]] && { echo "❌ Need 10GB free, have ${FREE_GB}GB"; exit 1; }
           echo "✅ Disk: ${FREE_GB}GB free"
-      
-      - name: Setup build tools in chroot
-        if: steps.list.outputs.specs != ''
-        run: |
-          echo "🔧 Checking for rpmbuild in chroot..."
-          
-          # Check if rpmbuild exists in chroot
-          if ./scripts/run-in-chroot.sh test -x /usr/bin/rpmbuild 2>/dev/null; then
-            echo "✅ rpmbuild already installed"
-          else
-            echo "⚠️  rpmbuild not found, installing rpm package..."
-            # Install rpm package from local repo which contains rpmbuild
-            ./scripts/run-in-chroot.sh dnf install -y rpm || {
-              echo "❌ Failed to install rpm package (contains rpmbuild)"
-              exit 1
-            }
-          fi
       
       - name: Fetch sources and build
         if: steps.list.outputs.specs != ''
@@ -193,7 +137,7 @@ jobs:
           IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
           
           for spec in "${SPECS[@]}"; do
-            spec=$(echo "$spec" | xargs)  # trim whitespace
+            spec=$(echo "$spec" | xargs)
             [ -z "$spec" ] && continue
             
             echo ""
@@ -201,30 +145,20 @@ jobs:
             echo "📦 Processing: $spec"
             echo "=========================================="
             
-            # Verify spec exists
-            if [ ! -f "SPECS/${spec}.spec" ]; then
-              echo "❌ Spec not found: SPECS/${spec}.spec"
-              exit 1
-            fi
-            
-            # Fetch sources (on host, chroot has no internet)
-            echo "🔽 Fetching sources..."
+            # Fetch sources (on host, has internet)
             ./scripts/fetch-spec-sources.sh "$spec"
             
-            # Build for both architectures
-            echo "🔨 Building x86_64..."
-            ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch x86_64
+            # Build inside chroot (x86_64)
+            ./scripts/build-spec.sh "$spec" --arch x86_64
             
-            echo "🔨 Building i686..."
-            ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch i686
+            # Build inside chroot (i686) - skip if spec is noarch or x86_64 only
+            if ! grep -Eq '^ExclusiveArch:[[:space:]]*x86_64' "SPECS/${spec}.spec"; then
+              ./scripts/build-spec.sh "$spec" --arch i686 || echo "⚠️  i686 build failed or not supported"
+            fi
             
-            # Install to rootfs using DNF (fresh from RPMS/)
-            echo "📥 Installing to rootfs..."
+            # Install to rootfs
             for rpm in RPMS/x86_64/${spec}-[0-9]*.rpm RPMS/i686/${spec}-[0-9]*.rpm; do
-              if [ -f "$rpm" ]; then
-                echo "Installing $(basename $rpm)"
-                ./scripts/run-in-chroot.sh dnf install -y "/workspace/$rpm" || true
-              fi
+              [ -f "$rpm" ] && ./scripts/run-in-chroot.sh dnf install -y "/workspace/$rpm" || true
             done
             ./scripts/run-in-chroot.sh ldconfig
             
@@ -235,12 +169,9 @@ jobs:
         if: steps.list.outputs.specs != ''
         run: |
           for rpm in RPMS/x86_64/*.rpm; do
-            if [ -f "$rpm" ]; then
-              nix shell nixpkgs#rpm -c rpmsign \
-                --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
-                --define '__gpg /run/current-system/sw/bin/gpg' \
-                --addsign "$rpm" 2>&1 || true
-            fi
+            [ -f "$rpm" ] && nix shell nixpkgs#rpm -c rpmsign \
+              --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
+              --addsign "$rpm" 2>&1 || true
           done
       
       - name: Update local repo
@@ -254,31 +185,15 @@ jobs:
       - name: Sync to repo.glats.org
         if: steps.list.outputs.specs != '' && success()
         run: |
-          echo "🔄 Syncing to repo.glats.org..."
-          rsync -avz --delete \
-            /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ \
-            rog:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
-          rsync -avz --delete \
-            /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ \
-            rog:/srv/repo/linux/maquilinux/26.4/i686/stable/
+          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ rog:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
+          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ rog:/srv/repo/linux/maquilinux/26.4/i686/stable/
           echo "✅ Synced to repo.glats.org"
       
       - name: Success backup
         if: success() && steps.list.outputs.specs != ''
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
-          echo ""
           echo "✅ Build complete!"
-          echo ""
-          echo "📋 Local backups created:"
-          ls -lh ~/maqui-backups/maquilinux-*-${{ steps.list.outputs.tag }}*.tar.xz 2>/dev/null || true
-          echo ""
-          echo "🚀 To publish to maquiroot.glats.org:"
-          echo "  gh workflow run promote.yml -f backup_tag=\"post-build-${{ steps.list.outputs.tag }}\""
-          echo ""
-          echo "⚠️  Test before promoting! Enter chroot and verify:"
-          echo "  ./mql chroot --restore post-build-${{ steps.list.outputs.tag }}"
-          echo "  ./mql chroot"
       
       - name: Failure notification
         if: failure() && steps.list.outputs.specs != ''
