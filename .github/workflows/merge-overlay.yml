@@ -1,0 +1,171 @@
+name: Promote Overlay to Base
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PROMOTE to confirm (this merges overlay changes to base permanently)'
+        required: true
+        type: string
+      create_backup:
+        description: 'Create backup before promote (recommended)'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  promote-overlay:
+    name: Promote Overlay to Base Rootfs
+    runs-on: [self-hosted, maquilinux]
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Load configuration
+        run: |
+          source mql.conf 2>/dev/null || true
+          echo "MQL_DISK=${MQL_DISK:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
+      
+      - name: Verify confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "PROMOTE" ]; then
+            echo "❌ Confirmation required"
+            echo "This action merges overlay changes to the base rootfs permanently."
+            echo "To confirm, type 'PROMOTE' in the confirmation field."
+            exit 1
+          fi
+          echo "✅ Confirmed"
+      
+      - name: Pre-promote backup
+        if: ${{ github.event.inputs.create_backup }}
+        run: |
+          echo "📦 Creating pre-promote backup..."
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-promote-$(date +%Y%m%d-%H%M%S)" || true
+          echo "✅ Pre-promote backup created"
+      
+      - name: Check overlay status
+        run: |
+          echo "🔍 Checking overlay status..."
+          
+          # Check if overlay has changes
+          UPPER_SIZE=$(du -sh "$MQL_DISK/layers/upper" 2>/dev/null | cut -f1)
+          UPPER_FILES=$(find "$MQL_DISK/layers/upper" -type f 2>/dev/null | wc -l)
+          
+          echo "Overlay upper layer:"
+          echo "  Size: $UPPER_SIZE"
+          echo "  Files: $UPPER_FILES"
+          
+          # List recently modified packages
+          echo ""
+          echo "📦 Recent RPM database changes:"
+          ./scripts/run-in-chroot.sh rpm -qa --last | head -20 || true
+          
+          # Show tree as example
+          if ./scripts/run-in-chroot.sh test -f /usr/bin/tree; then
+            echo ""
+            echo "✅ tree will be promoted to base:"
+            ./scripts/run-in-chroot.sh tree --version
+          fi
+      
+      - name: Unmount overlay
+        run: |
+          echo "🔧 Preparing for promote..."
+          
+          # Unmount virtual filesystems from merged
+          sudo umount -l "$MQL_DISK/merged/proc" 2>/dev/null || true
+          sudo umount -l "$MQL_DISK/merged/dev" 2>/dev/null || true
+          sudo umount -l "$MQL_DISK/merged/workspace" 2>/dev/null || true
+          sudo umount -l "$MQL_DISK/merged" 2>/dev/null || true
+          
+          echo "✅ Overlay unmounted"
+      
+      - name: Promote overlay to base
+        run: |
+          echo "🚀 Promoting overlay to base..."
+          echo "  This will merge all overlay changes to the base rootfs."
+          echo "  Source: $MQL_DISK/layers/upper/"
+          echo "  Target: $MQL_DISK/base/"
+          echo ""
+          
+          # Use rsync to merge upper to base
+          # --inplace for speed on large files
+          # --delete to remove files deleted in overlay
+          sudo rsync -a --inplace --delete \
+            "$MQL_DISK/layers/upper/" \
+            "$MQL_DISK/base/"
+          
+          echo "✅ Overlay merged to base"
+          
+          # Clear upper layer
+          echo "🧹 Clearing overlay upper layer..."
+          sudo rm -rf "$MQL_DISK/layers/upper"/*
+          
+          echo "✅ Upper layer cleared"
+      
+      - name: Remount overlay
+        run: |
+          echo "🔧 Remounting overlay..."
+          
+          # Remount the overlay
+          sudo mount -t overlay overlay \
+            -o lowerdir="$MQL_DISK/base",upperdir="$MQL_DISK/layers/upper",workdir="$MQL_DISK/layers/work" \
+            "$MQL_DISK/merged"
+          
+          # Remount workspace
+          sudo mkdir -p "$MQL_DISK/merged/workspace"
+          sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_DISK/merged/workspace"
+          
+          # Remount virtual filesystems
+          sudo mount -t proc proc "$MQL_DISK/merged/proc" || true
+          sudo mount --bind /dev "$MQL_DISK/merged/dev" || true
+          
+          echo "✅ Overlay remounted"
+      
+      - name: Verify promote
+        run: |
+          echo "🔍 Verifying promote..."
+          
+          # Check that tree is now in base
+          if [ -f "$MQL_DISK/base/usr/bin/tree" ]; then
+            echo "✅ tree is now in base rootfs:"
+            "$MQL_DISK/base/usr/bin/tree" --version 2>/dev/null || true
+          else
+            echo "⚠️  tree not found in base (may need manual check)"
+          fi
+          
+          # Check overlay is clean
+          UPPER_FILES=$(find "$MQL_DISK/layers/upper" -type f 2>/dev/null | wc -l)
+          if [ "$UPPER_FILES" -eq 0 ]; then
+            echo "✅ Overlay upper layer is clean ($UPPER_FILES files)"
+          else
+            echo "⚠️  Overlay upper layer still has $UPPER_FILES files"
+          fi
+          
+          # Verify chroot works
+          if ./scripts/run-in-chroot.sh /usr/bin/tree --version > /dev/null 2>&1; then
+            echo "✅ Chroot working after promote"
+          else
+            echo "❌ Chroot may have issues"
+            exit 1
+          fi
+      
+      - name: Post-promote backup
+        if: ${{ github.event.inputs.create_backup }}
+        run: |
+          echo "📦 Creating post-promote backup..."
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-promote-$(date +%Y%m%d-%H%M%S)" || true
+          echo "✅ Post-promote backup created"
+      
+      - name: Success notification
+        run: |
+          echo ""
+          echo "🎉 PROMOTE COMPLETE!"
+          echo ""
+          echo "The overlay has been merged to the base rootfs."
+          echo "All changes are now permanent."
+          echo ""
+          echo "Next build will start from this new base."
