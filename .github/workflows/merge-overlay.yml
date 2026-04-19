@@ -107,8 +107,8 @@ jobs:
           
           # Use rsync to merge upper to base
           # --inplace for speed on large files
-          # --delete to remove files deleted in overlay
-          sudo rsync -a --inplace --delete \
+          # NOTE: NO --delete! We only want to ADD overlay changes, not replace base
+          sudo rsync -a --inplace \
             "$MQL_DISK/layers/upper/" \
             "$MQL_DISK/base/"
           
