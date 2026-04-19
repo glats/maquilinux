@@ -144,7 +144,7 @@ jobs:
           
           echo "🏃 DRY RUN - Would promote:"
           echo "  Source: $BACKUP_PATH"
-          echo "  Destination: rog:/srv/glats/nginx/maquiroot/latest/"
+          echo "  Destination: rog.local:/srv/glats/nginx/maquiroot/latest/"
           echo "  As: maquilinux-rootfs-latest.tar.xz"
           
           # Show what would be synced
@@ -166,18 +166,18 @@ jobs:
           echo "  Size: $(du -h "$BACKUP_PATH" | cut -f1)"
           
           # Ensure maquiroot directory exists
-          ssh rog "mkdir -p /srv/glats/nginx/maquiroot/latest /srv/glats/nginx/maquiroot/history"
+          ssh rog.local "mkdir -p /srv/glats/nginx/maquiroot/latest /srv/glats/nginx/maquiroot/history"
           
           # Sync to latest/ (overwrites previous latest)
           echo "📤 Syncing to latest/..."
           rsync -avz --progress \
             "$BACKUP_PATH" \
-            rog:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz
+            rog.local:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz
           
           # Also sync metadata
           if [ -f "${BACKUP_PATH}.meta" ]; then
             rsync -avz "${BACKUP_PATH}.meta" \
-              rog:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz.meta
+              rog.local:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz.meta
           fi
           
           # Also archive to history/ with timestamp
@@ -185,7 +185,7 @@ jobs:
           HIST_NAME="maquilinux-${TIMESTAMP}-stable.tar.xz"
           
           echo "📚 Archiving to history/${HIST_NAME}..."
-          ssh rog "cp /srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz \
+          ssh rog.local "cp /srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz \
             /srv/glats/nginx/maquiroot/history/${HIST_NAME}"
           
           echo ""
@@ -201,7 +201,7 @@ jobs:
           echo "🔍 Verifying promoted backup..."
           
           # Check file exists and has reasonable size
-          SIZE=$(ssh rog "stat -c%s /srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz" 2>/dev/null || echo 0)
+          SIZE=$(ssh rog.local "stat -c%s /srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz" 2>/dev/null || echo 0)
           
           if [ "$SIZE" -lt 1000000000 ]; then  # Less than 1GB
             echo "❌ Promoted backup seems too small (${SIZE} bytes)"
@@ -211,7 +211,7 @@ jobs:
           echo "✅ Promotion verified ($(du -h <<< $SIZE | cut -f1))"
           
           # Update index.json
-          ssh rog "cd /srv/glats/nginx/maquiroot && \
+          ssh rog.local "cd /srv/glats/nginx/maquiroot && \
             ls -1 history/*.tar.xz latest/*.tar.xz 2>/dev/null | \
             jq -R '[inputs | {file: ., type: (if contains(\"latest\") then \"latest\" else \"history\" end)}]' \
             > index.json 2>/dev/null || echo '[]' > index.json"
