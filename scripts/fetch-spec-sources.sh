@@ -43,9 +43,20 @@ fi
 
 log_info "Checking sources for: $SPEC_NAME"
 
-# Extract Source* URLs from spec
+# Expand RPM macros in spec to get actual URLs
+# Use rpmspec -P to parse and expand, then grep sources
+if command -v rpmspec >/dev/null 2>&1; then
+    # Expand macros
+    expanded_spec=$(rpmspec -P "$SPEC_FILE" 2>/dev/null || cat "$SPEC_FILE")
+else
+    # Fallback: just cat the spec (macros won't expand)
+    expanded_spec=$(cat "$SPEC_FILE")
+    log_warn "rpmspec not available, macros won't be expanded"
+fi
+
+# Extract Source* URLs from expanded spec
 # Format: SourceN: URL (optionally -> local-name)
-sources=$(grep -E '^Source[0-9]*:' "$SPEC_FILE" | sed -E 's/^Source[0-9]*:[[:space:]]+//' || true)
+sources=$(echo "$expanded_spec" | grep -E '^Source[0-9]*:' | sed -E 's/^Source[0-9]*:[[:space:]]+//' || true)
 
 if [ -z "$sources" ]; then
     log_info "No external sources defined in spec"

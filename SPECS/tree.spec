@@ -13,7 +13,7 @@ Summary:        List directory contents in a tree-like format
 
 License:        GPL-2.0-or-later
 URL:            http://mama.indstate.edu/users/ice/tree/
-Source0:        http://mama.indstate.edu/users/ice/tree/src/tree-%{version}.tgz
+Source0:        http://mama.indstate.edu/users/ice/tree/src/tree-2.2.1.tgz
 
 BuildRequires:  gcc
 BuildRequires:  make
