@@ -33,7 +33,7 @@ jobs:
       - name: Load configuration
         run: |
           source mql.conf 2>/dev/null || true
-          echo "MQL_LFS=${MQL_LFS:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_DISK=${MQL_DISK:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
       
       - name: Verify backup exists
         run: |
