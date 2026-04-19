@@ -70,6 +70,8 @@ You have:
 
 Download a pre-built rootfs from **maquiroot.glats.org**:
 
+**Browse:** https://maquiroot.glats.org/ (directory listing with all backups)
+
 ```bash
 # Download latest stable rootfs (~4GB)
 curl -O https://maquiroot.glats.org/latest/maquilinux-rootfs-latest.tar.xz

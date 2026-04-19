@@ -104,13 +104,39 @@ thinkcentre (runner)
 ### Directory Listing
 
 Browse all available rootfs backups:
-```bash
-# List all backups
-curl https://maquiroot.glats.org/index.json | jq '.backups[] | {date, tag, size}'
 
-# Or view in browser
-https://maquiroot.glats.org/
+**Web:** https://maquiroot.glats.org/  
+*(Simple directory listing with all tarballs, organized by date)*
+
+**JSON API (for scripts):**
+```bash
+curl https://maquiroot.glats.org/index.json | jq '.backups[] | {date, tag, size}'
 ```
+
+### Server Configuration (rog)
+
+The nginx server should have **autoindex on** for the maquiroot directory:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name maquiroot.glats.org;
+    
+    root /srv/maquiroot;
+    autoindex on;              # ← Directory listing
+    autoindex_exact_size off;  # ← Human-readable sizes
+    autoindex_localtime on;    # ← Local timestamps
+    
+    # Also serve index.json for API access
+    location = /index.json {
+        alias /srv/maquiroot/index.json;
+    }
+}
+```
+
+This provides both:
+- **Human browsing**: https://maquiroot.glats.org/ (directory listing)
+- **Machine API**: https://maquiroot.glats.org/index.json (JSON)
 
 ### Metadata
 
