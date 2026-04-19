@@ -54,40 +54,62 @@ else
     log_warn "rpmspec not available, macros won't be expanded"
 fi
 
-# Extract Source* URLs from expanded spec
-# Format: SourceN: URL (optionally -> local-name)
-# Use rpmspec -P output, or just grep directly from the file
-sources=$(grep -E '^Source[0-9]*:' "$SPEC_FILE" 2>/dev/null | sed -E 's/^Source[0-9]*:[[:space:]]+//' || true)
+# Extract sources from spec
+# Supports two formats:
+#   1. SourceN: URL (or URL -> local-name) - URL is the source
+#   2. # Download URL: URL followed by SourceN: filename - comment has URL
 
-if [ -z "$sources" ]; then
+# Get line numbers of Source definitions
+source_lines=$(grep -n -E '^Source[0-9]*:' "$SPEC_FILE" 2>/dev/null | cut -d: -f1 || true)
+
+if [ -z "$source_lines" ]; then
     log_info "No external sources defined in spec"
     exit 0
 fi
 
-log_info "Found sources: $(echo "$sources" | wc -l)"
+log_info "Found $(echo "$source_lines" | wc -l) source(s) to process"
 
-# Process each source
-while IFS= read -r source_line; do
-    [ -z "$source_line" ] && continue
+# Process each source by line number
+while IFS= read -r line_num; do
+    [ -z "$line_num" ] && continue
     
-    log_info "Processing source line: $source_line"
+    # Get the Source line content
+    source_line=$(sed -n "${line_num}p" "$SPEC_FILE" | sed -E 's/^Source[0-9]*:[[:space:]]+//')
     
-    # Parse: URL or URL -> local-name
-    if echo "$source_line" | grep -q -- '->'; then
-        # Has local rename: URL -> local-name
-        url=$(echo "$source_line" | sed -E 's/[[:space:]]*->.*$//' | xargs)
-        local_name=$(echo "$source_line" | sed -E 's/^.*->[[:space:]]*//' | xargs)
-        log_info "  Parsed: URL=$url, local_name=$local_name"
+    log_info "Processing: $source_line"
+    
+    # Check if source_line is a URL or just a filename
+    if echo "$source_line" | grep -Eq '^https?://|^ftp://'; then
+        # Format 1: URL directly in Source
+        if echo "$source_line" | grep -q -- '->'; then
+            # Has local rename: URL -> local-name
+            url=$(echo "$source_line" | sed -E 's/[[:space:]]*->.*$//' | xargs)
+            local_name=$(echo "$source_line" | sed -E 's/^.*->[[:space:]]*//' | xargs)
+            log_info "  Parsed: URL=$url, local_name=$local_name"
+        else
+            # No rename: extract filename from URL
+            url=$(echo "$source_line" | xargs)
+            local_name=$(basename "$url" | sed 's/?.*$//')  # Remove query params
+            log_info "  Parsed: URL=$url, local_name=$local_name (from basename)"
+        fi
     else
-        # No rename: extract filename from URL
-        url=$(echo "$source_line" | xargs)
-        local_name=$(basename "$url" | sed 's/?.*$//')  # Remove query params
-        log_info "  Parsed: URL=$url, local_name=$local_name (from basename)"
+        # Format 2: filename in Source, look for URL in preceding comment
+        local_name=$(echo "$source_line" | xargs)
+        
+        # Look for "# Download URL:" comment on previous line(s)
+        url=$(sed -n "$((line_num - 1))p" "$SPEC_FILE" | grep -E '^#[[:space:]]*Download URL:' | sed -E 's/^#[[:space:]]*Download URL:[[:space:]]+//' | xargs)
+        
+        if [ -z "$url" ]; then
+            log_warn "  Cannot find download URL for $local_name (no preceding # Download URL: comment)"
+            continue
+        fi
+        
+        log_info "  Parsed from comment: URL=$url, local_name=$local_name"
     fi
     
-    # Skip if not HTTP(S) or FTP
+    # Skip if no valid URL
     if ! echo "$url" | grep -Eq '^https?://|^ftp://'; then
-        log_warn "Skipping non-URL source: $url"
+        log_warn "Skipping invalid URL for $local_name: $url"
         continue
     fi
     
@@ -111,6 +133,6 @@ while IFS= read -r source_line; do
         rm -f "$target_file.tmp"
         exit 1
     fi
-done <<< "$sources"
+done <<< "$source_lines"
 
 log_info "All sources ready for: $SPEC_NAME"

@@ -13,7 +13,8 @@ Summary:        List directory contents in a tree-like format
 
 License:        GPL-2.0-or-later
 URL:            http://mama.indstate.edu/users/ice/tree/
-Source0:        https://github.com/Old-Man-Programmer/tree/archive/refs/tags/2.2.1.tar.gz -> tree-2.2.1.tar.gz
+# Download URL: https://github.com/Old-Man-Programmer/tree/archive/refs/tags/2.2.1.tar.gz
+Source0:        tree-2.2.1.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  make
