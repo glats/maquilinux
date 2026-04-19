@@ -181,8 +181,15 @@ jobs:
       - name: Update local repo
         if: steps.list.outputs.specs != ''
         run: |
+          # Create repo directories if they don't exist
+          sudo mkdir -p /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
+          sudo mkdir -p /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
+          
+          # Copy RPMs
           sudo cp RPMS/x86_64/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ 2>/dev/null || true
           sudo cp RPMS/i686/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ 2>/dev/null || true
+          
+          # Update repo metadata
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
       
