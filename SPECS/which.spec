@@ -9,8 +9,8 @@ Summary:        Shows the full path of shell commands
 
 License:        GPL-3.0-or-later
 URL:            https://www.gnu.org/software/which/
-# Download URL: https://ftp.gnu.org/gnu/which/which-%{version}.tar.gz
-Source0:        which-%{version}.tar.gz
+# Download URL: https://ftp.gnu.org/gnu/which/which-2.23.tar.gz
+Source0:        which-2.23.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  make
