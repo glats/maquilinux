@@ -167,7 +167,7 @@ dnf --version
 ./mql chroot
 
 # Install your built RPM
-rpm -ivh /workspace/RPMS/x86_64/bash-*.rpm --nodeps --noscripts
+dnf5 install /workspace/RPMS/x86_64/bash-*.rpm
 
 # Test it
 bash --version

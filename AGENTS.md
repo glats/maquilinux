@@ -171,10 +171,10 @@ gh api repos/glats/maquilinux/actions/runners | \
 
 ## Critical Gotchas
 
-1. **`--nodeps` required for bootstrap installs.** LFS-era libraries (librpm,
-   libsqlite3, etc.) were installed directly onto the filesystem — not via RPM.
-   The `.so` files exist but RPM has no record of them. Always use:
-   `rpm -ivh --nosignature --nodeps /mnt/repo/<pkg>-*.rpm`
+1. **`dnf5 install` for package installs.** The Maqui Linux rootfs now uses DNF5
+   for package management with proper dependency resolution. Use:
+   `mql chroot --exec "dnf5 install /mnt/repo/<pkg>-*.rpm"`
+   Legacy: `--nodeps` was required for LFS-era libraries (now fixed with proper specs).
 
 2. **`sudo env "PATH=$PATH"` inside `nix develop`.** Plain `sudo mql` resets
    PATH and loses Nix tools (`xorriso`, `mksquashfs`, `qemu-system-x86_64`).

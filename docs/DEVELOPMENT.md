@@ -107,7 +107,7 @@ Configure in your Git platform:
 
 3. Test locally (optional but recommended)
    mql build glib2
-   mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/glib2-*.rpm"
+   mql chroot --exec "dnf5 install /mnt/repo/glib2-*.rpm"
 
 4. Push and create PR
    git push origin feature/update-glib2
@@ -253,7 +253,7 @@ vim SPECS/mypackage.spec
 
 # Test locally
 mql build mypackage
-mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/mypackage-*.rpm"
+mql chroot --exec "dnf5 install /mnt/repo/mypackage-*.rpm"
 
 # Push for CI
 git add SPECS/mypackage.spec

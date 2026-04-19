@@ -198,19 +198,13 @@ RPM lands in `RPMS/x86_64/`.
 ### 4.2 Install the RPM
 
 ```bash
-mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/mtools-*.rpm"
+mql chroot --exec "dnf5 install /mnt/repo/mtools-*.rpm"
 ```
 
-> **Why `--nodeps`?** The Maqui Linux base rootfs was built from LFS, which
-> means libraries like `librpm`, `libsqlite3`, and others were installed
-> directly onto the filesystem — not through RPM. The `.so` files exist on
-> disk, but RPM's database has no record of them. Without `--nodeps`, RPM
-> refuses to install anything that lists those libraries as dependencies, even
-> though they are physically present.
->
-> Always use `--nodeps --nosignature` when installing RPMs directly during
-> development. Once `dnf` is used to manage the system, this is no longer
-> needed.
+> **DNF5 for package installs.** The Maqui Linux rootfs now uses DNF5 for
+> package management with proper dependency resolution. The `--nodeps` workaround
+> was only needed during early LFS bootstrap when libraries weren't registered
+> in RPM's database. All specs now have proper `Provides:` for dependencies.
 
 ### 4.3 Verify the Install
 
@@ -238,7 +232,7 @@ your newly built RPM.
 ```
 Edit SPECS/<package>.spec
   → mql build <package>
-  → mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/<package>-*.rpm"
+  → mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
   → mql chroot --exec "<test command>"
   → mql repo update
   → mql repo sync          (when ready to publish)
@@ -435,27 +429,29 @@ sudo env "PATH=$PATH" mql test vm
 
 **Symptom:** `error: Failed dependencies: libXYZ.so.N is needed by ...`
 
-**Cause:** See Section 4.2. The LFS-era libraries exist on disk but are
-not registered in the RPM database.
+**Cause:** Missing `Provides:` in spec files. All library specs should declare
+`Provides: libXYZ.so.N()(64bit)` for proper dependency resolution.
 
-**Fix:** Always use `--nodeps --nosignature` for direct RPM installs:
+**Fix:** Use DNF5 for proper dependency resolution:
 
 ```bash
-mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
 ```
+
+If building from source, add the missing `Provides:` to the library spec.
 
 ### `mql install` not finding the RPM
 
 **Symptom:** `mql install <package>` fails or looks in the wrong directory.
 
-**Fix:** Use the manual `rpm -ivh` form directly:
+**Fix:** Use DNF5 directly:
 
 ```bash
 # First, find the file
 ls RPMS/x86_64/<package>-*.rpm
 
-# Then install
-mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/<package>-*.rpm"
+# Then install with DNF5
+mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
 ```
 
 The local repo (`$MQL_LFS/repo/`) is bind-mounted inside the chroot as

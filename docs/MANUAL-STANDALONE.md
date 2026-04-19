@@ -837,16 +837,15 @@ does not work:
 sudo cp /etc/resolv.conf /mnt/maquilinux/merged/etc/resolv.conf
 ```
 
-### RPM install fails with missing dependencies (bootstrap)
+### RPM install and DNF5 package management
 
-LFS-era libraries (`librpm`, `libsqlite3`, etc.) are on the filesystem but not
-in RPM's database. `rpm -i` without `--nodeps` will reject packages that list
-those libraries as dependencies, even though the `.so` files are present.
+Maqui Linux uses DNF5 for package installation with proper dependency resolution.
 
-**Fix:** Always use `--nodeps --nosignature` for direct RPM installs:
+**Install packages:**
 
 ```bash
-mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
 ```
 
-Once `dnf` is managing the system, this is no longer needed.
+**Note:** The `--nodeps` workaround was only needed during early LFS bootstrap.
+All specs now have proper `Provides:` declarations for dependency resolution.

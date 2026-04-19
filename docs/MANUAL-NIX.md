@@ -592,18 +592,22 @@ sudo env "PATH=$PATH" mql release iso
 sudo env "PATH=$PATH" mql test vm
 ```
 
-### RPM install fails with missing dependencies (bootstrap)
+### RPM install and dependency resolution
 
-LFS-era libraries (`librpm`, `libsqlite3`, etc.) are installed on the
-filesystem but not registered in RPM's database. `rpm -i` without `--nodeps`
-will refuse to install packages that list those libraries as dependencies, even
-though the `.so` files are physically present.
+Maqui Linux uses DNF5 for package management with proper dependency resolution.
+All specs should declare proper `Provides:` for libraries they install.
 
-**Fix:** Always use `--nodeps --nosignature` for direct RPM installs during
-development:
+**Install packages:**
 
 ```bash
-mql chroot --exec "rpm -ivh --nosignature --nodeps /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
 ```
 
-Once `dnf` manages the system, this is no longer needed.
+**Build packages with proper dependencies:**
+
+Ensure your specs have correct `BuildRequires:` and `Requires:` for proper
+resolution. For libraries, add explicit `Provides:`:
+
+```spec
+Provides: libexample.so.1()(64bit)
+```
