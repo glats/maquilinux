@@ -47,26 +47,26 @@ ensure_chroot() {
     fi
 
     if ! mountpoint -q "$CHROOT_TARGET$WORKSPACE_IN_CHROOT" 2>/dev/null; then
-        mount --bind "$WORKSPACE" "$CHROOT_TARGET$WORKSPACE_IN_CHROOT" 2>/dev/null || {
-            echo "[chroot] ERROR: Cannot bind-mount workspace" >&2
+        sudo mount --bind "$WORKSPACE" "$CHROOT_TARGET$WORKSPACE_IN_CHROOT" || {
+            echo "[chroot] ERROR: Cannot bind-mount workspace (tried: $WORKSPACE -> $CHROOT_TARGET$WORKSPACE_IN_CHROOT)" >&2
             exit 1
         }
     fi
 
     # Setup network for chroot (copies host DNS config)
     if [[ -f /etc/resolv.conf ]] && [[ ! -f "$CHROOT_TARGET/etc/resolv.conf" ]]; then
-        cp /etc/resolv.conf "$CHROOT_TARGET/etc/resolv.conf"
+        sudo cp /etc/resolv.conf "$CHROOT_TARGET/etc/resolv.conf"
         echo "[chroot] Network configured (resolv.conf copied)"
     fi
 
     # Ensure proc is mounted (needed by some build tools)
     if ! mountpoint -q "$CHROOT_TARGET/proc" 2>/dev/null; then
-        mount -t proc proc "$CHROOT_TARGET/proc" 2>/dev/null || true
+        sudo mount -t proc proc "$CHROOT_TARGET/proc" 2>/dev/null || true
     fi
 
     # Ensure dev is mounted
     if ! mountpoint -q "$CHROOT_TARGET/dev" 2>/dev/null; then
-        mount --bind /dev "$CHROOT_TARGET/dev" 2>/dev/null || true
+        sudo mount --bind /dev "$CHROOT_TARGET/dev" 2>/dev/null || true
     fi
 }
 
