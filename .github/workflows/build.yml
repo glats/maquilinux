@@ -67,6 +67,28 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "📋 Build order: $SPECS"
       
+      - name: Check if Rust bootstrap needed
+        id: rust-check
+        run: |
+          SPECS="${{ steps.list.outputs.specs }}"
+          if echo "$SPECS" | grep -q "rust"; then
+            echo "rust_needed=true" >> $GITHUB_OUTPUT
+            echo "🦀 Rust detected - will download stage0 binary"
+          else
+            echo "rust_needed=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Cache and download Rust stage0
+        if: steps.rust-check.outputs.rust_needed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: SOURCES/rustc-1.75.0-x86_64-unknown-linux-gnu.tar.xz
+          key: rust-stage0-1.75.0
+      
+      - name: Download Rust stage0 (if not cached)
+        if: steps.rust-check.outputs.rust_needed == 'true'
+        run: ./scripts/download-rust-stage0.sh
+      
       - name: Backup before build
         if: steps.list.outputs.specs != ''
         run: |
