@@ -204,23 +204,29 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           
-          # Add rog to known_hosts if not present
-          if ! grep -q "^rog " ~/.ssh/known_hosts 2>/dev/null; then
-            ssh-keyscan -H rog >> ~/.ssh/known_hosts 2>/dev/null || echo "⚠️  Could not get rog host key"
+          # Add rog.local to known_hosts if not present
+          if ! grep -q "rog.local" ~/.ssh/known_hosts 2>/dev/null; then
+            ssh-keyscan -H rog.local >> ~/.ssh/known_hosts 2>/dev/null || echo "⚠️  Could not get rog.local host key"
           fi
           
           # Check SSH key exists
           if [ -f ~/.ssh/id_ed25519 ] || [ -f ~/.ssh/id_rsa ]; then
             echo "✅ SSH key found for sync"
+            # Also verify rog.local key works
+            if ssh -o BatchMode=yes -o ConnectTimeout=5 rog.local 'echo SSH OK' 2>/dev/null; then
+              echo "✅ SSH to rog.local works"
+            else
+              echo "⚠️  SSH to rog.local not working yet. Run: ssh-copy-id -i ~/.ssh/id_ed25519 rog.local"
+            fi
           else
-            echo "⚠️  No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog"
+            echo "⚠️  No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog.local"
           fi
       
       - name: Sync to repo.glats.org
         if: steps.list.outputs.specs != '' && success()
         run: |
-          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ rog:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
-          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ rog:/srv/repo/linux/maquilinux/26.4/i686/stable/
+          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ rog.local:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
+          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ rog.local:/srv/repo/linux/maquilinux/26.4/i686/stable/
           echo "✅ Synced to repo.glats.org"
       
       - name: Success backup
