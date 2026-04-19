@@ -6,6 +6,36 @@ before adding entries here.
 
 ---
 
+## 2026-04-19: Remove LFS branding references
+
+**Component:** Project identity and branding - eliminating "Linux From Scratch"
+and "LFS" terminology from codebase and documentation.
+
+**Decision:** Remove all explicit LFS branding while maintaining backward
+compatibility during transition. See full ADR: `docs/ADR-003-remove-lfs-branding.md`
+
+**Alternatives considered:**
+
+| Option | Pros | Cons | Decision |
+|--------|------|------|----------|
+| Keep all LFS references | Acknowledges origins | Weakens independent brand | ❌ Rejected |
+| Remove everything including history | Cleanest branding | Loses provenance | ❌ Rejected |
+| Remove branding, keep history | Best of both | More work | ✅ Accepted |
+
+**Scope:**
+- Configuration: `MQL_LFS` → `MQL_ROOT` (104+ occurrences, backward compat)
+- Scripts: `mlfs-runner.sh` → `maqui-runner.sh`, `cleanup-lfs-remnants.sh` → `cleanup-bootstrap-remnants.sh`
+- Language: "LFS bootstrap"/"vestiges" → "bootstrap"
+- Documentation: Remove "Linux From Scratch" from descriptions
+- Preserved: RPM spec changelogs (history), generic "from scratch" phrases
+
+**Sources:** Exploration of 268+ references across 22 files; Maqui Linux
+independent distribution positioning requirements.
+
+**Revisit when:** Never. One-time branding separation.
+
+---
+
 ## 2026-03-25: cpio implementation
 
 **Component:** cpio archive tool (required by dracut for initramfs creation

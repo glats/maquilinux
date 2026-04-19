@@ -56,26 +56,33 @@ fi
 
 # Extract Source* URLs from expanded spec
 # Format: SourceN: URL (optionally -> local-name)
-sources=$(echo "$expanded_spec" | grep -E '^Source[0-9]*:' | sed -E 's/^Source[0-9]*:[[:space:]]+//' || true)
+# Use rpmspec -P output, or just grep directly from the file
+sources=$(grep -E '^Source[0-9]*:' "$SPEC_FILE" 2>/dev/null | sed -E 's/^Source[0-9]*:[[:space:]]+//' || true)
 
 if [ -z "$sources" ]; then
     log_info "No external sources defined in spec"
     exit 0
 fi
 
+log_info "Found sources: $(echo "$sources" | wc -l)"
+
 # Process each source
 while IFS= read -r source_line; do
     [ -z "$source_line" ] && continue
     
+    log_info "Processing source line: $source_line"
+    
     # Parse: URL or URL -> local-name
-    if echo "$source_line" | grep -q '->'; then
+    if echo "$source_line" | grep -q -- '->'; then
         # Has local rename: URL -> local-name
         url=$(echo "$source_line" | sed -E 's/[[:space:]]*->.*$//' | xargs)
         local_name=$(echo "$source_line" | sed -E 's/^.*->[[:space:]]*//' | xargs)
+        log_info "  Parsed: URL=$url, local_name=$local_name"
     else
         # No rename: extract filename from URL
         url=$(echo "$source_line" | xargs)
         local_name=$(basename "$url" | sed 's/?.*$//')  # Remove query params
+        log_info "  Parsed: URL=$url, local_name=$local_name (from basename)"
     fi
     
     # Skip if not HTTP(S) or FTP
