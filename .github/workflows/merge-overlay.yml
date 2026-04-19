@@ -19,7 +19,21 @@ jobs:
     runs-on: [self-hosted, maquilinux]
     timeout-minutes: 30
     
+    env:
+      # NixOS: ensure wrappers bin is first for sudo with setuid
+      PATH: "/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+    
     steps:
+      - name: Cleanup previous artifacts
+        run: |
+          # Remove files owned by root from previous chroot builds
+          sudo rm -rf "$GITHUB_WORKSPACE/BUILD" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/BUILDROOT" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/RPMS" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/SRPMS" || true
+          rm -rf "$GITHUB_WORKSPACE/.git/config.lock" || true
+          echo "✅ Cleanup complete"
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
