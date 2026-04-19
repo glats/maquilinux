@@ -163,8 +163,9 @@ get_project_root() {
 }
 
 # Path helper functions - always read from env so overrides are picked up
+# Support both MQL_DISK (new) and MQL_LFS (legacy)
 get_lfs_path() {
-    echo "${MQL_LFS:-/mnt/maquilinux}"
+    echo "${MQL_DISK:-${MQL_LFS:-/mnt/maquilinux}}"
 }
 
 get_repo_dest() {
