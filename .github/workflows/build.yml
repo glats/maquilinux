@@ -45,10 +45,20 @@ jobs:
             echo "⚠️  Sudo may require password - builds might fail"
           fi
       
+      - name: Cleanup previous build artifacts
+        run: |
+          # Remove files that might be owned by root from previous chroot builds
+          # This prevents checkout permission errors on self-hosted runners
+          sudo rm -rf RPMS/ || true
+          sudo rm -rf SOURCES/*.tar.* || true
+          rm -rf .git/config.lock || true
+          echo "✅ Cleanup complete"
+      
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 2  # Need HEAD~1 for detecting changed specs
+          clean: true
       
       - name: Load configuration
         run: |
