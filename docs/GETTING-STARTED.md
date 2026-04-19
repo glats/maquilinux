@@ -50,9 +50,43 @@ yay -S createrepo_c
 
 ---
 
-## 2. Clone and Configure
+## 2. Get the Rootfs (Two Approaches)
 
-### 2.1 Clone the Repository
+### Approach A: Full Developer (With Build Environment)
+
+You have:
+- Repository cloned locally
+- Maqui Linux development disk (120GB+)
+- Tools installed (Nix or standalone)
+- **Goal:** Build packages locally, contribute specs
+
+Follow sections 3-4 below to set up your environment.
+
+### Approach B: Standalone Developer (Rootfs Only)
+
+You have:
+- Just a disk/partition (no build tools needed initially)
+- **Goal:** Use Maqui Linux as a development environment, install packages via `dnf`
+
+Download a pre-built rootfs from **maquiroot.glats.org**:
+
+```bash
+# Download latest stable rootfs (~4GB)
+curl -O https://maquiroot.glats.org/latest/maquilinux-rootfs-latest.tar.xz
+curl -O https://maquiroot.glats.org/latest/maquilinux-rootfs-latest.tar.xz.sha256
+sha256sum -c *.sha256
+
+# Extract to your disk (see docs/agents/standalone-developer.md for details)
+# Then clone repo and start developing
+```
+
+**Full instructions:** [`docs/agents/standalone-developer.md`](agents/standalone-developer.md)
+
+---
+
+## 3. Clone and Configure
+
+### 3.1 Clone the Repository
 
 ```bash
 git clone https://github.com/glats/maquilinux.git
@@ -65,7 +99,7 @@ Or if you have access to the working directory directly:
 ls ~/Work/maquilinux/
 ```
 
-### 2.2 Understand the Config System
+### 3.2 Understand the Config System
 
 `mql` uses two config files:
 
@@ -79,7 +113,7 @@ Environment variables override both files.
 The most important variable is **`MQL_LFS`** — where your development disk is
 mounted. The default is `/mnt/maquilinux`.
 
-### 2.3 Set MQL_LFS If Your Disk Auto-Mounts Elsewhere
+### 3.3 Set MQL_LFS If Your Disk Auto-Mounts Elsewhere
 
 > **⚠️ Critical gotcha:** On NixOS and most desktop environments, `udisks2`
 > auto-mounts labeled disks at `/run/media/<user>/<label>`, not at
@@ -106,7 +140,7 @@ Or set it per-session:
 export MQL_LFS=/run/media/$USER/maquilinux
 ```
 
-### 2.4 Verify the Configuration
+### 3.4 Verify the Configuration
 
 ```bash
 # Nix path:
@@ -121,9 +155,9 @@ pointing to `/dev/sdd1`, and `MQL_RELEASEVER=26.4`.
 
 ---
 
-## 3. Enter the Development Environment
+## 4. Enter the Development Environment
 
-### 3.1 Path A — Nix
+### 4.1 Path A — Nix
 
 ```bash
 cd ~/Work/maquilinux
@@ -163,7 +197,7 @@ Type `exit` to leave the chroot. All mounts clean up automatically.
 > **Better approach:** For chroot operations, use `./scripts/run-in-chroot.sh`
 > which handles PATH, bind mounts, and network setup automatically.
 
-### 3.2 Path B — Standalone
+### 4.2 Path B — Standalone
 
 Verify all required tools are on your PATH:
 
@@ -185,11 +219,11 @@ mql chroot
 
 ---
 
-## 4. Your First Build
+## 5. Your First Build
 
 This walks you through building a simple package (`mtools`) from scratch.
 
-### 4.1 Build the RPM
+### 5.1 Build the RPM
 
 ```bash
 mql build mtools

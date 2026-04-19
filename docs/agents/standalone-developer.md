@@ -1,6 +1,10 @@
 # Standalone Developer Setup (Without Runner)
 
-Set up a complete Maqui Linux development environment using a pre-built rootfs. No self-hosted runner required — compile and test locally, push to GitHub when ready.
+Set up a complete Maqui Linux development environment using a pre-built rootfs from **maquiroot.glats.org**. No self-hosted runner required — download the rootfs, develop locally, push to GitHub when ready.
+
+**Rootfs Source**: https://maquiroot.glats.org
+
+This is a public mirror of the Maqui Linux rootfs backups. The CI/CD runner (thinkcentre) creates museum-style backups before every build, which are periodically synced to this public endpoint.
 
 ---
 
@@ -62,6 +66,63 @@ For those who want to build everything from scratch:
 # Minimal bootstrap rootfs (~500MB)
 curl -O https://maquiroot.glats.org/bootstrap/maquilinux-bootstrap.tar.xz
 # Then bootstrap gcc, glibc, etc. (see docs/BOOTSTRAP.md)
+```
+
+---
+
+## About the Backup System
+
+Maqui Linux uses a **museum-style backup system** — backups are never deleted, only archived.
+
+### Storage Tiers
+
+| Tier | Location | Retention | Access |
+|------|----------|-----------|--------|
+| **Hot** | CI/CD runner (`~/maqui-backups/`) | Last 90 days | Fast (local disk) |
+| **Cold** | CI/CD runner (`~/maqui-archive/`) | Forever | Slower (can be NFS/S3) |
+| **Public** | `maquiroot.glats.org` | Selected snapshots | HTTP download |
+
+### Automatic Backups & Sync
+
+The CI/CD runner (thinkcentre) creates backups automatically:
+- **Before every build**: `pre-build-<tag>.tar.xz` (local only)
+- **After successful builds**: `post-build-<tag>-ok.tar.xz` → **auto-synced to maquiroot.glats.org**
+
+### Sync to maquiroot.glats.org
+
+Successful builds are automatically synchronized:
+```
+thinkcentre (runner)
+   ~/maqui-backups/maquilinux-YYYYMMDD-HHMMSS-post-build-ok.tar.xz
+            ↓ rsync
+   rog:/srv/maquiroot/incoming/
+   rog:/srv/maquiroot/latest/maquilinux-rootfs-latest.tar.xz (symlink)
+            ↓
+   https://maquiroot.glats.org/latest/
+```
+
+### Directory Listing
+
+Browse all available rootfs backups:
+```bash
+# List all backups
+curl https://maquiroot.glats.org/index.json | jq '.backups[] | {date, tag, size}'
+
+# Or view in browser
+https://maquiroot.glats.org/
+```
+
+### Metadata
+
+Each backup includes a `.meta` file with:
+```json
+{
+  "timestamp": "2026-04-18T12:00:00",
+  "tag": "pre-rust-bootstrap",
+  "git_commit": "abc1234",
+  "packages_count": 136,
+  "size": "3.8GB"
+}
 ```
 
 ---
