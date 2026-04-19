@@ -25,7 +25,26 @@ jobs:
     runs-on: [self-hosted, maquilinux]
     timeout-minutes: 360
     
+    # Ensure NixOS wrappers are available for sudo
+    env:
+      PATH: "/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+    
     steps:
+      - name: Setup NixOS environment
+        run: |
+          # NixOS-specific: ensure wrappers bin is in PATH for sudo
+          if [[ -d /run/wrappers/bin ]]; then
+            echo "/run/wrappers/bin" >> $GITHUB_PATH
+            echo "✅ NixOS wrappers path added"
+          fi
+          
+          # Verify sudo works without password
+          if sudo -n true 2>/dev/null; then
+            echo "✅ Sudo configured (no password required)"
+          else
+            echo "⚠️  Sudo may require password - builds might fail"
+          fi
+      
       - name: Checkout
         uses: actions/checkout@v4
         with:
