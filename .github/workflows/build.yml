@@ -169,17 +169,20 @@ jobs:
         if: success() && steps.list.outputs.specs != ''
         run: |
           echo "🔄 Syncing rootfs backups to maquiroot.glats.org..."
+          # Ensure directory exists
+          ssh rog "mkdir -p /srv/glats/nginx/maquiroot/{incoming,latest}"
+          
           # Sync post-build backups (successful builds)
           rsync -avz --include='maquilinux-*-*-post-*.tar.xz' --include='*.meta' --exclude='*' \
             ~/maqui-backups/ \
-            rog:/srv/maquiroot/incoming/
+            rog:/srv/glats/nginx/maquiroot/incoming/
           
           # Also sync latest as 'latest' symlink target
           LATEST=$(ls -t ~/maqui-backups/maquilinux-*-post-*.tar.xz 2>/dev/null | head -1)
           if [ -n "$LATEST" ]; then
             echo "Latest backup: $(basename $LATEST)"
-            rsync -avz "$LATEST" rog:/srv/maquiroot/latest/maquilinux-rootfs-latest.tar.xz
-            rsync -avz "${LATEST}.meta" rog:/srv/maquiroot/latest/maquilinux-rootfs-latest.tar.xz.meta 2>/dev/null || true
+            rsync -avz "$LATEST" rog:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz
+            rsync -avz "${LATEST}.meta" rog:/srv/glats/nginx/maquiroot/latest/maquilinux-rootfs-latest.tar.xz.meta 2>/dev/null || true
           fi
           
           echo "✅ Backups synced to maquiroot.glats.org"
