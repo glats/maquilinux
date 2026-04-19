@@ -114,11 +114,13 @@ jobs:
             echo "🔨 Building i686..."
             ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch i686
             
-            # Install to rootfs for dependencies
+            # Install to rootfs using DNF5 (proper dependency resolution)
             echo "📥 Installing to rootfs..."
             for rpm in RPMS/x86_64/${spec}-[0-9]*.rpm RPMS/i686/${spec}-[0-9]*.rpm; do
               if [ -f "$rpm" ]; then
-                ./scripts/run-in-chroot.sh rpm -Uvh --nodeps --noscripts --nosignature "/workspace/$rpm" --dbpath /var/lib/rpm || true
+                echo "Installing $(basename $rpm)"
+                # Use DNF5 for proper deps, fallback to rpm if dnf5 not available
+                ./scripts/run-in-chroot.sh /bin/bash -c "cd /workspace && dnf5 install -y $rpm 2>/dev/null || rpm -Uvh --noscripts $rpm" || true
               fi
             done
             ./scripts/run-in-chroot.sh ldconfig
