@@ -39,7 +39,7 @@ in under an hour.
 ```bash
 nix develop                            # Enter dev shell (or install tools manually)
 mql build <spec>                       # Build an RPM
-mql chroot --exec "dnf5 install /mnt/repo/<pkg>-*.rpm"  # Install in chroot
+mql chroot --exec "dnf install /mnt/repo/<pkg>-*.rpm"  # Install in chroot
 ```
 
 ---

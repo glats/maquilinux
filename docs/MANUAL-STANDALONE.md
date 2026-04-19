@@ -528,7 +528,7 @@ for each formal release; they are not stored in git.
 mql release rootfs
 ```
 
-Creates a rootfs directory from RPMs via `dnf5 --installroot`.
+Creates a rootfs directory from RPMs via `dnf --installroot`.
 Configured with proper fstab, hostname, CA certificates, and repo
 config. This rootfs is the base for both the tarball and the ISO.
 
@@ -844,7 +844,7 @@ Maqui Linux uses DNF5 for package installation with proper dependency resolution
 **Install packages:**
 
 ```bash
-mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf install /mnt/repo/<package>-*.rpm"
 ```
 
 **Note:** The `--nodeps` workaround was only needed during early LFS bootstrap.

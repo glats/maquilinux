@@ -340,7 +340,7 @@ from them.
 mql release rootfs
 ```
 
-Creates a rootfs directory from RPMs via `dnf5 --installroot`.
+Creates a rootfs directory from RPMs via `dnf --installroot`.
 This is the base for both the tarball and the ISO. The rootfs is
 configured with proper fstab, hostname, CA certificates, and repo
 config.
@@ -361,7 +361,7 @@ mql release iso
 ```
 
 Pipeline:
-1. Generates a clean rootfs from RPMs (`dnf5 --installroot`).
+1. Generates a clean rootfs from RPMs (`dnf --installroot`).
 2. Cleans LFS vestiges.
 3. Configures the rootfs for live boot.
 4. Generates initramfs with dracut-ng.
@@ -600,7 +600,7 @@ All specs should declare proper `Provides:` for libraries they install.
 **Install packages:**
 
 ```bash
-mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf install /mnt/repo/<package>-*.rpm"
 ```
 
 **Build packages with proper dependencies:**

@@ -201,7 +201,7 @@ RPM lands in `RPMS/x86_64/`.
 
 ```bash
 # Install directly from your build
-mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/mtools-*.rpm"
+mql chroot --exec "dnf install /workspace/RPMS/x86_64/mtools-*.rpm"
 ```
 
 **Option B — Standalone developer (using pre-built packages):**
@@ -209,7 +209,7 @@ mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/mtools-*.rpm"
 ```bash
 # Enter chroot and install from repo.glats.org
 mql chroot
-dnf5 install mtools
+dnf install mtools
 ```
 
 > **DNF5 for package installs.** The Maqui Linux rootfs now uses DNF5 for
@@ -222,7 +222,7 @@ dnf5 install mtools
 | Mode | What you have | Build packages? | Install from |
 |------|---------------|-----------------|--------------|
 | **Developer** | Repo cloned + disk | `mql build <spec>` | `/workspace/RPMS/` (your builds) |
-| **Standalone** | Just rootfs disk | ❌ No (download pre-built) | `repo.glats.org` (dnf5 install) |
+| **Standalone** | Just rootfs disk | ❌ No (download pre-built) | `repo.glats.org` (dnf install) |
 
 ### 4.3 Verify the Install
 
@@ -250,7 +250,7 @@ your newly built RPM.
 ```
 Edit SPECS/<package>.spec
   → mql build <package>
-  → mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
+  → mql chroot --exec "dnf install /mnt/repo/<package>-*.rpm"
   → mql chroot --exec "<test command>"
   → mql repo update
   → mql repo sync          (when ready to publish)
@@ -318,7 +318,7 @@ mql release iso
 Output: `maquilinux-26.4-x86_64.iso` in the project root.
 
 The full pipeline:
-1. Generates a clean rootfs from RPMs (`dnf5 --installroot`)
+1. Generates a clean rootfs from RPMs (`dnf --installroot`)
 2. Removes LFS vestiges
 3. Configures for live boot (fstab, hostname, networking, CA certs)
 4. Generates initramfs with dracut-ng
@@ -453,7 +453,7 @@ sudo env "PATH=$PATH" mql test vm
 **Fix:** Use DNF5 for proper dependency resolution:
 
 ```bash
-mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf install /mnt/repo/<package>-*.rpm"
 ```
 
 If building from source, add the missing `Provides:` to the library spec.
@@ -469,7 +469,7 @@ If building from source, add the missing `Provides:` to the library spec.
 ls RPMS/x86_64/<package>-*.rpm
 
 # Then install with DNF5
-mql chroot --exec "dnf5 install /mnt/repo/<package>-*.rpm"
+mql chroot --exec "dnf install /mnt/repo/<package>-*.rpm"
 ```
 
 The local repo (`$MQL_LFS/repo/`) is bind-mounted inside the chroot as

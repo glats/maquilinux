@@ -23,11 +23,11 @@ Maqui Linux supports two development workflows depending on what you have:
 mql build <spec>
 
 # Install directly from your build
-mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/<spec>-*.rpm"
+mql chroot --exec "dnf install /workspace/RPMS/x86_64/<spec>-*.rpm"
 
 # Or copy to repo and install from there
 mql repo update  # copies to /srv/...
-mql chroot --exec "dnf5 install /mnt/repo/<spec>-*.rpm"
+mql chroot --exec "dnf install /mnt/repo/<spec>-*.rpm"
 ```
 
 **When to use:** You own/maintain specs, need to build and test changes.
@@ -42,7 +42,7 @@ mql chroot --exec "dnf5 install /mnt/repo/<spec>-*.rpm"
 mql chroot
 
 # Install pre-built packages from repo.glats.org
-dnf5 install <package>
+dnf install <package>
 ```
 
 **When to use:** Testing the system, developing applications (not specs), using Maqui as end user.
@@ -101,10 +101,10 @@ SPECS/linux.spec        @kernel-team
 
 # Package management stack
 SPECS/rpm.spec          @pkg-team
-SPECS/dnf5.spec         @pkg-team
+SPECS/dnf.spec         @pkg-team
 SPECS/libsolv.spec      @pkg-team
 SPECS/librepo.spec      @pkg-team
-SPECS/libdnf5.spec      @pkg-team
+SPECS/libdnf.spec      @pkg-team
 
 # Desktop environment (example: Cinnamon)
 SPECS/cinnamon*.spec    @desktop-team
@@ -150,7 +150,7 @@ Configure in your Git platform:
 
 3. Test locally (optional but recommended)
    mql build glib2
-   mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/glib2-*.rpm"
+   mql chroot --exec "dnf install /workspace/RPMS/x86_64/glib2-*.rpm"
 
 4. Push and create PR
    git push origin feature/update-glib2
@@ -284,7 +284,7 @@ This image contains:
 - Complete Maquilinux toolchain (gcc, binutils, etc.)
 - rpm/rpmbuild
 - Build dependencies
-- dnf5 for package installation
+- dnf for package installation
 
 ## Quick Reference
 
@@ -296,7 +296,7 @@ vim SPECS/mypackage.spec
 
 # Test locally
 mql build mypackage
-mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/mypackage-*.rpm"
+mql chroot --exec "dnf install /workspace/RPMS/x86_64/mypackage-*.rpm"
 
 # Push for CI
 git add SPECS/mypackage.spec

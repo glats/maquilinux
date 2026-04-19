@@ -167,7 +167,7 @@ dnf --version
 ./mql chroot
 
 # Install your built RPM
-dnf5 install /workspace/RPMS/x86_64/bash-*.rpm
+dnf install /workspace/RPMS/x86_64/bash-*.rpm
 
 # Test it
 bash --version
