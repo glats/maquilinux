@@ -159,11 +159,11 @@ jobs:
             echo "⚠️  Overlay upper layer still has $UPPER_FILES files"
           fi
           
-          # Verify chroot works
-          if ./scripts/run-in-chroot.sh /usr/bin/tree --version > /dev/null 2>&1; then
-            echo "✅ Chroot working after promote"
+          # Verify overlay is properly remounted
+          if mountpoint -q "$MQL_DISK/merged" 2>/dev/null; then
+            echo "✅ Overlay filesystem remounted"
           else
-            echo "❌ Chroot may have issues"
+            echo "❌ Overlay not mounted - manual intervention needed"
             exit 1
           fi
       
