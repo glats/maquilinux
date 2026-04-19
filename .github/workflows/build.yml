@@ -33,9 +33,13 @@ jobs:
       
       - name: Load configuration
         run: |
-          source mql.conf 2>/dev/null || true
-          source mql.local 2>/dev/null || true
+          # Source config files from workspace
+          source "$GITHUB_WORKSPACE/mql.conf" 2>/dev/null || true
+          source "$GITHUB_WORKSPACE/mql.local" 2>/dev/null || true
+          
+          # Fallback to thinkcentre's actual mount path
           echo "MQL_LFS=${MQL_LFS:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
+          echo "📍 MQL_LFS set to: ${MQL_LFS:-/run/media/glats/maquilinux}"
       
       - name: Verify overlay mounted
         run: |
