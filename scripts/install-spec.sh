@@ -47,8 +47,9 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOPDIR="$(dirname "$SCRIPT_DIR")"
 
-# Rootfs paths
-ROOTFS="${MQL_LFS:-/run/media/glats/maquilinux}"
+# Rootfs paths (overlay chroot)
+MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
+ROOTFS="${MQL_DISK}/merged"
 RPM_DB="$ROOTFS/var/lib/rpm"
 
 # Maquilinux RPM tools

@@ -8,7 +8,8 @@
 
 set -euo pipefail
 
-ROOTFS="${MQL_LFS:-/run/media/glats/maquilinux}"
+MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
+ROOTFS="${MQL_DISK}/merged"
 WORKSPACE="$(cd "$(dirname "$0")/.." && pwd)"
 CMD=""
 INTERACTIVE=true

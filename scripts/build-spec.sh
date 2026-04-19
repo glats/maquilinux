@@ -50,8 +50,9 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOPDIR="$(dirname "$SCRIPT_DIR")"
 
-# Maquilinux rootfs (tools and libraries)
-ROOTFS="${MQL_LFS:-/run/media/glats/maquilinux}"
+# Maquilinux rootfs (tools and libraries from overlay chroot)
+MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
+ROOTFS="${MQL_DISK}/merged"
 
 # Ensure RPM tree exists
 mkdir -p "$TOPDIR"/{BUILD,BUILDROOT,RPMS/{noarch,x86_64,i686},SOURCES,SRPMS}

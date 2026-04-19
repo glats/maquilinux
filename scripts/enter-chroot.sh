@@ -4,7 +4,8 @@
 
 set -euo pipefail
 
-ROOTFS="${MQL_LFS:-/run/media/glats/maquilinux}"
+MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
+ROOTFS="${MQL_DISK}/merged"
 
 if [ ! -d "$ROOTFS" ]; then
     echo "ERROR: Rootfs no encontrado en $ROOTFS"
