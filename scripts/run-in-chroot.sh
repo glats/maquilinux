@@ -15,6 +15,11 @@
 
 set -euo pipefail
 
+# NixOS fix: use real sudo with setuid from wrappers
+if [[ -x /run/wrappers/bin/sudo ]]; then
+    export PATH="/run/wrappers/bin:$PATH"
+fi
+
 # Find workspace root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE="$(dirname "$SCRIPT_DIR")"
