@@ -1,60 +1,131 @@
 name: Build RPMs
 
 on:
+  workflow_dispatch:
+    inputs:
+      specs:
+        description: 'Specs to build (comma-separated, in exact order)'
+        required: true
+        type: string
+        default: ''
+      tag:
+        description: 'Build tag (for backup naming)'
+        required: false
+        type: string
+        default: 'manual'
   push:
     branches: [main]
     paths:
       - 'SPECS/*.spec'
       - 'SOURCES/*'
-  workflow_dispatch:
-    inputs:
-      specs:
-        description: 'Specs to build (comma-separated, empty = all changed)'
-        required: false
-        default: ''
 
 jobs:
   build:
+    name: Build RPM packages in order
     runs-on: [self-hosted, maquilinux]
+    timeout-minutes: 360
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 1
       
-      - name: Detect changed specs
-        id: detect
+      - name: Load configuration
+        run: |
+          source mql.conf 2>/dev/null || true
+          echo "MQL_LFS=${MQL_LFS:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
+      
+      - name: Verify overlay mounted
+        run: |
+          if ! mountpoint -q "$MQL_LFS/merged" 2>/dev/null; then
+            echo "❌ Overlay not mounted at $MQL_LFS/merged"
+            exit 1
+          fi
+          echo "✅ Overlay mounted"
+      
+      - name: Determine build list
+        id: list
         run: |
           if [ -n "${{ github.event.inputs.specs }}" ]; then
-            # Manual dispatch with specific specs
-            SPECS=$(echo "${{ github.event.inputs.specs }}" | tr ',' ' ')
+            # Manual: use exact list provided
+            SPECS="${{ github.event.inputs.specs }}"
+            TAG="${{ github.event.inputs.tag }}"
           else
-            # Auto-detect changed specs from commit
-            SPECS=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | sed 's|SPECS/||; s|\.spec$||' || true)
+            # Auto: simple detection (one at a time for safety)
+            SPEC=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | head -1 | sed 's|SPECS/||; s|\.spec$||')
+            SPECS="$SPEC"
+            TAG="auto-$(date +%Y%m%d-%H%M%S)"
           fi
-          echo "specs=$SPECS" >> $GITHUB_OUTPUT
-          echo "Detected specs: $SPECS"
-      
-      - name: Build RPMs
-        if: steps.detect.outputs.specs != ''
-        run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
-          ROOTFS="/run/media/glats/maquilinux"
           
-          for spec in ${{ steps.detect.outputs.specs }}; do
-            echo "Building $spec..."
-            sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c \
-              "cd /workspace && rpmbuild -ba SPECS/${spec}.spec --define '_topdir /workspace' --nodeps" || true
+          if [ -z "$SPECS" ]; then
+            echo "No specs to build"
+            exit 0
+          fi
+          
+          echo "specs=$SPECS" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "📋 Build order: $SPECS"
+      
+      - name: Backup before build
+        if: steps.list.outputs.specs != ''
+        run: |
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-${{ steps.list.outputs.tag }}" || true
+      
+      - name: Check disk space
+        if: steps.list.outputs.specs != ''
+        run: |
+          FREE_GB=$(df -BG "$MQL_LFS" | tail -1 | awk '{print $4}' | sed 's/G//')
+          if [[ "$FREE_GB" -lt 10 ]]; then
+            echo "❌ Need 10GB free, have ${FREE_GB}GB"
+            exit 1
+          fi
+          echo "✅ Disk: ${FREE_GB}GB free"
+      
+      - name: Build specs in exact order
+        if: steps.list.outputs.specs != ''
+        run: |
+          IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
+          
+          for spec in "${SPECS[@]}"; do
+            spec=$(echo "$spec" | xargs)  # trim
+            [ -z "$spec" ] && continue
+            
+            echo ""
+            echo "=========================================="
+            echo "🔨 Building: $spec"
+            echo "=========================================="
+            
+            # Verify spec exists
+            if [ ! -f "SPECS/${spec}.spec" ]; then
+              echo "❌ Spec not found: SPECS/${spec}.spec"
+              exit 1
+            fi
+            
+            # Build x86_64
+            echo "Building x86_64..."
+            ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch x86_64
+            
+            # Build i686  
+            echo "Building i686..."
+            ./scripts/run-in-chroot.sh /workspace/mql build "$spec" --arch i686
+            
+            # Install to rootfs
+            echo "Installing to rootfs..."
+            for rpm in RPMS/x86_64/${spec}-[0-9]*.rpm RPMS/i686/${spec}-[0-9]*.rpm; do
+              if [ -f "$rpm" ]; then
+                ./scripts/run-in-chroot.sh rpm -Uvh --nodeps --noscripts --nosignature "/workspace/$rpm" --dbpath /var/lib/rpm || true
+              fi
+            done
+            ./scripts/run-in-chroot.sh ldconfig
+            
+            echo "✅ $spec complete"
           done
       
       - name: Sign RPMs
-        if: steps.detect.outputs.specs != ''
+        if: steps.list.outputs.specs != ''
         run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
-          
-          # Sign new RPMs
-          for rpm in $WORKSPACE/RPMS/x86_64/*.rpm; do
+          for rpm in RPMS/x86_64/*.rpm; do
             if [ -f "$rpm" ]; then
               nix shell nixpkgs#rpm -c rpmsign \
                 --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
@@ -64,39 +135,35 @@ jobs:
           done
       
       - name: Update repo
-        if: steps.detect.outputs.specs != ''
+        if: steps.list.outputs.specs != ''
         run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
-          REPO="/srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable"
-          
-          # Copy new RPMs to repo
-          sudo cp $WORKSPACE/RPMS/x86_64/*.rpm "$REPO/" 2>/dev/null || true
-          
-          # Regenerate repo metadata
-          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$REPO"
+          sudo cp RPMS/x86_64/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ 2>/dev/null || true
+          sudo cp RPMS/i686/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ 2>/dev/null || true
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
       
-      - name: Update rootfs
-        if: steps.detect.outputs.specs != ''
+      - name: Sync to repo.glats.org
+        if: steps.list.outputs.specs != '' && success()
         run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
-          ROOTFS="/run/media/glats/maquilinux"
-          
-          # Install new RPMs in rootfs
-          for rpm in $WORKSPACE/RPMS/x86_64/*.rpm; do
-            if [ -f "$rpm" ]; then
-              pkg=$(basename "$rpm" | sed 's/-[0-9].*//')
-              sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c \
-                "rpm -Uvh --nodeps --noscripts --nosignature /workspace/RPMS/x86_64/$(basename $rpm) --dbpath /var/lib/rpm" || true
-            fi
-          done
-          
-          # Run ldconfig
-          sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c "ldconfig"
+          echo "🔄 Syncing repository to rog (repo.glats.org)..."
+          # Sync x86_64 repo
+          rsync -avz --delete \
+            /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ \
+            rog:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
+          # Sync i686 repo
+          rsync -avz --delete \
+            /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ \
+            rog:/srv/repo/linux/maquilinux/26.4/i686/stable/
+          echo "✅ Repository synced to repo.glats.org"
       
-      - name: Upload artifacts
-        if: steps.detect.outputs.specs != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: rpms
-          path: RPMS/x86_64/*.rpm
-          retention-days: 7
+      - name: Success backup
+        if: success() && steps.list.outputs.specs != ''
+        run: |
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-${{ steps.list.outputs.tag }}" || true
+          echo "✅ Build complete"
+      
+      - name: Failure notification
+        if: failure() && steps.list.outputs.specs != ''
+        run: |
+          echo "❌ Build failed"
+          echo "Restore: mql backup restore pre-${{ steps.list.outputs.tag }}"

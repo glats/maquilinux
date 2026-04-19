@@ -143,6 +143,26 @@ jobs:
           ' || true
           echo "✅ GPG test complete (manual verification recommended)"
       
+      - name: Update local repo and sync to rog
+        if: success()
+        run: |
+          echo "📚 Updating repository and syncing..."
+          # Copy to local repo
+          sudo cp RPMS/x86_64/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ 2>/dev/null || true
+          sudo cp RPMS/i686/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ 2>/dev/null || true
+          # Update metadata
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
+          # Sync to rog
+          echo "🔄 Syncing to repo.glats.org..."
+          rsync -avz --delete \
+            /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ \
+            rog:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
+          rsync -avz --delete \
+            /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ \
+            rog:/srv/repo/linux/maquilinux/26.4/i686/stable/
+          echo "✅ Repository synced"
+      
       - name: Success backup
         if: success()
         run: |
