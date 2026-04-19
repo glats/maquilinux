@@ -195,16 +195,34 @@ mql build mtools
 This runs `rpmbuild` inside the chroot using `SPECS/mtools.spec`. The output
 RPM lands in `RPMS/x86_64/`.
 
-### 4.2 Install the RPM
+### 4.2 Install the RPM (Two Ways)
+
+**Option A — Developer with repo (you just built it):**
 
 ```bash
-mql chroot --exec "dnf5 install /mnt/repo/mtools-*.rpm"
+# Install directly from your build
+mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/mtools-*.rpm"
+```
+
+**Option B — Standalone developer (using pre-built packages):**
+
+```bash
+# Enter chroot and install from repo.glats.org
+mql chroot
+dnf5 install mtools
 ```
 
 > **DNF5 for package installs.** The Maqui Linux rootfs now uses DNF5 for
 > package management with proper dependency resolution. The `--nodeps` workaround
 > was only needed during early LFS bootstrap when libraries weren't registered
 > in RPM's database. All specs now have proper `Provides:` for dependencies.
+
+**Two development modes:**
+
+| Mode | What you have | Build packages? | Install from |
+|------|---------------|-----------------|--------------|
+| **Developer** | Repo cloned + disk | `mql build <spec>` | `/workspace/RPMS/` (your builds) |
+| **Standalone** | Just rootfs disk | ❌ No (download pre-built) | `repo.glats.org` (dnf5 install) |
 
 ### 4.3 Verify the Install
 

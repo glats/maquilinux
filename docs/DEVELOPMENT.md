@@ -9,6 +9,49 @@
 This document describes the development workflow, ownership model, and CI/CD
 process for Maquilinux spec maintainers.
 
+## Two Developer Modes
+
+Maqui Linux supports two development workflows depending on what you have:
+
+### Mode 1: Full Developer (Build + Install)
+
+**You have:** Repository cloned + Maqui rootfs disk mounted
+
+**Workflow:**
+```bash
+# Build your spec locally
+mql build <spec>
+
+# Install directly from your build
+mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/<spec>-*.rpm"
+
+# Or copy to repo and install from there
+mql repo update  # copies to /srv/...
+mql chroot --exec "dnf5 install /mnt/repo/<spec>-*.rpm"
+```
+
+**When to use:** You own/maintain specs, need to build and test changes.
+
+### Mode 2: Standalone Developer (Install Only)
+
+**You have:** Maqui rootfs disk only (no repository)
+
+**Workflow:**
+```bash
+# Enter chroot
+mql chroot
+
+# Install pre-built packages from repo.glats.org
+dnf5 install <package>
+```
+
+**When to use:** Testing the system, developing applications (not specs), using Maqui as end user.
+
+| Mode | Clone repo? | Disk? | Can build? | Install from |
+|------|-------------|-------|------------|--------------|
+| **Full** | ✅ Yes | ✅ Yes | ✅ `mql build` | `/workspace/RPMS/` (local builds) |
+| **Standalone** | ❌ No | ✅ Yes | ❌ No | `repo.glats.org` (pre-built) |
+
 ## Terminology
 
 Different CI/CD platforms use different names for build executors:
@@ -107,7 +150,7 @@ Configure in your Git platform:
 
 3. Test locally (optional but recommended)
    mql build glib2
-   mql chroot --exec "dnf5 install /mnt/repo/glib2-*.rpm"
+   mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/glib2-*.rpm"
 
 4. Push and create PR
    git push origin feature/update-glib2
@@ -253,7 +296,7 @@ vim SPECS/mypackage.spec
 
 # Test locally
 mql build mypackage
-mql chroot --exec "dnf5 install /mnt/repo/mypackage-*.rpm"
+mql chroot --exec "dnf5 install /workspace/RPMS/x86_64/mypackage-*.rpm"
 
 # Push for CI
 git add SPECS/mypackage.spec
