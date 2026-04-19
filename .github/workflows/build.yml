@@ -172,6 +172,10 @@ jobs:
       - name: Sign RPMs
         if: steps.list.outputs.specs != ''
         run: |
+          # Fix permissions: RPMs created inside chroot as root, need access for signing
+          sudo chown -R $(id -u):$(id -g) RPMS/ 2>/dev/null || true
+          
+          # Sign RPMs with GPG
           for rpm in RPMS/x86_64/*.rpm; do
             [ -f "$rpm" ] && nix shell nixpkgs#rpm -c rpmsign \
               --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
@@ -192,6 +196,25 @@ jobs:
           # Update repo metadata
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
+      
+      - name: Setup SSH for sync
+        if: steps.list.outputs.specs != ''
+        run: |
+          # Ensure SSH directory and known_hosts
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Add rog to known_hosts if not present
+          if ! grep -q "^rog " ~/.ssh/known_hosts 2>/dev/null; then
+            ssh-keyscan -H rog >> ~/.ssh/known_hosts 2>/dev/null || echo "⚠️  Could not get rog host key"
+          fi
+          
+          # Check SSH key exists
+          if [ -f ~/.ssh/id_ed25519 ] || [ -f ~/.ssh/id_rsa ]; then
+            echo "✅ SSH key found for sync"
+          else
+            echo "⚠️  No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog"
+          fi
       
       - name: Sync to repo.glats.org
         if: steps.list.outputs.specs != '' && success()
