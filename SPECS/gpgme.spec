@@ -8,7 +8,8 @@ Summary:        GnuPG Made Easy - high level crypto API
 
 License:        LGPL-2.1-or-later
 URL:            https://www.gnupg.org/related_software/gpgme/
-Source0:        https://gnupg.org/ftp/gcrypt/gpgme/gpgme-%{version}.tar.bz2
+# Download URL: https://gnupg.org/ftp/gcrypt/gpgme/gpgme-1.24.0.tar.bz2
+Source0:        gpgme-1.24.0.tar.bz2
 
 BuildRequires:  gcc
 BuildRequires:  make

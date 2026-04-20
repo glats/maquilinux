@@ -8,7 +8,8 @@ Summary:        Library for error values used by GnuPG components
 
 License:        LGPL-2.1-or-later
 URL:            https://www.gnupg.org/related_software/libgpg-error/
-Source0:        https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-%{version}.tar.bz2
+# Download URL: https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.50.tar.bz2
+Source0:        libgpg-error-1.50.tar.bz2
 
 BuildRequires:  gcc
 BuildRequires:  make

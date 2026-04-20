@@ -8,7 +8,8 @@ Summary:        General-purpose cryptographic library based on code from GnuPG
 
 License:        LGPL-2.1-or-later
 URL:            https://www.gnupg.org/related_software/libgcrypt/
-Source0:        https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-%{version}.tar.bz2
+# Download URL: https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.0.tar.bz2
+Source0:        libgcrypt-1.11.0.tar.bz2
 
 BuildRequires:  gcc
 BuildRequires:  make

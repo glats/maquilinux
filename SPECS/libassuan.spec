@@ -8,7 +8,8 @@ Summary:        IPC library for the GnuPG components
 
 License:        LGPL-2.1-or-later AND GPL-3.0-or-later
 URL:            https://www.gnupg.org/related_software/libassuan/
-Source0:        https://gnupg.org/ftp/gcrypt/libassuan/libassuan-%{version}.tar.bz2
+# Download URL: https://gnupg.org/ftp/gcrypt/libassuan/libassuan-3.0.1.tar.bz2
+Source0:        libassuan-3.0.1.tar.bz2
 
 BuildRequires:  gcc
 BuildRequires:  make
