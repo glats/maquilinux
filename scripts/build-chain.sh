@@ -265,6 +265,50 @@ fetch_sources() {
     fi
 }
 
+# Install built RPMs for BuildRequires chain support
+install_built_rpms() {
+    local spec="$1"
+    local log_file="$2"
+    
+    log_info "Installing built RPMs for: $spec (BuildRequires chain)"
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY-RUN] Would install RPMs from RPMS/"
+        return 0
+    fi
+    
+    local rpms_dir="$PROJECT_ROOT/RPMS"
+    local rpms_installed=0
+    
+    # Find and install all RPMs for this spec (both main and -devel, -doc, etc.)
+    # Look for pattern: specname-*.rpm
+    for rpm_file in "$rpms_dir"/*/${spec}-[0-9]*.rpm "$rpms_dir"/*/${spec}-[a-z]*-[0-9]*.rpm; do
+        [ -f "$rpm_file" ] || continue
+        
+        log_info "  Installing: $(basename "$rpm_file")"
+        
+        # Try dnf5 first, fallback to rpm --nodeps
+        if sudo chroot "$CHROOT_TARGET" /usr/bin/dnf5 install -y "$rpm_file" > /dev/null 2>&1; then
+            ((rpms_installed++))
+        elif sudo chroot "$CHROOT_TARGET" /usr/bin/rpm -Uvh --nodeps "$rpm_file" > /dev/null 2>&1; then
+            log_warn "  Installed with rpm --nodeps (dnf5 failed): $(basename "$rpm_file")"
+            ((rpms_installed++))
+        else
+            log_warn "  Failed to install: $(basename "$rpm_file")"
+        fi
+    done
+    
+    if [[ $rpms_installed -gt 0 ]]; then
+        log_info "✓ Installed $rpms_installed RPM(s) for $spec"
+        # Run ldconfig to update library cache
+        sudo chroot "$CHROOT_TARGET" /sbin/ldconfig || true
+        return 0
+    else
+        log_warn "No RPMs found/installed for $spec"
+        return 0  # Don't fail the build
+    fi
+}
+
 # Build a single spec
 build_spec() {
     local spec="$1"
@@ -307,6 +351,8 @@ build_spec() {
             local duration=$((end_time - start_time))
             log_success "$spec built successfully in ${duration}s"
             update_state "$spec" "SUCCESS" "$log_file"
+            # Auto-install for BuildRequires chain
+            install_built_rpms "$spec" "$log_file" || true
             return 0
         else
             local end_time=$(date +%s)
@@ -323,6 +369,9 @@ build_spec() {
             local duration=$((end_time - start_time))
             log_success "$spec built successfully in ${duration}s"
             update_state "$spec" "SUCCESS" "$log_file"
+            
+            # Auto-install for BuildRequires chain
+            install_built_rpms "$spec" "$log_file" || true
             
             # Show last lines of log for verification
             echo "  Last 5 lines of log:" >&2
