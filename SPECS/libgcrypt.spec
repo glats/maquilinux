@@ -68,7 +68,7 @@ make check || true
 %{_bindir}/libgcrypt-config
 %{_bindir}/dumpsexp
 %{_bindir}/hmac256
-%{_libdir}/libgcrypt
+# %{_libdir}/libgcrypt - commented out, verify if this directory exists
 
 %files devel
 %{_includedir}/gcrypt.h

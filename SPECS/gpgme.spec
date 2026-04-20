@@ -70,17 +70,19 @@ make check || true
 %files
 %license COPYING* AUTHORS THANKS
 %{_libdir}/libgpgme.so.11*
-%{_libdir}/libgpgmepp.so.6*
 %{_bindir}/gpgme-config
 %{_bindir}/gpgme-json
+# C++ bindings may not be built/installed by default:
+# %{_libdir}/libgpgmepp.so.6*
 
 %files devel
 %{_includedir}/gpgme.h
-%{_includedir}/gpgmepp
 %{_libdir}/libgpgme.so
-%{_libdir}/libgpgmepp.so
 %{_libdir}/pkgconfig/gpgme.pc
-%{_libdir}/pkgconfig/gpgmepp.pc
+# C++ devel files (if C++ bindings are enabled):
+# %{_includedir}/gpgmepp
+# %{_libdir}/libgpgmepp.so
+# %{_libdir}/pkgconfig/gpgmepp.pc
 
 %changelog
 * Sun Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 1.24.0-1.m264
