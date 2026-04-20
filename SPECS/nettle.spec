@@ -49,16 +49,23 @@ make DESTDIR=%{buildroot} install
 # Remove static libraries
 rm -f %{buildroot}%{_libdir}/*.a
 
-%check
-# Run tests (not strict - may fail in some environments)
-make check || true
-
-# Move documentation
+# Move documentation - must be in %install, not %check
 mkdir -p %{buildroot}%{_docdir}/%{name}-%{version}
-cp -a ChangeLog COPYING* NEWS README %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/dev/null || true
+# Copy doc files (nettle uses COPYINGv2, COPYINGv3, COPYING.LESSERv3)
+for doc in ChangeLog COPYING* NEWS README; do
+  for f in $doc; do  # Handle wildcards
+    if [ -f "$f" ]; then
+      cp -a "$f" %{buildroot}%{_docdir}/%{name}-%{version}/
+    fi
+  done
+done
 
 # Remove /usr/share/info/dir (generated file, not packaged)
 rm -f %{buildroot}%{_infodir}/dir
+
+%check
+# Run tests (not strict - may fail in some environments)
+make check || true
 
 %files
 %license COPYING* AUTHORS
