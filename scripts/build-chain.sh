@@ -227,7 +227,9 @@ should_skip() {
     local status=$(get_spec_status "$spec")
     
     if [[ "$status" == "SUCCESS" ]]; then
+        # Even if SUCCESS, ensure RPMs are installed (may have been built before auto-install was added)
         log_info "Skipping $spec (already built successfully)"
+        install_built_rpms "$spec" "" || true
         return 0
     fi
     
