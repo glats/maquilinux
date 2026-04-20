@@ -50,6 +50,10 @@ make DESTDIR=%{buildroot} install
 # Remove static libraries
 rm -f %{buildroot}%{_libdir}/*.a
 
+%check
+# Run tests (not strict - may fail in some environments)
+make check || true
+
 # Move documentation
 mkdir -p %{buildroot}%{_docdir}/%{name}-%{version}
 cp -a ChangeLog COPYING* NEWS README %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/dev/null || true

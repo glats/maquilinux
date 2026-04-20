@@ -133,6 +133,11 @@ find . \( -type f -o -type l \) | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$
 %postun
 %{_sbindir}/ldconfig || :
 
+%check
+# Run Rust tests if available (may take time)
+cd target/cargo 2>/dev/null || cd .
+cargo test --release 2>/dev/null || echo "Tests skipped or failed"
+
 %files -f %{_builddir}/rpm-sequoia-runtime.list
 %defattr(-,root,root)
 

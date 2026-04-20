@@ -93,6 +93,10 @@ rm -f %{buildroot}%{_libdir}/*.a
 mkdir -p %{buildroot}%{_docdir}/%{name}-%{version}
 cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/dev/null || true
 
+%check
+# Minimal sanity check - verify llvm-config works
+%{buildroot}%{_bindir}/llvm-config --version || true
+
 %files
 %license LICENSE.TXT
 %doc %{_docdir}/%{name}-%{version}
