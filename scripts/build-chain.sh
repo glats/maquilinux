@@ -101,8 +101,14 @@ Options:
   --dry-run       Show what would be built without executing
   --help, -h      Show this help
 
+Features:
+  ✓ Automatic source fetching - no need to run fetch-spec-sources.sh manually
+  ✓ Resume capability - continue from where it failed
+  ✓ Per-spec log files - detailed logs in BUILD-LOGS/
+  ✓ State tracking - remembers what was built/failed/pending
+
 Examples:
-  # Build crypto chain
+  # Build crypto chain (auto-fetches sources)
   ./build-chain.sh nettle,libgpg-error,libgcrypt,libassuan,gpgme
 
   # Resume after fixing a failed build
@@ -239,6 +245,26 @@ should_skip() {
     return 1
 }
 
+# Fetch sources for a spec
+fetch_sources() {
+    local spec="$1"
+    
+    log_info "Fetching sources for: $spec"
+    
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY-RUN] Would execute: ./scripts/fetch-spec-sources.sh $spec"
+        return 0
+    fi
+    
+    if "$SCRIPT_DIR/fetch-spec-sources.sh" "$spec" > /dev/null 2>&1; then
+        log_info "✓ Sources ready for: $spec"
+        return 0
+    else
+        log_error "✗ Failed to fetch sources for: $spec"
+        return 1
+    fi
+}
+
 # Build a single spec
 build_spec() {
     local spec="$1"
@@ -252,6 +278,12 @@ build_spec() {
     log_info "=========================================="
     
     update_state "$spec" "BUILDING" "$log_file"
+    
+    # Fetch sources first (auto-fetch)
+    if ! fetch_sources "$spec"; then
+        update_state "$spec" "FAILED" "$log_file"
+        return 1
+    fi
     
     # Build command with optional flags
     local build_cmd=("$SCRIPT_DIR/build-spec.sh" "$spec")
