@@ -58,7 +58,6 @@ make check || true
 %{_libdir}/libgpg-error.so.0*
 %{_bindir}/gpg-error
 %{_bindir}/gpg-error-config
-%{_bindir}/gpgerr-*
 %{_datadir}/libgpg-error/
 
 %files devel
