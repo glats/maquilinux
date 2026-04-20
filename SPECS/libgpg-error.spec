@@ -50,6 +50,15 @@ make DESTDIR=%{buildroot} install
 rm -f %{buildroot}%{_libdir}/*.la
 rm -f %{buildroot}%{_libdir}/*.a
 
+# Remove unpackaged files we don't want to include
+# (or add to %files below if needed)
+rm -rf %{buildroot}%{_datadir}/common-lisp
+rm -rf %{buildroot}%{_datadir}/locale
+rm -f %{buildroot}%{_bindir}/yat2m
+rm -f %{buildroot}%{_infodir}/dir
+rm -f %{buildroot}%{_infodir}/gpgrt.info*
+rm -f %{buildroot}%{_mandir}/man1/gpgrt-config.1*
+
 %check
 make check || true
 
@@ -58,13 +67,17 @@ make check || true
 %{_libdir}/libgpg-error.so.0*
 %{_bindir}/gpg-error
 %{_bindir}/gpg-error-config
+%{_bindir}/gpgrt-config
 %{_datadir}/libgpg-error/
+%{_mandir}/man1/gpg-error-config.1*
 
 %files devel
 %{_includedir}/gpg-error.h
 %{_includedir}/gpgrt.h
 %{_libdir}/libgpg-error.so
 %{_libdir}/pkgconfig/gpg-error.pc
+%{_datadir}/aclocal/gpg-error.m4
+%{_datadir}/aclocal/gpgrt.m4
 
 %changelog
 * Sun Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 1.50-1.m264
