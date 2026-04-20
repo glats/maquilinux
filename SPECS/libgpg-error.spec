@@ -38,9 +38,10 @@ export CFLAGS="-std=gnu17 ${CFLAGS:-}"
     --libdir=%{_libdir} \
     --enable-shared \
     --disable-static \
-    --enable-install-gpg-error-config
+    --enable-install-gpg-error-config \
+    CFLAGS="${CFLAGS}"
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} CFLAGS="${CFLAGS}"
 
 %install
 make DESTDIR=%{buildroot} install
