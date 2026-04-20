@@ -8,8 +8,7 @@ Summary:        A low-level cryptographic library
 
 License:        LGPL-3.0-or-later AND GPL-2.0-or-later
 URL:            https://www.lysator.liu.se/~nisse/nettle/
-# Download URL: https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz
-Source0:        nettle-3.10.tar.gz
+Source0:        https://ftp.gnu.org/gnu/nettle/nettle-%{version}.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  make

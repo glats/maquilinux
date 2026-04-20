@@ -11,10 +11,8 @@ Summary:        LLVM compiler infrastructure
 
 License:        Apache-2.0 WITH LLVM-exception OR NCSA
 URL:            https://llvm.org/
-# Download URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/llvm-19.1.7.src.tar.xz
-Source0:        llvm-19.1.7.src.tar.xz
-# Download URL: https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/cmake-19.1.7.src.tar.xz
-Source1:        cmake-19.1.7.src.tar.xz
+Source0:        https://github.com/llvm/llvm-project/releases/download/llvmorg-%{version}/llvm-%{version}.src.tar.xz
+Source1:        https://github.com/llvm/llvm-project/releases/download/llvmorg-%{version}/cmake-%{version}.src.tar.xz
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++

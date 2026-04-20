@@ -8,8 +8,7 @@ Summary:        A library implementing the SSH2 protocol
 
 License:        BSD-3-Clause
 URL:            https://www.libssh2.org/
-# Download URL: https://www.libssh2.org/download/libssh2-1.11.1.tar.gz
-Source0:        libssh2-1.11.1.tar.gz
+Source0:        https://www.libssh2.org/download/libssh2-%{version}.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  make
