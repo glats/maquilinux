@@ -54,6 +54,9 @@ rm -f %{buildroot}%{_libdir}/*.a
 mkdir -p %{buildroot}%{_docdir}/%{name}-%{version}
 cp -a ChangeLog COPYING* NEWS README %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/dev/null || true
 
+# Remove /usr/share/info/dir (generated file, not packaged)
+rm -f %{buildroot}%{_infodir}/dir
+
 %files
 %license COPYING* AUTHORS
 %doc %{_docdir}/%{name}-%{version}
@@ -61,6 +64,7 @@ cp -a ChangeLog COPYING* NEWS README %{buildroot}%{_docdir}/%{name}-%{version}/ 
 %{_libdir}/libhogweed.so.6*
 %{_bindir}/nettle-hash
 %{_bindir}/nettle-lfib-stream
+%{_bindir}/nettle-pbkdf2
 %{_bindir}/pkcs1-conv
 %{_bindir}/sexp-conv
 
