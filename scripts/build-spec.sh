@@ -2,7 +2,12 @@
 # build-spec.sh - Build Maquilinux RPMs inside chroot
 #
 # Usage:
-#   ./build-spec.sh <spec-name> [--arch=x86_64|i686|noarch] [--both]
+#   ./build-spec.sh <spec-name> [options]
+#
+# Options:
+#   --arch=x86_64|i686|noarch - Target architecture
+#   --both                    - Build both x86_64 and i686
+#   --skip-tests, --nocheck   - Skip test/check phase (faster builds)
 #
 # This script ALWAYS runs rpmbuild inside the Maqui Linux chroot,
 # following the LFS pattern. It works on any host distro (NixOS, Ubuntu, Arch).
@@ -16,6 +21,7 @@
 #   ./build-spec.sh bash
 #   ./build-spec.sh glibc --both
 #   ./build-spec.sh python3 --arch x86_64
+#   ./build-spec.sh nettle --skip-tests    # Skip %check section for faster build
 
 set -euo pipefail
 
@@ -33,6 +39,7 @@ shift
 
 TARGET_CPU=""
 BUILD_BOTH="false"
+SKIP_TESTS="false"
 EXTRA_ARGS=()
 
 while (( "$#" )); do
@@ -47,6 +54,9 @@ while (( "$#" )); do
     --both)
       BUILD_BOTH="true"
       ;;
+    --skip-tests|--nocheck)
+      SKIP_TESTS="true"
+      ;;
     --)
       shift
       EXTRA_ARGS+=("$@")
@@ -58,6 +68,11 @@ while (( "$#" )); do
   esac
   shift || true
 done
+
+# Add --nocheck to EXTRA_ARGS if skip-tests is enabled
+if [[ "$SKIP_TESTS" == "true" ]]; then
+  EXTRA_ARGS+=("--nocheck")
+fi
 
 # ============================================================================
 # Configuration

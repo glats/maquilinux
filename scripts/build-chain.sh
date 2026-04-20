@@ -37,6 +37,7 @@ RESUME=false
 SKIP_FAILED=false
 VERBOSE=false
 DRY_RUN=false
+SKIP_TESTS=false
 STATE_FILE="$DEFAULT_STATE_FILE"
 
 # Parse arguments
@@ -57,6 +58,10 @@ parse_args() {
                 ;;
             --dry-run)
                 DRY_RUN=true
+                shift
+                ;;
+            --skip-tests|--nocheck)
+                SKIP_TESTS=true
                 shift
                 ;;
             --state-file)
@@ -90,6 +95,7 @@ Usage:
 Options:
   --resume        Resume from last failed spec (requires state file)
   --skip-failed   Skip previously failed specs and continue
+  --skip-tests    Skip test/check phase for faster builds (rpmbuild --nocheck)
   --state-file    Use custom state file (default: .build-chain-state)
   --verbose       Show all build output (not just summary)
   --dry-run       Show what would be built without executing
@@ -104,6 +110,9 @@ Examples:
 
   # Skip failed and continue with rest
   ./build-chain.sh nettle,libgpg-error,libgcrypt,libassuan,gpgme --skip-failed
+
+  # Fast build - skip tests (useful for bootstrap/development)
+  ./build-chain.sh nettle,libgpg-error,libgcrypt,libassuan,gpgme --skip-tests
 
 State File Format:
   Each line: spec_name|status|timestamp|log_file
@@ -244,8 +253,14 @@ build_spec() {
     
     update_state "$spec" "BUILDING" "$log_file"
     
+    # Build command with optional flags
+    local build_cmd=("$SCRIPT_DIR/build-spec.sh" "$spec")
+    if [[ "$SKIP_TESTS" == true ]]; then
+        build_cmd+=("--skip-tests")
+    fi
+    
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY-RUN] Would execute: ./scripts/build-spec.sh $spec"
+        log_info "[DRY-RUN] Would execute: ${build_cmd[*]}"
         update_state "$spec" "SUCCESS" "$log_file"
         return 0
     fi
@@ -255,7 +270,7 @@ build_spec() {
     
     if [[ "$VERBOSE" == true ]]; then
         # Show all output
-        if "$SCRIPT_DIR/build-spec.sh" "$spec" 2>&1 | tee "$log_file"; then
+        if "${build_cmd[@]}" 2>&1 | tee "$log_file"; then
             local end_time=$(date +%s)
             local duration=$((end_time - start_time))
             log_success "$spec built successfully in ${duration}s"
@@ -271,7 +286,7 @@ build_spec() {
         fi
     else
         # Capture output to log only, show summary
-        if "$SCRIPT_DIR/build-spec.sh" "$spec" > "$log_file" 2>&1; then
+        if "${build_cmd[@]}" > "$log_file" 2>&1; then
             local end_time=$(date +%s)
             local duration=$((end_time - start_time))
             log_success "$spec built successfully in ${duration}s"
