@@ -35,6 +35,8 @@ python3 configure.py --bootstrap --verbose
 %install
 rm -rf %{buildroot}
 install -Dm755 ninja %{buildroot}/usr/bin/ninja
+# Create ninja-build symlink for compatibility with specs that require ninja-build
+ln -sf ninja %{buildroot}/usr/bin/ninja-build
 install -Dm644 misc/bash-completion \
   %{buildroot}/usr/share/bash-completion/completions/ninja
 install -Dm644 misc/zsh-completion \
