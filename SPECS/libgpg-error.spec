@@ -30,6 +30,9 @@ applications that use libgpg-error.
 %setup -q
 
 %build
+# Fix for GCC 15 / C23: nullptr is a keyword in C23, but this code uses it as variable name
+export CFLAGS="-std=gnu17 ${CFLAGS:-}"
+
 ./configure \
     --prefix=%{_prefix} \
     --libdir=%{_libdir} \
