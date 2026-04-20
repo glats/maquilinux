@@ -34,6 +34,9 @@ applications that use libassuan.
 %setup -q
 
 %build
+# GCC 15/C23 compatibility: use C17 standard
+export CFLAGS="-std=gnu17 ${CFLAGS:-}"
+
 ./configure \
     --prefix=%{_prefix} \
     --libdir=%{_libdir} \

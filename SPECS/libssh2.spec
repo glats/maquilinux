@@ -38,13 +38,17 @@ applications that use libssh2.
 %setup -q
 
 %build
+# GCC 15/C23 compatibility: use C17 standard
+export CFLAGS="-std=gnu17 ${CFLAGS:-}"
+
 mkdir -p build
 cd build
 cmake .. \
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=ON \
-    -DBUILD_TESTING=OFF
+    -DBUILD_TESTING=OFF \
+    -DCMAKE_C_FLAGS="${CFLAGS}"
 
 make %{?_smp_mflags}
 
