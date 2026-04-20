@@ -47,9 +47,10 @@ export CFLAGS="-std=gnu17 ${CFLAGS:-}"
     --disable-static \
     --disable-doc \
     --disable-asm \
-    --with-libgpg-error-prefix=%{_prefix}
+    --with-libgpg-error-prefix=%{_prefix} \
+    CFLAGS="${CFLAGS}"
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} CFLAGS="${CFLAGS}"
 
 %install
 make DESTDIR=%{buildroot} install

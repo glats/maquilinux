@@ -52,9 +52,10 @@ export CFLAGS="-std=gnu17 ${CFLAGS:-}"
     --disable-gpgsm-test \
     --with-libgpg-error-prefix=%{_prefix} \
     --with-libgcrypt-prefix=%{_prefix} \
-    --with-libassuan-prefix=%{_prefix}
+    --with-libassuan-prefix=%{_prefix} \
+    CFLAGS="${CFLAGS}"
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} CFLAGS="${CFLAGS}"
 
 %install
 make DESTDIR=%{buildroot} install

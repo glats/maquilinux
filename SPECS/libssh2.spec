@@ -48,7 +48,8 @@ cmake .. \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=ON \
     -DBUILD_TESTING=OFF \
-    -DCMAKE_C_FLAGS="${CFLAGS}"
+    -DCMAKE_C_FLAGS="${CFLAGS}" \
+    -DCMAKE_C_COMPILER="gcc ${CFLAGS}"
 
 make %{?_smp_mflags}
 
