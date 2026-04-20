@@ -176,15 +176,25 @@ check_sources() {
   local spec="$1"
   local sources_dir="$TOPDIR/SOURCES"
   
-  # Extract Source0 from spec (filename only)
-  local source_file
+  # Extract Source0 from spec and expand macros
+  local source_file name version release
   source_file=$(grep -E '^Source0:' "$spec" | awk '{print $2}' || true)
+  name=$(grep '^Name:' "$spec" | awk '{print $2}')
+  version=$(grep '^Version:' "$spec" | awk '{print $2}')
+  release=$(grep '^Release:' "$spec" | awk '{print $2}' | sed 's/%{.*$//')
   
   if [[ -n "$source_file" ]]; then
-    # Handle %{version} expansion
-    local version
-    version=$(grep '^Version:' "$spec" | awk '{print $2}')
+    # Expand common macros
+    source_file=$(echo "$source_file" | sed "s/%{name}/$name/g")
     source_file=$(echo "$source_file" | sed "s/%{version}/$version/g")
+    source_file=$(echo "$source_file" | sed "s/%{release}/$release/g")
+    source_file=$(echo "$source_file" | sed 's/%{[?]*_isa}//g')
+    source_file=$(echo "$source_file" | sed 's/%{[?]*dist}//g')
+    
+    # If it's a URL, extract just the filename (basename)
+    if echo "$source_file" | grep -Eq '^https?://|^ftp://'; then
+      source_file=$(basename "$source_file" | sed 's/?.*$//')
+    fi
     
     if [[ ! -f "$sources_dir/$source_file" ]]; then
       echo "ERROR: Source not found: $sources_dir/$source_file" >&2
