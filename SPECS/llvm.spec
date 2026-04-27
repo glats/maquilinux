@@ -6,6 +6,17 @@ Summary:        LLVM compiler infrastructure
 %define debug_package %{nil}
 %define __os_install_post %{nil}
 
+# Multiarch configuration (Maqui Linux standard)
+%if "%{_target_cpu}" == "i686"
+%global pkg_multilibdir /usr/lib/i386-linux-gnu
+%global pkg_libdir_suffix /i386-linux-gnu
+%global pkg_enable_devel 0
+%else
+%global pkg_multilibdir /usr/lib/x86_64-linux-gnu
+%global pkg_libdir_suffix /x86_64-linux-gnu
+%global pkg_enable_devel 1
+%endif
+
 # LLVM needs large memory, disable parallel builds if needed
 # %%define _smp_mflags -j4
 
@@ -17,7 +28,7 @@ Source1:        https://github.com/llvm/llvm-project/releases/download/llvmorg-%
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  cmake
-BuildRequires:  ninja-build
+BuildRequires:  ninja
 BuildRequires:  python3
 BuildRequires:  zlib-devel
 BuildRequires:  libxml2-devel
@@ -47,19 +58,23 @@ applications that use LLVM.
 # Setup requires extracting both archives
 %setup -q -n llvm-%{version}.src
 
-# Extract cmake modules to the right place
+# Extract cmake modules to the right place  
 tar -xf %{SOURCE1}
-mkdir -p cmake
-mv cmake-%{version}.src/* cmake/ 2>/dev/null || true
-rm -rf cmake-%{version}.src
+# LLVM 19.x expects cmake modules at ../cmake/Modules relative to source
+# Copy the Modules directory to the expected location at build root level
+mkdir -p %{_builddir}/cmake
+cp -r %{_builddir}/llvm-%{version}.src/cmake-19.1.7.src/Modules %{_builddir}/cmake/
 
 %build
 mkdir -p build
 cd build
 
 # Configure with minimal set of components for Rust support
+# Point to cmake modules extracted in %%prep
 cmake -G Ninja .. \
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+    -DCMAKE_INSTALL_LIBDIR=lib%{pkg_libdir_suffix} \
+    -DLLVM_LIBDIR_SUFFIX=%{pkg_libdir_suffix} \
     -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_ENABLE_PROJECTS="" \
     -DLLVM_TARGETS_TO_BUILD="X86;AArch64;ARM" \
@@ -75,7 +90,8 @@ cmake -G Ninja .. \
     -DLLVM_BUILD_TOOLS=ON \
     -DLLVM_ENABLE_RTTI=ON \
     -DLLVM_ENABLE_EH=ON \
-    -DLLVM_DEFAULT_TARGET_TRIPLE="x86_64-pc-linux-gnu"
+    -DLLVM_DEFAULT_TARGET_TRIPLE="x86_64-pc-linux-gnu" \
+    -DLLVM_CMAKE_PATH="%{_builddir}/llvm-%{version}.src/cmake"
 
 # Build - this takes a LONG time (hours)
 ninja %{?_smp_mflags}
@@ -85,7 +101,7 @@ cd build
 DESTDIR=%{buildroot} ninja install
 
 # Remove static libraries to reduce size
-rm -f %{buildroot}%{_libdir}/*.a
+rm -f %{buildroot}%{pkg_multilibdir}/*.a 2>/dev/null || true
 
 # Move documentation
 mkdir -p %{buildroot}%{_docdir}/%{name}-%{version}
@@ -98,43 +114,47 @@ cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/
 %files
 %license LICENSE.TXT
 %doc %{_docdir}/%{name}-%{version}
-%{_bindir}/llvm-ar
-%{_bindir}/llvm-as
-%{_bindir}/llvm-config
-%{_bindir}/llvm-dis
-%{_bindir}/llvm-dlltool
-%{_bindir}/llvm-lib
-%{_bindir}/llvm-link
-%{_bindir}/llvm-lto
-%{_bindir}/llvm-lto2
-%{_bindir}/llvm-mt
-%{_bindir}/llvm-nm
-%{_bindir}/llvm-objcopy
-%{_bindir}/llvm-objdump
-%{_bindir}/llvm-profdata
-%{_bindir}/llvm-ranlib
-%{_bindir}/llvm-readelf
-%{_bindir}/llvm-readobj
-%{_bindir}/llvm-strip
-%{_bindir}/llvm-symbolizer
+# LLVM tools (wildcard covers most)
+%{_bindir}/llvm-*
 %{_bindir}/opt
-%{_libdir}/libLLVM.so.*
-%{_libdir}/libRemarks.so.*
-%{_libdir}/libLTO.so.*
-%{_libdir}/LLVMHello.so
-%{_libdir}/libLLVM-*.so
+%{_bindir}/llc
+%{_bindir}/lli
+%{_bindir}/bugpoint
+%{_bindir}/dsymutil
+%{_bindir}/FileCheck
+%{_bindir}/count
+%{_bindir}/not
+%{_bindir}/UnicodeNameMappingGenerator
+%{_bindir}/yaml-bench
+%{_bindir}/split-file
+%{_bindir}/obj2yaml
+%{_bindir}/yaml2obj
+%{_bindir}/sancov
+%{_bindir}/sanstats
+%{_bindir}/llvm-tblgen
+# Libraries - use multiarch path
+%{pkg_multilibdir}/libLLVM.so.*
+%{pkg_multilibdir}/libRemarks.so.*
+%{pkg_multilibdir}/libLTO.so.*
+%{pkg_multilibdir}/LLVMHello.so
+%{pkg_multilibdir}/libLLVM-*.so
 
 %files devel
 %{_includedir}/llvm
 %{_includedir}/llvm-c
-%{_libdir}/libLLVM.so
-%{_libdir}/libRemarks.so
-%{_libdir}/libLTO.so
-%{_libdir}/cmake/llvm
-%{_libdir}/cmake/llvm*
+%{pkg_multilibdir}/libLLVM.so
+%{pkg_multilibdir}/libRemarks.so
+%{pkg_multilibdir}/libLTO.so
+%{pkg_multilibdir}/cmake/llvm
+%{pkg_multilibdir}/cmake/llvm*
 %{_datadir}/llvm
 
 %changelog
-* Sun Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 19.1.7-1.m264
-- Initial build for Maqui Linux 26.4
-- Minimal configuration for Rust support (X86/AArch64/ARM targets)
+* Fri Apr 25 2026 Maqui Linux
+      - Fixed multiarch library installation using LLVM_LIBDIR_SUFFIX
+      - Libraries now install to /usr/lib/x86_64-linux-gnu/
+      - Added pkg_libdir_suffix macro for proper multiarch support
+
+      * Sun Apr 19 2026 Maqui Linux
+      - Initial build for Maqui Linux 26.4
+      - Minimal configuration for Rust support (X86/AArch64/ARM targets)

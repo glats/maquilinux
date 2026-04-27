@@ -82,15 +82,17 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOPDIR="$(dirname "$SCRIPT_DIR")"
 
-# Load config files
-MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
-if [[ -f "$TOPDIR/mql.local" ]]; then
-  source "$TOPDIR/mql.local" 2>/dev/null || true
-fi
+# Load config files (allow env vars and config to override defaults)
+# Order: mql.conf first (project defaults), mql.local second (user overrides)
 if [[ -f "$TOPDIR/mql.conf" ]]; then
   source "$TOPDIR/mql.conf" 2>/dev/null || true
 fi
-MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
+if [[ -f "$TOPDIR/mql.local" ]]; then
+  source "$TOPDIR/mql.local" 2>/dev/null || true
+fi
+
+# Set defaults if not configured (MQL_LFS env takes precedence over mql.conf MQL_DISK)
+MQL_DISK="${MQL_LFS:-${MQL_DISK:-/run/media/glats/maquilinux}}"
 
 # Chroot target (overlay merged directory)
 CHROOT_TARGET="$MQL_DISK/merged"

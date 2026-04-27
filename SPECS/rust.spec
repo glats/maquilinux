@@ -37,7 +37,7 @@ BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  make
 BuildRequires:  cmake
-BuildRequires:  ninja-build
+BuildRequires:  ninja
 BuildRequires:  python3
 BuildRequires:  libcurl-devel
 BuildRequires:  libssh2-devel
@@ -72,13 +72,13 @@ Summary:        Rust standard library
 %description std
 Standard library for Rust.
 
-%package -n rust
+%package -n rust-toolchain
 Summary:        Rust meta package
 Requires:       rustc%{?_isa} = %{version}-%{release}
 Requires:       cargo%{?_isa} = %{version}-%{release}
 Requires:       rust-std%{?_isa} = %{version}-%{release}
 
-%description -n rust
+%description -n rust-toolchain
 Meta package that pulls in the complete Rust toolchain (rustc, cargo, rust-std).
 
 %prep
@@ -106,8 +106,8 @@ python3 ./configure \
     --prefix=%{_prefix} \
     --libdir=%{pkg_multilibdir} \
     --enable-extended \
-    --tools=cargo \
-    --enable-lld
+    --tools=cargo
+    # --enable-lld removed - lld-devel not available in rootfs
 
 # Build stage1 using stage0
 python3 ./x.py build --stage 1

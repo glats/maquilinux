@@ -48,16 +48,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE="$(dirname "$SCRIPT_DIR")"
 
 # Load configuration
-MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
-if [[ -f "$WORKSPACE/mql.local" ]]; then
-    source "$WORKSPACE/mql.local" 2>/dev/null || true
-fi
+# Order: mql.conf first (project defaults), mql.local second (user overrides)
 if [[ -f "$WORKSPACE/mql.conf" ]]; then
     source "$WORKSPACE/mql.conf" 2>/dev/null || true
 fi
+if [[ -f "$WORKSPACE/mql.local" ]]; then
+    source "$WORKSPACE/mql.local" 2>/dev/null || true
+fi
+
+# Set defaults if not configured (MQL_LFS takes precedence over mql.conf MQL_DISK)
+MQL_DISK="${MQL_LFS:-${MQL_DISK:-/run/media/glats/maquilinux}}"
 
 # Support both MQL_DISK (new) and MQL_LFS (legacy)
-CHROOT_TARGET="${MQL_DISK:-$MQL_LFS}/merged"
+CHROOT_TARGET="${MQL_DISK}/merged"
 WORKSPACE_IN_CHROOT="/workspace"
 
 # Verify chroot is ready (mounts must be done externally)
