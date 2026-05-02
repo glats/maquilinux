@@ -21,7 +21,7 @@ build performance.
 %prep
 %autosetup -n ninja-%{version}
 
-# Allow limiting jobs via the NINJAJOBS environment variable, matching MLFS guidance.
+# Allow limiting jobs via the NINJAJOBS environment variable, matching Maqui Linuxguidance.
 sed -i '/int Guess/a \
   int   j = 0;\
   char* jobs = getenv( "NINJAJOBS" );\
@@ -50,4 +50,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/ninja-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 1.13.2-1.m264
-- Initial packaging aligned with MLFS 8.59 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

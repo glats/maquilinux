@@ -49,4 +49,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/xml-parser-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.47-1.m264
-- Initial packaging aligned with MLFS 8.46 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

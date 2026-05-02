@@ -43,4 +43,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/less-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 685-1.m264
-- Initial packaging of Less following MLFS 8.44 instructions.
+- Initial packaging of Less following Maqui Linux instructions.

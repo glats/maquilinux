@@ -46,7 +46,7 @@ the shared libraries and the capsh, getcap, getpcaps, and setcap tools.
 %prep
 %setup -q -n libcap-%{version}
 
-# Prevent static libraries from being installed as per LFS instructions.
+# Prevent static libraries from being installed standard Maqui Linux package layout.
 sed -i '/install -m.*STA/d' libcap/Makefile
 
 %build

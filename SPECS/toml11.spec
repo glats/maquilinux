@@ -1,6 +1,6 @@
 %define _toml11_version 4.4.0
 
-# Header-only library; no debuginfo helpers available in the LFS-style chroot.
+# Header-only library; no debuginfo helpers available in the Maqui Linux chroot.
 %global debug_package %{nil}
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}

@@ -11,22 +11,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
-# Configuration
-PUBLISH_HOST="${MAQUIROOT_HOST:-maquiroot.glats.org}"
-PUBLISH_USER="${MAQUIROOT_USER:-root}"
-PUBLISH_BASE_DIR="${MAQUIROOT_DIR:-/var/www/maquiroot}"
-LATEST_LINK="${PUBLISH_BASE_DIR}/latest"
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-log_info() { echo -e "${GREEN}[INFO]${NC} $*"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+# shellcheck source=../lib/common.sh
+source "$SCRIPT_DIR/../lib/common.sh"
 
 # Check arguments
 if [[ $# -lt 1 ]]; then

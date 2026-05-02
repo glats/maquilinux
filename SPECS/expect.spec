@@ -3,7 +3,7 @@ Version:        5.45.4
 Release:        1.m264%{?dist}
 Summary:        Automate interactive applications and testing
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -21,7 +21,7 @@ applications. The DejaGnu test framework is written in Expect.
 %prep
 %setup -q -n expect%{version}
 
-# Fix build with gcc-15 and later, as per MLFS instructions
+# Fix build with gcc-15 and later, as per Maqui Linuxinstructions
 %patch 0 -p1
 
 %build
@@ -43,7 +43,7 @@ rm -rf %{buildroot}
 
 make DESTDIR=%{buildroot} install
 
-# Create the libexpect symlink as requested by MLFS
+# Create the libexpect symlink as requested by Maqui Linux
 ln -svf expect5.45.4/libexpect5.45.4.so %{buildroot}/usr/lib/libexpect5.45.4.so
 
 # Avoid owning the shared Info directory file to prevent conflicts with glibc
@@ -57,4 +57,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/expect-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 5.45.4-1.m264
-- Initial RPM packaging for Expect following MLFS instructions.
+- Initial RPM packaging for Expect following Maqui Linuxinstructions.

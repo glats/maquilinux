@@ -3,7 +3,7 @@ Version:        3.12
 Release:        1.m264%{?dist}
 Summary:        Print lines matching a pattern
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -19,7 +19,7 @@ that match a specified pattern.
 %prep
 %setup -q -n grep-%{version}
 
-# Remove deprecation warning that breaks some package test suites (MLFS step)
+# Remove deprecation warning that breaks some package test suites (Maqui Linuxstep)
 sed -i "s/echo/#echo/" src/egrep.sh
 
 %build

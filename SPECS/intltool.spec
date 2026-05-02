@@ -20,7 +20,7 @@ files so that they can be translated using standard gettext utilities.
 %prep
 %setup -q -n intltool-%{version}
 
-# Fix perl 5.22+ warning per MLFS instructions
+# Fix perl 5.22+ warning per Maqui Linuxinstructions
 sed -i 's:\\${:\\\${:' intltool-update.in
 
 %build
@@ -45,4 +45,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/intltool-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 0.51.0-1.m264
-- Initial packaging aligned with MLFS 8.47 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

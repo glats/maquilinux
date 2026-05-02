@@ -5,7 +5,7 @@ Release:        1.m264%{?dist}
 Summary:        Time Zone Database
 BuildArch:      noarch
 
-# Built inside a minimal LFS-style chroot without find-debuginfo or brp helpers.
+# Built inside a minimal Maqui Linux chroot without find-debuginfo or brp helpers.
 # Disable automatic debuginfo and BRP post scripts for consistent packaging.
 %global debug_package %{nil}
 %global _enable_debug_packages 0

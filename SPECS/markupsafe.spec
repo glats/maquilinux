@@ -51,4 +51,4 @@ test -s %{builddir}/markupsafe-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 3.0.3-1.m264
-- Initial packaging aligned with MLFS 8.77 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

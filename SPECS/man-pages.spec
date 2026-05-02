@@ -3,7 +3,7 @@ Version:        6.16
 Release:        1.m264%{?dist}
 Summary:        Linux Manual Pages
  
-# Built inside a minimal LFS-style chroot without find-debuginfo or brp helpers.
+# Built inside a minimal Maqui Linux chroot without find-debuginfo or brp helpers.
 # Disable those automatic steps so rpmbuild does not expect the missing tools.
 %global debug_package %{nil}
 %global _enable_debug_packages 0
@@ -25,7 +25,7 @@ and kernel interfaces.
 # It also changes the current directory to the top-level directory of the unpacked sources.
 %setup -q
 
-# Remove man pages for password hashing functions, as per LFS instructions.
+# Remove man pages for password hashing functions, standard Maqui Linux package layout.
 # Libxcrypt will provide better versions.
 rm -v man3/crypt*
 

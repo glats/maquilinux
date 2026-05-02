@@ -65,4 +65,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/sysklogd-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.7.2-1.m264
-- Initial packaging aligned with MLFS 8.84 instructions (syslog.conf secure defaults).
+- Initial packaging Initial packaging for Maqui Linux instructions (syslog.conf secure defaults).

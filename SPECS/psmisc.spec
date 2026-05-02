@@ -3,7 +3,7 @@ Version:        23.7
 Release:        1.m264%{?dist}
 Summary:        Utilities for displaying information about running processes
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}

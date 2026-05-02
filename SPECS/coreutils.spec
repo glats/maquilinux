@@ -47,7 +47,7 @@ make -k check || :
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
-# Move chroot according to FHS guidance from MLFS instructions.
+# Move chroot according to FHS guidance from Maqui Linuxinstructions.
 install -d %{buildroot}/usr/sbin
 if [ -f %{buildroot}/usr/bin/chroot ]; then
   mv -f %{buildroot}/usr/bin/chroot %{buildroot}/usr/sbin/
@@ -68,4 +68,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/coreutils-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 9.9-1.m264
-- Initial packaging aligned with MLFS 8.62 instructions (i18n patch, chroot relocation).
+- Initial packaging Initial packaging for Maqui Linux instructions (i18n patch, chroot relocation).

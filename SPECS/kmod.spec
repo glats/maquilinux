@@ -78,4 +78,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/kmod-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 34.2-1.m264
-- Initial packaging aligned with MLFS 8.61 instructions (multilib layout).
+- Initial packaging Initial packaging for Maqui Linux instructions (multilib layout).

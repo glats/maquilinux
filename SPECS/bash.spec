@@ -3,7 +3,7 @@ Version:        5.3
 Release:        3.m264%{?dist}
 Summary:        The GNU Bourne Again shell
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -42,7 +42,7 @@ make tests || :
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 
-# Provide sh symlink pointing to bash, as expected in LFS/MLFS environments
+# Provide sh symlink pointing to bash, as expected in LFS/Maqui Linuxenvironments
 mkdir -pv %{buildroot}%{_bindir}
 ln -svf bash %{buildroot}%{_bindir}/sh
 # Provide csh symlink for compatibility (vim and other tools may require it)

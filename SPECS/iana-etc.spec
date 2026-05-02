@@ -3,7 +3,7 @@ Version:        20251120
 Release:        1.m264%{?dist}
 Summary:        Provides data for network services and protocols
  
-# Built inside a minimal LFS-style chroot without find-debuginfo or brp helpers.
+# Built inside a minimal Maqui Linux chroot without find-debuginfo or brp helpers.
 # Disable those automatic steps so rpmbuild does not expect the missing tools.
 %global debug_package %{nil}
 %global _enable_debug_packages 0
@@ -36,7 +36,7 @@ and protocol types.
 # Create the target directory in the build root.
 mkdir -pv %{buildroot}/etc
 
-# Copy the files into the build root, as per LFS instructions.
+# Copy the files into the build root, standard Maqui Linux package layout.
 # The LFS command is: cp services protocols /etc
 # We need to copy from the source directory (which is the current directory
 # after %setup) to %{buildroot}/etc/

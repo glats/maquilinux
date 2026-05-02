@@ -60,4 +60,4 @@ test -s %{builddir}/setuptools-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 80.9.0-1.m264
-- Initial packaging aligned with MLFS 8.58 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

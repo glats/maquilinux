@@ -1,7 +1,7 @@
 # Maqui Linux
 
-Maqui Linux is an independent Linux distribution built from source following
-the Linux From Scratch (MLFS multilib) book. Every userland package is wrapped
+Maqui Linux is an independent Linux distribution built entirely from source.
+Every userland package is wrapped
 in an RPM spec file, giving us repeatable builds, a consistent filesystem
 ownership model, and a place to encode distribution-specific policy. The result
 is a 64-bit x86_64 system with i686 multilib support, managed entirely by

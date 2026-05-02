@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR_EARLY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "$SCRIPT_DIR_EARLY/../lib/common.sh"
+
 # Install Maquilinux RPMs to the rootfs
 # Usage:
 #   ./install-spec.sh <package-name> [--arch=x86_64|i686] [--both]
@@ -48,8 +52,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOPDIR="$(dirname "$SCRIPT_DIR")"
 
 # Rootfs paths (overlay chroot)
-MQL_DISK="${MQL_DISK:-${MQL_LFS:-/run/media/glats/maquilinux}}"
-ROOTFS="${MQL_DISK}/merged"
+MQL_ROOTFS="$(get_rootfs_path)"
+ROOTFS="${MQL_ROOTFS}/merged"
 RPM_DB="$ROOTFS/var/lib/rpm"
 
 # Maquilinux RPM tools

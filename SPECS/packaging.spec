@@ -49,4 +49,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/packaging-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 25.0-1.m264
-- Initial packaging aligned with MLFS 8.56 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

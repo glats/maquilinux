@@ -3,7 +3,7 @@ Version:        1.4.20
 Release:        1.m264%{?dist}
 Summary:        GNU macro processor
 
-# This spec is built in a minimal LFS-style chroot without the usual
+# This spec is built in a minimal Maqui Linux chroot without the usual
 # debuginfo and brp helper tools. Disable those automatic steps so
 # rpmbuild does not try to call find-debuginfo or related scripts.
 %define debug_package       %{nil}
@@ -27,7 +27,7 @@ front end to a compiler or as a standalone macro processor.
 %setup -q -n m4-%{version}
 
 %build
-# 64-bit build only, as in the MLFS instructions
+# 64-bit build only, as in the Maqui Linuxinstructions
 ./configure \
     --prefix=%{_prefix}
 
@@ -53,4 +53,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/m4-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 1.4.20-1.m264
-- Initial RPM packaging for m4 following MLFS instructions.
+- Initial RPM packaging for m4 following Maqui Linuxinstructions.

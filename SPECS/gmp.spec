@@ -45,7 +45,7 @@ includes both C and C++ interfaces.
 %prep
 %setup -q -n gmp-%{version}
 
-# Adjust configure for gcc-15 and later, per upstream/MLFS guidance
+# Adjust configure for gcc-15 and later, per upstream/Maqui Linuxguidance
 sed -i '/long long t1;/,+1s/()/(...)/' configure
 
 %build

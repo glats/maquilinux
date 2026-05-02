@@ -1,7 +1,7 @@
 %define glibc_version 2.42
 %define kernel_version 5.4
 
-# This spec is used in a minimal LFS-style chroot where the standard
+# This spec is used in a minimal Maqui Linux chroot where the standard
 # debuginfo tools (find-debuginfo, debugedit, etc.) are not available.
 # Disable automatic debuginfo generation so rpmbuild does not try to
 # call /usr/bin/find-debuginfo, and disable post-install BRP scripts.
@@ -116,7 +116,7 @@ ln -sv ld-linux-x86-64.so.2 \
 
 install -vdm 755 %{buildroot}/usr/lib
 
-# Fix hardcoded path in ldd script as per LFS
+# Fix hardcoded path in ldd script standard Maqui Linux package layout
 sed '/RTLDLIST=/s@%{_prefix}@@g' -i %{buildroot}%{_bindir}/ldd
 sed -i 's@^RTLDLIST=.*@RTLDLIST="/lib64/ld-linux-x86-64.so.2 /lib/ld-linux.so.2"@' \
     %{buildroot}%{_bindir}/ldd

@@ -163,11 +163,6 @@ get_project_root() {
 }
 
 # Path helper functions - always read from env so overrides are picked up
-# Support both MQL_DISK (new) and MQL_LFS (legacy)
-get_lfs_path() {
-    echo "${MQL_DISK:-${MQL_LFS:-/mnt/maquilinux}}"
-}
-
 get_repo_dest() {
     local releasever="${MQL_RELEASEVER:-26.4}"
     echo "${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/${releasever}}"
@@ -242,6 +237,68 @@ confirm() {
     
     read -r -p "$prompt [y/N] " response
     [[ "$response" =~ ^[Yy]$ ]]
+}
+
+# ============================================================================
+# Initialization
+# ============================================================================
+
+# ============================================================================
+# Tool Discovery (NixOS-aware)
+# ============================================================================
+
+# find_tool <name> [extra_paths...]
+# Search extra_paths first, then PATH. Returns path and rc=0, or rc=1.
+find_tool() {
+    local name="$1"; shift
+    for p in "$@"; do [[ -x "$p" ]] && echo "$p" && return 0; done
+    local f; f="$(command -v "$name" 2>/dev/null)" && echo "$f" && return 0
+    return 1
+}
+
+find_sudo() {
+    find_tool sudo /run/wrappers/bin/sudo /usr/bin/sudo /bin/sudo
+}
+
+find_chroot() {
+    find_tool chroot /run/current-system/sw/bin/chroot /usr/sbin/chroot /sbin/chroot /bin/chroot
+}
+
+is_nixos() {
+    [[ -f /etc/NIXOS ]]
+}
+
+# check_overlay [disk_path]
+# Validates overlay directories and merged mountpoint.
+check_overlay() {
+    local disk="${1:-$(get_rootfs_path)}"
+    local ok=0
+    [[ -d "$disk/base" ]]         || { log_error "Missing: $disk/base";         ok=1; }
+    [[ -d "$disk/layers/upper" ]] || { log_error "Missing: $disk/layers/upper"; ok=1; }
+    [[ -d "$disk/layers/work" ]]  || { log_error "Missing: $disk/layers/work";  ok=1; }
+    mountpoint -q "$disk/merged"  || { log_error "Not mounted: $disk/merged";   ok=1; }
+    return $ok
+}
+
+# get_rootfs_path
+# Priority: MQL_ROOTFS > MQL_DISK > MQL_LFS (deprecated, warns) > /mnt/maquilinux
+get_rootfs_path() {
+    if [[ -n "${MQL_ROOTFS:-}" ]]; then
+        echo "$MQL_ROOTFS"
+    elif [[ -n "${MQL_DISK:-}" ]]; then
+        echo "$MQL_DISK"
+    elif [[ -n "${MQL_LFS:-}" ]]; then
+        log_warn "MQL_LFS is deprecated, use MQL_ROOTFS" >&2
+        echo "$MQL_LFS"
+    else
+        echo "/mnt/maquilinux"
+    fi
+}
+
+# Deprecated alias - use get_rootfs_path
+get_lfs_path() {
+    log_warn "get_lfs_path() is deprecated, use get_rootfs_path()" >&2
+    get_rootfs_path
 }
 
 # ============================================================================

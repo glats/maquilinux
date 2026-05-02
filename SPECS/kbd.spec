@@ -10,7 +10,7 @@ Summary:        Key-table files, console fonts, and keyboard utilities
 License:        GPL-2.0-or-later
 URL:            https://www.kernel.org/pub/linux/utils/kbd/
 Source0:        https://www.kernel.org/pub/linux/utils/kbd/kbd-%{version}.tar.xz
-Patch0:         https://www.linuxfromscratch.org/patches/lfs/development/kbd-%{version}-backspace-1.patch
+Patch0:         kbd-%{version}-backspace-1.patch
 
 BuildRequires:  gcc
 BuildRequires:  make
@@ -51,4 +51,4 @@ test -s %{builddir}/kbd-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.9.0-1.m264
-- Initial packaging aligned with MLFS 8.70 instructions (backspace patch, no resizecons, disable vlock).
+- Initial packaging Initial packaging for Maqui Linux instructions (backspace patch, no resizecons, disable vlock).

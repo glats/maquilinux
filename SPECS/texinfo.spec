@@ -47,4 +47,4 @@ test -s %{builddir}/texinfo-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 7.2-1.m264
-- Initial packaging aligned with MLFS 8.75 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

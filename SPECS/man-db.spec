@@ -56,4 +56,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/man-db-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.13.1-1.m264
-- Initial packaging aligned with MLFS 8.80 instructions.
+- Initial packaging Initial packaging for Maqui Linux instructions.

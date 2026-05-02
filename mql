@@ -18,8 +18,7 @@ export MQL_PROJECT_ROOT
 
 _load_config() {
     # Preserve any environment variables already set before loading config
-    local pre_lfs="${MQL_LFS:-}"
-    local pre_disk="${MQL_DISK:-}"
+    local pre_rootfs="${MQL_ROOTFS:-}"
     local pre_releasever="${MQL_RELEASEVER:-}"
     local pre_repo_dest="${MQL_REPO_DEST:-}"
     local pre_repo_url="${MQL_REPO_URL:-}"
@@ -38,31 +37,38 @@ _load_config() {
     fi
 
     # Restore env vars that were set before (env always wins)
-    [[ -n "$pre_lfs" ]]        && MQL_LFS="$pre_lfs"
-    [[ -n "$pre_disk" ]]       && MQL_DISK="$pre_disk"
+    [[ -n "$pre_rootfs" ]]     && MQL_ROOTFS="$pre_rootfs"
     [[ -n "$pre_releasever" ]] && MQL_RELEASEVER="$pre_releasever"
     [[ -n "$pre_repo_dest" ]]  && MQL_REPO_DEST="$pre_repo_dest"
     [[ -n "$pre_repo_url" ]]   && MQL_REPO_URL="$pre_repo_url"
     [[ -n "$pre_kernel" ]]     && MQL_KERNEL_VERSION="$pre_kernel"
 
+    # Backward compat: MQL_LFS deprecated in favour of MQL_ROOTFS
+    if [[ -z "${MQL_ROOTFS:-}" && -n "${MQL_LFS:-}" ]]; then
+        echo "Warning: MQL_LFS is deprecated, use MQL_ROOTFS" >&2
+        MQL_ROOTFS="$MQL_LFS"
+    fi
+    # Backward compat: MQL_DISK deprecated in favour of MQL_ROOTFS
+    if [[ -z "${MQL_ROOTFS:-}" && -n "${MQL_DISK:-}" ]]; then
+        MQL_ROOTFS="$MQL_DISK"
+    fi
+
     # Export all MQL_ variables so child processes see them
-    export MQL_LFS MQL_DISK MQL_RELEASEVER MQL_REPO_DEST MQL_REPO_URL \
-           MQL_JOBS MQL_RPMBUILD_OPTS MQL_RELEASE_DIR MQL_KERNEL_VERSION
+    export MQL_ROOTFS="${MQL_ROOTFS:-/mnt/maquilinux}"
+    export MQL_RELEASEVER MQL_REPO_DEST MQL_REPO_URL MQL_JOBS MQL_KERNEL_VERSION
 }
 
-# Auto-detect mount point if MQL_LFS is not mounted but disk is accessible
+# Auto-detect mount point if MQL_ROOTFS is not mounted but disk is accessible
 _autodetect_mount() {
-    local lfs="${MQL_LFS:-/mnt/maquilinux}"
-    local disk="${MQL_DISK:-/dev/sdd1}"
+    local rootfs="${MQL_ROOTFS:-/mnt/maquilinux}"
 
     # Already mounted at expected location
-    if mountpoint -q "$lfs" 2>/dev/null; then
+    if mountpoint -q "$rootfs" 2>/dev/null; then
         return 0
     fi
 
     # Check common auto-mount locations (udisks2)
-    local label
-    label=$(blkid -s LABEL -o value "$disk" 2>/dev/null || echo "maquilinux")
+    local label="maquilinux"
 
     for candidate in \
         "/run/media/${USER}/${label}" \
@@ -71,9 +77,9 @@ _autodetect_mount() {
         "/media/${USER}/${label}"
     do
         if mountpoint -q "$candidate" 2>/dev/null; then
-            log_warn "Disk found at $candidate (not $lfs)"
-            log_info "Set MQL_LFS=$candidate in mql.local or export MQL_LFS=$candidate"
-            export MQL_LFS="$candidate"
+            log_warn "Disk found at $candidate (not $rootfs)"
+            log_info "Set MQL_ROOTFS=$candidate in mql.local or export MQL_ROOTFS=$candidate"
+            export MQL_ROOTFS="$candidate"
             return 0
         fi
     done
@@ -87,7 +93,7 @@ _autodetect_mount() {
 
 _load_config
 
-# Load common library (uses MQL_LFS from config)
+# Load common library (uses MQL_ROOTFS from config)
 source "$MQL_PROJECT_ROOT/lib/common.sh"
 
 # Auto-detect if needed
@@ -98,7 +104,7 @@ _autodetect_mount
 # ============================================================================
 
 show_help() {
-    local lfs="${MQL_LFS:-/mnt/maquilinux}"
+    local rootfs="${MQL_ROOTFS:-/mnt/maquilinux}"
     cat << EOF
 mql - Maqui Linux Development CLI
 
@@ -150,8 +156,7 @@ CONFIGURATION:
   All MQL_* variables can also be set as environment variables.
 
   Key variables:
-    MQL_LFS=$lfs
-    MQL_DISK=${MQL_DISK:-/dev/sdd1}
+    MQL_ROOTFS=$rootfs
     MQL_RELEASEVER=${MQL_RELEASEVER:-26.4}
     MQL_REPO_DEST=${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/26.4}
 
@@ -161,7 +166,7 @@ EXAMPLES:
   mql build openrc --both              # Build openrc for 64+32 bit
   mql install openrc                   # Install RPM in chroot
   mql backup create pre-rust           # Create backup before risky changes
-  MQL_LFS=/run/media/glats/maquilinux mql status   # Override mount point
+  MQL_ROOTFS=/run/media/glats/maquilinux mql status   # Override mount point
 
 For full documentation:
   docs/MANUAL-NIX.md
@@ -174,30 +179,29 @@ EOF
 # ============================================================================
 
 show_status() {
-    local lfs="${MQL_LFS:-/mnt/maquilinux}"
+    local rootfs="${MQL_ROOTFS:-/mnt/maquilinux}"
 
     log_info "Development Status"
-    echo "  MQL_LFS = $lfs"
+    echo "  MQL_ROOTFS = $rootfs"
     echo ""
 
     # Check disk mount
-    if mountpoint -q "$lfs" 2>/dev/null; then
-        log_ok "Disk mounted at $lfs"
-        df -h "$lfs" | tail -1
+    if mountpoint -q "$rootfs" 2>/dev/null; then
+        log_ok "Disk mounted at $rootfs"
+        df -h "$rootfs" | tail -1
     else
-        log_warn "Disk not mounted at $lfs"
-        log_info "Mount with: sudo mount ${MQL_DISK:-/dev/sdd1} $lfs"
-        log_info "Or set MQL_LFS to where the disk is currently mounted"
+        log_warn "Disk not mounted at $rootfs"
+        log_info "Or set MQL_ROOTFS to where the disk is currently mounted"
     fi
     echo ""
 
     # Check overlay structure
-    if [[ -d "$lfs/base" && -d "$lfs/merged" ]]; then
+    if [[ -d "$rootfs/base" && -d "$rootfs/merged" ]]; then
         log_ok "Overlay structure ready"
-        echo "  Base:      $(du -sh "$lfs/base" 2>/dev/null | cut -f1)"
-        echo "  Upper:     $(du -sh "$lfs/layers/upper" 2>/dev/null | cut -f1)"
-        echo "  Snapshots: $(ls "$lfs/layers/snapshots/" 2>/dev/null | wc -l)"
-    elif [[ -d "$lfs" ]]; then
+        echo "  Base:      $(du -sh "$rootfs/base" 2>/dev/null | cut -f1)"
+        echo "  Upper:     $(du -sh "$rootfs/layers/upper" 2>/dev/null | cut -f1)"
+        echo "  Snapshots: $(ls "$rootfs/layers/snapshots/" 2>/dev/null | wc -l)"
+    elif [[ -d "$rootfs" ]]; then
         log_warn "Disk mounted but overlay not set up (run setup first)"
     else
         log_warn "Overlay structure not set up"
@@ -205,7 +209,7 @@ show_status() {
     echo ""
 
     # Check chroot active
-    if mountpoint -q "$lfs/merged" 2>/dev/null; then
+    if mountpoint -q "$rootfs/merged" 2>/dev/null; then
         log_ok "Chroot is currently active (merged mounted)"
     fi
 
@@ -232,8 +236,7 @@ show_config() {
     log_info "Active Configuration"
     echo ""
     echo "  MQL_PROJECT_ROOT = $MQL_PROJECT_ROOT"
-    echo "  MQL_LFS          = ${MQL_LFS:-/mnt/maquilinux}"
-    echo "  MQL_DISK         = ${MQL_DISK:-/dev/sdd1}"
+    echo "  MQL_ROOTFS       = ${MQL_ROOTFS:-/mnt/maquilinux}"
     echo "  MQL_RELEASEVER   = ${MQL_RELEASEVER:-26.4}"
     echo "  MQL_REPO_DEST    = ${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/26.4}"
     echo "  MQL_REPO_URL     = ${MQL_REPO_URL:-https://repo.glats.org/linux/maquilinux}"

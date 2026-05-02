@@ -79,13 +79,13 @@
               source "$PWD/mql.local"
             fi
 
-            # Auto-detect MQL_LFS if not set
-            _detect_lfs() {
-              local lfs="''${MQL_LFS:-/run/media/glats/maquilinux}"
+            # Auto-detect MQL_ROOTFS if not set
+            _detect_rootfs() {
+              local rootfs="''${MQL_ROOTFS:-''${MQL_LFS:-/run/media/glats/maquilinux}}"
               local label="maquilinux"
 
-              if mountpoint -q "$lfs" 2>/dev/null; then
-                echo "$lfs"
+              if mountpoint -q "$rootfs" 2>/dev/null; then
+                echo "$rootfs"
                 return
               fi
 
@@ -99,18 +99,18 @@
                   return
                 fi
               done
-              echo "$lfs"
+              echo "$rootfs"
             }
 
-            export MQL_LFS="$(_detect_lfs)"
-            unset -f _detect_lfs
+            export MQL_ROOTFS="$(_detect_rootfs)"
+            unset -f _detect_rootfs
 
             echo "=========================================="
             echo "Maqui Linux Development Shell"
             echo "=========================================="
             echo ""
-            echo "  MQL_LFS          = $MQL_LFS"
-            echo "  MQL_RELEASEVER   = ''${MQL_RELEASEVER:-25.4}"
+            echo "  MQL_ROOTFS       = $MQL_ROOTFS"
+            echo "  MQL_RELEASEVER   = ''${MQL_RELEASEVER:-26.4}"
             echo "  LD_LIBRARY_PATH  = (set for runner support)"
             echo ""
             echo "Commands:"

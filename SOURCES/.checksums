@@ -1,0 +1,9 @@
+# Vendored sources for Maqui Linux — no external URLs
+# Format: sha256sum  filename
+# PENDING entries: file not yet downloaded, URL recorded for reference
+
+104cdde52a898c648ce346a9ed1fbe9297514656534636a6584132cf2d7428d9  udev-lfs-20230818.tar.xz
+8be28dcb11420624a500f2ea4fe975f771174bffee50e54ec8cd295a2dec104e  kbd-2.9.0-backspace-1.patch
+
+# PENDING: https://anduin.linuxfromscratch.org/LFS/systemd/systemd-man-pages-258.1.tar.xz  systemd-man-pages-258.1.tar.xz
+# NOTE: 404 on anduin.linuxfromscratch.org as of 2026-05-02. Try https://github.com/systemd/systemd/releases for man pages bundle.

@@ -4,7 +4,7 @@ Release:        1.m264%{?dist}
 Summary:        Successor to pkg-config for retrieving build flags
 ExclusiveArch:  x86_64
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -63,4 +63,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/pkgconf-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.5.1-1.m264
-- Initial RPM packaging for pkgconf following MLFS instructions.
+- Initial RPM packaging for pkgconf following Maqui Linuxinstructions.

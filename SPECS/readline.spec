@@ -45,7 +45,7 @@ bindings, and to recall previously typed commands.
 %prep
 %setup -q -n readline-%{version}
 
-# Follow MLFS instructions to avoid ldconfig bug and unwanted rpath,
+# Follow Maqui Linuxinstructions to avoid ldconfig bug and unwanted rpath,
 # and to apply the upstream input.c fix for this version.
 sed -i '/MV.*old/d' Makefile.in
 sed -i '/{OLDSUFF}/c:' support/shlib-install

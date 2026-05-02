@@ -8,7 +8,7 @@ URL:        https://maquilinux.com
 BuildArch:  noarch
 Source0:    maquilinux.repo
 
-# Built inside a minimal LFS-style chroot without find-debuginfo or brp helpers.
+# Built inside a minimal Maqui Linux chroot without find-debuginfo or brp helpers.
 # Disable automatic debuginfo and BRP post scripts for consistent packaging.
 %global debug_package %{nil}
 %global _enable_debug_packages 0
@@ -17,15 +17,15 @@ Source0:    maquilinux.repo
 
 # NOTE about dependencies for this base package:
 # rpmbuild normally scans the scripts in this spec (like %install and %pre)
-# and automatically adds Requires such as /bin/sh. In our LFS bootstrap
+# and automatically adds Requires such as /bin/sh. In our Maqui Linux chroot
 # environment, /bin/sh already exists because it was created by the
-# temporary tools, but it is not yet owned by any RPM package. That makes
+# bootstrap tools, but it is not yet owned by any RPM package. That makes
 # the automatically generated /bin/sh dependency fail, even though the
 # interpreter is really present and working.
 
 
 %description
-Maquilinux is a Linux distribution based on LFS and RPM.
+Maquilinux is an independent Linux distribution built from source, managed with RPM and DNF5.
 This package contains the basic directory layout for a Linux operating system,
 including the correct permissions for the directories.
 
@@ -178,7 +178,7 @@ install -Dm 644 %{_sourcedir}/maquilinux.repo %{buildroot}/etc/yum.repos.d/maqui
 echo "26.4" > %{buildroot}/etc/dnf/vars/releasever
 
 # Temporary workaround: on early systems /var/mail may exist as a directory
-# created by the temporary LFS setup. We remove that directory here so the
+# created by the bootstrap toolchain. We remove that directory here so the
 # maquilinux base package can own /var/mail as a symlink to /var/spool/mail.
 # Similarly, /usr/lib32 may exist as a real directory from the temporary toolchain.
 # We remove it so the package can create the symlink.

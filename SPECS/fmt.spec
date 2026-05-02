@@ -1,6 +1,6 @@
 %define fmt_version 12.1.0
 
-# Packed inside an LFS-style chroot lacking debuginfo helpers.
+# Packed inside an Maqui Linux chroot lacking debuginfo helpers.
 %global debug_package %{nil}
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}

@@ -3,7 +3,7 @@ Version:        2.45.1
 Release:        1.m264%{?dist}
 Summary:        Binary utilities including linker and assembler
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -63,4 +63,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/binutils-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.45.1-1.m264
-- Initial RPM packaging for binutils following MLFS instructions.
+- Initial RPM packaging for binutils following Maqui Linuxinstructions.

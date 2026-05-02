@@ -36,8 +36,8 @@ jobs:
           cp "$ROOTFS/boot/vmlinuz-"* "$ISODIR/vmlinuz" || true
           
           # Generate initramfs
-          sudo "$WORKSPACE/scripts/enter-chroot-build.sh" -c \
-            "dracut --no-hostonly --force /tmp/initramfs.img" || true
+          sudo "$WORKSPACE/scripts/run-in-chroot.sh" \
+            dracut --no-hostonly --force /tmp/initramfs.img || true
           cp "$ROOTFS/tmp/initramfs.img" "$ISODIR/initramfs.img" || true
       
       - name: Create squashfs

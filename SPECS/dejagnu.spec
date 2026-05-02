@@ -3,7 +3,7 @@ Version:        1.6.3
 Release:        1.m264%{?dist}
 Summary:        Framework for testing other programs
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -53,4 +53,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/dejagnu-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 1.6.3-1.m264
-- Initial RPM packaging for DejaGNU following MLFS instructions.
+- Initial RPM packaging for DejaGNU following Maqui Linuxinstructions.

@@ -12,8 +12,8 @@ ExclusiveArch:  x86_64
 License:        LGPL-2.1-or-later and GPL-2.0-or-later
 URL:            https://www.freedesktop.org/wiki/Software/systemd/
 Source0:        https://github.com/systemd/systemd/archive/refs/tags/v%{version}/systemd-%{version}.tar.gz
-Source1:        https://anduin.linuxfromscratch.org/LFS/udev-lfs-20230818.tar.xz
-Source2:        https://anduin.linuxfromscratch.org/LFS/systemd/systemd-man-pages-%{version}.tar.xz
+Source1:        udev-lfs-20230818.tar.xz
+Source2:        systemd-man-pages-%{version}.tar.xz
 
 BuildRequires:  gcc
 BuildRequires:  meson
@@ -33,7 +33,7 @@ programs, rules, and libudev without installing the rest of systemd.
 %prep
 %autosetup -n systemd-%{version}
 
-# Follow MLFS instructions to trim unneeded functionality.
+# Follow Maqui Linuxinstructions to trim unneeded functionality.
 sed -e 's/GROUP="render"/GROUP="video"/' \
     -e 's/GROUP="sgx", //' -i rules.d/50-udev-default.rules.in
 sed -i '/systemd-sysctl/s/^/#/' rules.d/99-systemd.rules.in
@@ -102,13 +102,15 @@ popd
 tar -xf %{SOURCE1}
 make -f udev-lfs-20230818/Makefile.lfs DESTDIR=%{buildroot} install
 
-# Install relevant man pages from systemd bundle.
+# Install relevant man pages from systemd bundle (optional — skipped if file absent).
+if [ -f %{SOURCE2} ]; then
 tar -xf %{SOURCE2} \
     --no-same-owner \
     --strip-components=1 \
     -C %{buildroot}/usr/share/man \
     --wildcards '*/udev*' '*/libudev*' '*/systemd.link.5' \
                  '*/systemd-hwdb.8' '*/systemd-udevd.service.8'
+fi
 
 if [ -f %{buildroot}/usr/share/man/man5/systemd.link.5 ]; then
   sed 's|systemd/network|udev/network|' \
@@ -137,4 +139,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/udev-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 258.1-1.m264
-- Standalone udev build from systemd 258.1 per MLFS 8.79 instructions.
+- Standalone udev build from systemd 258.1 per Maqui Linux instructions.

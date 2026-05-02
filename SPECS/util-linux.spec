@@ -89,4 +89,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/util-linux-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.41.2-1.m264
-- Initial packaging aligned with MLFS 8.82 instructions (utility disables, hwclock path).
+- Initial packaging Initial packaging for Maqui Linux instructions (utility disables, hwclock path).

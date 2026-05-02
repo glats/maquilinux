@@ -13,8 +13,8 @@
 # following the LFS pattern. It works on any host distro (NixOS, Ubuntu, Arch).
 #
 # Prerequisites:
-#   - Overlay mounted at $MQL_DISK/merged
-#   - Workspace bind-mounted at $MQL_DISK/merged/workspace
+#   - Overlay mounted at $MQL_ROOTFS/merged
+#   - Workspace bind-mounted at $MQL_ROOTFS/merged/workspace
 #   - Virtual filesystems mounted (proc, dev, etc.)
 #
 # Examples:
@@ -24,6 +24,10 @@
 #   ./build-spec.sh nettle --skip-tests    # Skip %check section for faster build
 
 set -euo pipefail
+
+SCRIPT_DIR_EARLY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "$SCRIPT_DIR_EARLY/../lib/common.sh"
 
 # ============================================================================
 # Argument parsing
@@ -82,8 +86,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOPDIR="$(dirname "$SCRIPT_DIR")"
 
-# Load config files (allow env vars and config to override defaults)
-# Order: mql.conf first (project defaults), mql.local second (user overrides)
+# Load config files (order: mql.conf then mql.local)
 if [[ -f "$TOPDIR/mql.conf" ]]; then
   source "$TOPDIR/mql.conf" 2>/dev/null || true
 fi
@@ -91,32 +94,19 @@ if [[ -f "$TOPDIR/mql.local" ]]; then
   source "$TOPDIR/mql.local" 2>/dev/null || true
 fi
 
-# Set defaults if not configured (MQL_LFS env takes precedence over mql.conf MQL_DISK)
-MQL_DISK="${MQL_LFS:-${MQL_DISK:-/run/media/glats/maquilinux}}"
+# Resolve rootfs path via lib/common.sh helper
+MQL_ROOTFS="$(get_rootfs_path)"
 
 # Chroot target (overlay merged directory)
-CHROOT_TARGET="$MQL_DISK/merged"
+CHROOT_TARGET="$MQL_ROOTFS/merged"
 
 # Ensure RPM tree exists on host (for output)
 mkdir -p "$TOPDIR"/{BUILD,BUILDROOT,RPMS/{noarch,x86_64,i686},SOURCES,SRPMS}
 
 # ============================================================================
-# Find sudo (NixOS-compatible)
+# Find sudo (NixOS-compatible, via lib/common.sh)
 # ============================================================================
 
-find_sudo() {
-  for path in /run/wrappers/bin/sudo /usr/bin/sudo /bin/sudo; do
-    if [[ -x "$path" ]]; then
-      echo "$path"
-      return
-    fi
-  done
-  if command -v sudo &> /dev/null; then
-    echo "sudo"
-  else
-    echo ""
-  fi
-}
 SUDO_CMD="$(find_sudo)"
 
 # ============================================================================
@@ -127,7 +117,7 @@ verify_chroot() {
   # Check overlay mounted
   if ! mountpoint -q "$CHROOT_TARGET" 2>/dev/null; then
     echo "ERROR: Overlay not mounted at $CHROOT_TARGET" >&2
-    echo "Run: sudo mount -t overlay overlay -o lowerdir=$MQL_DISK/base,upperdir=$MQL_DISK/layers/upper,workdir=$MQL_DISK/layers/work $CHROOT_TARGET" >&2
+    echo "Run: sudo mount -t overlay overlay -o lowerdir=$MQL_ROOTFS/base,upperdir=$MQL_ROOTFS/layers/upper,workdir=$MQL_ROOTFS/layers/work $CHROOT_TARGET" >&2
     exit 1
   fi
 
@@ -248,14 +238,15 @@ run_rpmbuild_in_chroot() {
   )
   
   # Run chroot (requires root)
+  # Note: no exec here -- must return for --both multi-arch support
   if [[ $EUID -eq 0 ]]; then
-    exec chroot "$CHROOT_TARGET" "${chroot_cmd[@]}"
+    chroot "$CHROOT_TARGET" "${chroot_cmd[@]}"
   else
     if [[ -z "$SUDO_CMD" ]]; then
       echo "ERROR: sudo not found (required for chroot)" >&2
       exit 1
     fi
-    exec "$SUDO_CMD" chroot "$CHROOT_TARGET" "${chroot_cmd[@]}"
+    "$SUDO_CMD" chroot "$CHROOT_TARGET" "${chroot_cmd[@]}"
   fi
 }
 

@@ -33,7 +33,7 @@ Show active config: `mql config`
 | `SPECS/` | 109+ RPM spec files |
 | `SOURCES/` | Source tarballs and patches |
 | `RPMS/` | Built RPMs (gitignored) |
-| `scripts/` | Build scripts (`build-spec.sh`, `install-spec.sh`, `mlfs-runner.sh`) |
+| `scripts/` | Build scripts (`build-spec.sh`, `install-spec.sh`) |
 | `tools/` | Maintenance tools (`create-clean-rootfs.sh`, `verify-independence.sh`) |
 | `lib/` | `mql` CLI library functions (bash) |
 | `release/` | ISO configs, dracut, branding |

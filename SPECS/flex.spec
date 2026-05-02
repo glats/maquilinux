@@ -3,7 +3,7 @@ Version:        2.6.4
 Release:        1.m264%{?dist}
 Summary:        Fast lexical analyzer generator
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -35,7 +35,7 @@ rm -rf %{buildroot}
 
 make DESTDIR=%{buildroot} install
 
-# Provide lex compatibility symlinks as requested by MLFS
+# Provide lex compatibility symlinks as requested by Maqui Linux
 ln -sv flex %{buildroot}/usr/bin/lex
 ln -sv flex.1 %{buildroot}/usr/share/man/man1/lex.1
 
@@ -50,4 +50,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/flex-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 2.6.4-1.m264
-- Initial RPM packaging for flex following MLFS instructions.
+- Initial RPM packaging for flex following Maqui Linuxinstructions.

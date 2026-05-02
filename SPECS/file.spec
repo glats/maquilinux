@@ -3,7 +3,7 @@ Version:        5.46
 Release:        1.m264%{?dist}
 Summary:        File type identification utility
 
-# This spec is built in a minimal LFS-style chroot without the usual
+# This spec is built in a minimal Maqui Linux chroot without the usual
 # debuginfo and brp helper tools. Disable those automatic steps so
 # rpmbuild does not try to call find-debuginfo or related scripts.
 %define debug_package       %{nil}

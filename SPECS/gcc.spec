@@ -3,7 +3,7 @@ Version:        15.2.0
 Release:        1.m264%{?dist}
 Summary:        GNU Compiler Collection (C and C++)
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -81,7 +81,7 @@ cd build
 # Ensure enough stack for some complex tests.
 ulimit -s -H unlimited || :
 
-# Remove a known problematic test, matching the MLFS instructions.
+# Remove a known problematic test, matching the Maqui Linuxinstructions.
 sed -e '/cpython/d' -i ../gcc/testsuite/gcc.dg/plugin/plugin.exp || :
 
 # Run the test suite but do not fail the build on unexpected failures in
@@ -97,7 +97,7 @@ rm -rf %{buildroot}
 
 make DESTDIR=%{buildroot} install
 
-# Fix ownership of the installed headers as per LFS instructions.
+# Fix ownership of the installed headers standard Maqui Linux package layout.
 chown -v -R root:root \
     %{buildroot}/usr/lib/gcc/$(gcc -dumpmachine)/%{version}/include{,-fixed} || :
 

@@ -3,7 +3,7 @@ Version:        8.6.17
 Release:        1.m264%{?dist}
 Summary:        Tool Command Language interpreter and libraries
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -80,4 +80,4 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/tcl-files.list
 
 %changelog
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 8.6.17-1.m264
-- Initial RPM packaging for Tcl following MLFS instructions.
+- Initial RPM packaging for Tcl following Maqui Linuxinstructions.

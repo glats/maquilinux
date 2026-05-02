@@ -1,6 +1,6 @@
 %define glib2_version 2.86.3
 
-# Built inside an LFS-style chroot with no debuginfo helpers available.
+# Built inside an Maqui Linux chroot with no debuginfo helpers available.
 %global debug_package %{nil}
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}

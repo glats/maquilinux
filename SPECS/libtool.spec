@@ -3,7 +3,7 @@ Version:        2.5.4
 Release:        1.m264%{?dist}
 Summary:        Generic library support script
 
-# Built inside a minimal LFS-style chroot; disable helpers not available here.
+# Built inside a minimal Maqui Linux chroot; disable helpers not available here.
 %define debug_package       %{nil}
 %define __debug_install_post %{nil}
 %define __os_install_post   %{nil}
@@ -54,7 +54,7 @@ rm -rf %{buildroot}%{_datadir}/libtool || :
 # Remove static library if present
 rm -fv %{buildroot}/usr/lib/i386-linux-gnu/libltdl.a || :
 %else
-# 64-bit: remove static library only used by tests (as per MLFS)
+# 64-bit: remove static library only used by tests (as per Maqui Linux)
 rm -fv %{buildroot}/usr/lib/x86_64-linux-gnu/libltdl.a || :
 rm -fv %{buildroot}/usr/lib/libltdl.a || :
 %endif

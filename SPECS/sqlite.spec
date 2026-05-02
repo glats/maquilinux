@@ -71,7 +71,7 @@ CONFIG_HOST=""
 make %{?_smp_mflags} LDFLAGS.rpath=""
 
 %check
-# No upstream test suite per MLFS; skip
+# No upstream test suite per Maqui Linux; skip
 :
 
 %install
