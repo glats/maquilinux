@@ -11,7 +11,8 @@ Summary:        GNU Compiler Collection (C and C++)
 License:        GPLv3+ and GPLv3+ with exceptions
 URL:            https://gcc.gnu.org/
 Source0:        https://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-%{version}.tar.xz
-Provides:       gcc-c++ = %{version}-%{release}
+Provides: gcc-c++ = %{version}-%{release}
+Provides: libstdc++-devel = %{version}-%{release}
 
 %description
 The GCC package contains the GNU Compiler Collection, including the C and

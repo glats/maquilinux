@@ -7,7 +7,8 @@
 # Options:
 #   --arch=x86_64|i686|noarch - Target architecture
 #   --both                    - Build both x86_64 and i686
-#   --skip-tests, --nocheck   - Skip test/check phase (faster builds)
+#   --skip-tests, --nocheck - Skip test/check phase (faster builds)
+#   --nodeps              - Skip BuildRequires resolution (bootstrap mode)
 #
 # This script ALWAYS runs rpmbuild inside the Maqui Linux chroot,
 # following the LFS pattern. It works on any host distro (NixOS, Ubuntu, Arch).
@@ -44,6 +45,7 @@ shift
 TARGET_CPU=""
 BUILD_BOTH="false"
 SKIP_TESTS="false"
+SKIP_DEPS="false"
 EXTRA_ARGS=()
 
 while (( "$#" )); do
@@ -58,9 +60,12 @@ while (( "$#" )); do
     --both)
       BUILD_BOTH="true"
       ;;
-    --skip-tests|--nocheck)
-      SKIP_TESTS="true"
-      ;;
+        --skip-tests|--nocheck)
+            SKIP_TESTS="true"
+            ;;
+        --nodeps)
+            SKIP_DEPS="true"
+            ;;
     --)
       shift
       EXTRA_ARGS+=("$@")
@@ -75,7 +80,12 @@ done
 
 # Add --nocheck to EXTRA_ARGS if skip-tests is enabled
 if [[ "$SKIP_TESTS" == "true" ]]; then
-  EXTRA_ARGS+=("--nocheck")
+EXTRA_ARGS+=("--nocheck")
+fi
+
+# Add --nodeps to EXTRA_ARGS if bootstrap mode is enabled
+if [[ "$SKIP_DEPS" == "true" ]]; then
+EXTRA_ARGS+=("--nodeps")
 fi
 
 # ============================================================================

@@ -1,13 +1,20 @@
-Name:           util-linux
-Version:        2.41.2
-Release:        1.m264%{?dist}
-Summary:        Essential system utilities (mount, fdisk, more)
+Name: util-linux
+Version: 2.41.2
+Release: 1.m264%{?dist}
+Summary: Essential system utilities (mount, fdisk, more)
 
-%define debug_package        %{nil}
+%define debug_package %{nil}
 %define __debug_install_post %{nil}
-%define __os_install_post    %{nil}
+%define __os_install_post %{nil}
 
-License:        GPL-2.0-or-later and BSD and Public Domain
+# Provide virtual packages for -devel and pkgconfig consumers
+Provides: pkgconfig(blkid) = %{version}
+Provides: pkgconfig(fdisk) = %{version}
+Provides: pkgconfig(mount) = %{version}
+Provides: pkgconfig(smartcols) = %{version}
+Provides: pkgconfig(uuid) = %{version}
+
+License: GPL-2.0-or-later and BSD and Public Domain
 URL:            https://www.kernel.org/pub/linux/utils/util-linux/
 Source0:        https://www.kernel.org/pub/linux/utils/util-linux/v%{version}/util-linux-%{version}.tar.xz
 

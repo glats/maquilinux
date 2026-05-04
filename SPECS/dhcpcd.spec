@@ -12,7 +12,7 @@ Obsoletes:      dhcpcd < 10.0.6-2
 BuildRequires:  gcc
 BuildRequires:  make
 BuildRequires:  openssl-devel
-BuildRequires:  eudev-devel
+BuildRequires: udev
 Requires:       openrc
 
 %description

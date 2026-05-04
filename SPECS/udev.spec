@@ -7,9 +7,13 @@ Summary:        Userspace device management from systemd (standalone build)
 %define __debug_install_post %{nil}
 %define __os_install_post    %{nil}
 
-ExclusiveArch:  x86_64
+ExclusiveArch: x86_64
 
-License:        LGPL-2.1-or-later and GPL-2.0-or-later
+# Provide virtual packages for -devel and pkgconfig consumers
+Provides: eudev-devel = %{version}-%{release}
+Provides: pkgconfig(udev) = %{version}
+
+License: LGPL-2.1-or-later and GPL-2.0-or-later
 URL:            https://www.freedesktop.org/wiki/Software/systemd/
 Source0:        https://github.com/systemd/systemd/archive/refs/tags/v%{version}/systemd-%{version}.tar.gz
 Source1:        udev-lfs-20230818.tar.xz

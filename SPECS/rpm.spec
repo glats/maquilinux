@@ -5,6 +5,10 @@ Summary:        The RPM Package Manager
 
 ExclusiveArch:  x86_64
 
+# Provide virtual packages for -devel and pkgconfig consumers
+Provides: rpm-devel = %{version}-%{release}
+Provides: rpm-libs = %{version}-%{release}
+
 # DNF5 looks for rpmdnf as a BuildRequires
 Provides:       rpmdnf = %{version}-%{release}
 

@@ -14,14 +14,13 @@ Summary:        CLI library for dnf5
 License:        LGPL-2.1-or-later
 URL:            https://github.com/rpm-software-management/dnf5
 Source0:        https://github.com/rpm-software-management/dnf5/archive/refs/tags/%{version}.tar.gz
-BuildRequires:  gcc
-BuildRequires:  gcc-c++
-BuildRequires:  cmake
-BuildRequires:  make
-BuildRequires:  pkgconfig(fmt)
-BuildRequires:  pkgconfig(json-c)
-BuildRequires:  pkgconfig(smartcols)
-BuildRequires:  libdnf5-devel
+BuildRequires: gcc
+BuildRequires: cmake
+BuildRequires: make
+BuildRequires: pkgconfig(fmt)
+BuildRequires: pkgconfig(json-c)
+BuildRequires: pkgconfig(smartcols)
+BuildRequires: libdnf5-devel
 Requires:       libdnf5%{?_isa} = %{version}-%{release}
 
 %description
