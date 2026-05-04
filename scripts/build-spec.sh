@@ -170,10 +170,10 @@ check_sources() {
   
   # Extract Source0 from spec and expand macros
   local source_file name version release
-  source_file=$(grep -E '^Source0:' "$spec" | awk '{print $2}' || true)
-  name=$(grep '^Name:' "$spec" | awk '{print $2}')
-  version=$(grep '^Version:' "$spec" | awk '{print $2}')
-  release=$(grep '^Release:' "$spec" | awk '{print $2}' | sed 's/%{.*$//')
+  source_file=$(grep -E '^Source0:' "$spec" | awk '{print $2}' | head -1 || true)
+  name=$(grep '^Name:' "$spec" | awk '{print $2}' | head -1)
+  version=$(grep '^Version:' "$spec" | awk '{print $2}' | head -1)
+  release=$(grep '^Release:' "$spec" | awk '{print $2}' | sed 's/%{.*$//' | head -1)
   
   if [[ -n "$source_file" ]]; then
     # Expand common macros

@@ -25,6 +25,7 @@ requiring a fast and powerful scripting capability.
 
 %build
 make MYCFLAGS="-fPIC" MYLDFLAGS="-L/usr/lib/x86_64-linux-gnu" linux-readline
+cd src
 gcc -shared -o liblua.so.5.4.8 -Wl,--whole-archive liblua.a -Wl,--no-whole-archive -ldl -lm -lreadline -lncurses
 ln -sf liblua.so.5.4.8 liblua.so.5.4
 ln -sf liblua.so.5.4.8 liblua.so
@@ -33,7 +34,8 @@ ln -sf liblua.so.5.4.8 liblua.so
 make INSTALL_TOP=%{buildroot}/usr INSTALL_INC=%{buildroot}/usr/include INSTALL_MAN=%{buildroot}/usr/share/man/man1 install
 
 install -d %{buildroot}/usr/lib
-install -m 755 liblua.so.5.4.8 %{buildroot}/usr/lib/
+install -d %{buildroot}/usr/lib/pkgconfig
+install -m 755 src/liblua.so.5.4.8 %{buildroot}/usr/lib/
 ln -sf liblua.so.5.4.8 %{buildroot}/usr/lib/liblua.so.5.4
 ln -sf liblua.so.5.4.8 %{buildroot}/usr/lib/liblua.so
 
@@ -67,12 +69,16 @@ install -d %{buildroot}/usr/share/licenses/lua-%{version}
 Summary: Development files for Lua
 Requires: lua%{?_isa} = %{version}-%{release}
 
+%description devel
+Development files for using Lua in other applications.
+
 %files devel
 /usr/include/lauxlib.h
 /usr/include/lua.h
 /usr/include/lua.hpp
 /usr/include/luaconf.h
 /usr/include/lualib.h
+/usr/lib/liblua.a
 /usr/lib/liblua.so
 /usr/lib/pkgconfig/lua.pc
 
