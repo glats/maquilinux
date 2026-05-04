@@ -1,213 +1,73 @@
-# Maquilinux RPM Spec Template (Gen3)
+# Maqui Linux Distro Health Specification
 
-This document describes the standard pattern for Maquilinux RPM specs.
-All new specs and updates to existing specs should follow this pattern.
+## Domain 1: repo-metadata (Phase 1)
 
-## Required Header Block
+### REQ-01: `mql repo update` MUST generate repodata via createrepo_c for each arch present in RPMS/
+**Happy Path**: Given RPMS/x86_64/ and RPMS/i686/ directories contain built RPMs, when `mql repo update` is executed, then createrepo_c is run for both architectures and repodata is generated in RPMS/*/repodata/ directories.
+**Edge Case**: Given RPMS/ directory exists but contains no architecture subdirectories, when `mql repo update` is executed, then no createrepo_c command is run and no repodata directories are created.
 
-```spec
-%define pkg_version X.Y.Z
+### REQ-02: `mql repo update` MUST be called automatically after `mql build` completes
+**Happy Path**: Given a spec is built with `mql build <spec>`, when the build completes successfully, then `mql repo update` is automatically invoked and repodata is refreshed.
+**Edge Case**: Given `mql build <spec>` fails due to compilation errors, when the build fails, then `mql repo update` is NOT called (to avoid creating repodata from broken/incomplete builds).
 
-# Disable debuginfo in bootstrap/minimal chroot
-%global debug_package %{nil}
-%global _enable_debug_packages 0
-%global __debug_install_post %{nil}
-%global __os_install_post %{nil}
+### REQ-03: DNF5 commands in mql CLI MUST include `--nogpgcheck` when installing from local repo (until PGP signing available)
+**Happy Path**: Given a package is available in the local RPM repo, when `mql install <spec>` is executed, then the underlying dnf command includes `--nogpgcheck` flag and installation proceeds without GPG verification errors.
+**Edge Case**: Given a package requires GPG signature verification and `--nogpgcheck` is not used, when `mql install <spec>` is attempted, then installation fails with GPG verification errors (until PGP signing is implemented in Phase 3).
 
-# Multiarch configuration
-%if "%{_target_cpu}" == "i686"
-%global pkg_multilibdir /usr/lib/i386-linux-gnu
-%global pkg_enable_devel 0
-%else
-%global pkg_multilibdir /usr/lib/x86_64-linux-gnu
-%global pkg_enable_devel 1
-%endif
+### REQ-04: The repo config in chroot MUST point to the bind-mounted local repo at /mnt/repo
+**Happy Path**: Given the chroot environment is active, when `dnf repolist` is executed, then a repository named "local" is listed with baseurl pointing to file:///mnt/repo.
+**Edge Case**: Given the bind mount is missing or misconfigured, when `dnf repolist` is executed, then either no "local" repository is found or it points to an incorrect path, causing dependency resolution to fail.
 
-Name:           pkgname
-Version:        %{pkg_version}
-Release:        1.m264%{?dist}
-Summary:        Short description
+## Domain 2: dep-naming (Phase 2)
 
-# Explicit Provides for shared library sonames (required for bootstrap)
-%if "%{_target_cpu}" == "x86_64"
-Provides:       libpkgname.so.N()(64bit)
-%endif
+### REQ-05: curl.spec MUST provide `libcurl-devel` as an alias (via %package devel or Provides:) OR rust.spec MUST use `curl-devel` instead of `libcurl-devel`
+**Happy Path**: Given either curl.spec provides libcurl-devel via Provides: or rust.spec BuildRequires curl-devel instead of libcurl-devel, when `dnf install rust` is executed in chroot, then dependency resolution succeeds and rust package installs without unresolved dependencies.
+**Edge Case**: Given curl.spec does not provide libcurl-devel AND rust.spec requires libcurl-devel, when `dnf install rust` is attempted, then dependency resolution fails with "No package libcurl-devel available" error.
 
-License:        LICENSE
-URL:            https://example.com
-Source0:        https://example.com/pkgname-%{version}.tar.xz
-```
+### REQ-06: libburn.spec MUST be created with Source from upstream (libburnia project)
+**Happy Path**: Given libburn.spec exists with Source pointing to official libburnia releases, when `mql build libburn` is executed, then the build succeeds using upstream source and produces libburn RPM with correct version.
+**Edge Case**: Given libburn.spec uses a non-upstream source or invalid URL, when `mql build libburn` is executed, then the build fails during source download or patch application.
 
-## Subpackage Definition (-devel)
+### REQ-07: libisoburn.spec MUST require libburn via its RPM name (not rely on LFS rootfs binary)
+**Happy Path**: Given libisoburn.spec has Requires: libburn and libburn RPM is installed from local repo, when `rpm -q libisoburn` is executed, then libisoburn package is installed and `rpm -q --requires libisoburn` shows libburn dependency.
+**Edge Case**: Given libisoburn.spec lacks Requires: libburn or points to a non-RPM dependency, when installed in a clean chroot without LFS rootfs libburn binary, then libisoburn may install but fails at runtime when libburn functions are called.
 
-For libraries, always create a real `-devel` subpackage on x86_64:
+### REQ-08: busybox RPM provenance MUST be documented (either create busybox.spec with m264 tag, or document external build in SPECS/README or similar)
+**Happy Path**: Given busybox.spec exists with Release tag containing m264, when `rpm -q busybox --qf '%{RELEASE}'` is executed, then output ends with .m264 indicating Maqui Linux build.
+**Edge Case**: Given no busybox.spec exists and provenance is undocumented, when investigating busybox package origin, then no clear build instructions or spec file can be found in the repository, making reproduction difficult.
 
-```spec
-%if %{pkg_enable_devel}
-%package devel
-Summary:        Development files for pkgname
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+## Domain 3: rpm-sequoia-bootstrap (Phase 3)
 
-%description devel
-Headers, pkg-config metadata, CMake configuration files, and the
-unversioned shared library symlink for developing against pkgname.
-%endif
-```
+### REQ-09: rust.spec MUST build successfully as RPM (x86_64) producing rustc, cargo, rust-std subpackages
+**Happy Path**: Given rust.spec is ready and build dependencies are satisfied, when `mql build rust` is executed, then build completes successfully and produces rust, rust-cargo, rust-std, rust-debuginfo RPMs in RPMS/x86_64/.
+**Edge Case**: Given rust.spec has unresolved BuildRequires or encounters compilation errors, when `mql build rust` is executed, then build fails with specific error indicating missing dependency or compilation issue.
 
-## Build Section
+### REQ-10: rpm-sequoia.spec MUST build successfully against the rust RPM's cargo
+**Happy Path**: Given rust RPM provides cargo and rpm-sequoia.spec BuildRequires: cargo, when `mql build rpm-sequoia` is executed after rust is installed, then build succeeds and produces rpm-sequoia RPM.
+**Edge Case**: Given rust is not installed or cargo is unavailable, when `mql build rpm-sequoia` is attempted, then build fails with unresolved dependency on cargo.
 
-```spec
-%build
-%if "%{_target_cpu}" == "i686"
-export CC="gcc -m32"
-export CXX="g++ -m32"
-export PKG_CONFIG_LIBDIR="/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig"
-CONFIG_HOST=--host=i686-pc-linux-gnu
-%else
-export PKG_CONFIG_LIBDIR="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
-CONFIG_HOST=""
-%endif
+### REQ-11: rpm.spec MUST rebuild with rpm-sequoia-devel available, producing rpm with PGP signing support
+**Happy Path**: Given rpm.spec is modified to build WITH_SEQUOIA=ON and rpm-sequoia-devel is installed, when `mql build rpm` is executed, then build succeeds and produces rpm RPM with sequoia support enabled (verified via `rpm --showrc`).
+**Edge Case**: Given rpm-sequoia-devel is missing or rpm.spec lacks sequoia support, when `mql build rpm` is executed, then either build fails due to missing dependency or resulting rpm lacks PGP signing capability.
 
-./configure \
-    --prefix=%{_prefix} \
-    --libdir=%{pkg_multilibdir} \
-    --disable-static \
-    ${CONFIG_HOST}
+### REQ-12: After rebuild, `rpm --verify` MUST validate signed packages when a key is present
+**Happy Path**: Given rpm has been rebuilt with sequoia support, a test package is signed with a trusted GPG key, when `rpm --verify <signed-package>` is executed, then verification passes with no output.
+**Edge Case**: Given rpm lacks sequoia support or package signature is invalid/missing, when `rpm --verify <package>` is executed, then verification fails with appropriate error message.
 
-make %{?_smp_mflags}
-```
+## Domain 4: dep-graph-audit (Phase 4)
 
-## Install Section with Filelist Generation
+### REQ-13: All 122 specs MUST have their BuildRequires satisfiable by existing specs or base rootfs packages
+**Happy Path**: Given the dependency graph is complete, when `rpmbuild --nobuild` is run on all specs and `dnf repoquery` checks BuildRequires, then all BuildRequires resolve to available packages.
+**Edge Case**: Given a spec has BuildRequires: unsatisfiable-package, when dependency check is performed, then unresolved BuildRequires is detected and recorded as a gap.
 
-```spec
-%install
-rm -rf %{buildroot}
-make DESTDIR=%{buildroot} install
+### REQ-14: All 122 specs MUST have their Requires satisfiable by existing specs or base rootfs packages
+**Happy Path**: Given the dependency graph is complete, when spec Requires are checked against available packages, then all Requires resolve to available packages from specs or base rootfs.
+**Edge Case**: Given a spec has Requires: missing-package, when dependency check is performed, then unresolved Requires is detected and recorded as a gap.
 
-# Remove static libraries
-rm -fv %{buildroot}%{pkg_multilibdir}/*.a || :
-rm -fv %{buildroot}%{pkg_multilibdir}/*.la || :
+### REQ-15: A `build-order.md` document MUST be produced listing specs in build-dependency order
+**Happy Path**: Given all dependencies are satisfied and no circular deps exist, when dep graph audit is executed, then build-order.md is generated containing all 122 specs in topological build order.
+**Edge Case**: Given circular dependencies exist in the spec set, when dep graph audit is executed, then build-order.md is NOT generated until circular deps are resolved, and gaps are documented instead.
 
-# i686: prune non-library content (libs-only package)
-%if "%{_target_cpu}" == "i686"
-rm -rf %{buildroot}%{_bindir} || :
-rm -rf %{buildroot}%{_sbindir} || :
-rm -rf %{buildroot}%{_includedir} || :
-rm -rf %{buildroot}%{_mandir} || :
-rm -rf %{buildroot}%{_datadir} || :
-%endif
-
-rm -f %{buildroot}/usr/share/info/dir || :
-
-# Generate file lists with normalization
-cd %{buildroot}
-
-%if "%{_target_cpu}" == "i686"
-{
-  if [ -d .%{pkg_multilibdir} ]; then
-    find .%{pkg_multilibdir} -type f -o -type l
-  fi
-} | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$||' | LC_ALL=C sort -u > %{_builddir}/pkg-files.list
-%else
-# All files
-find . \( -type f -o -type l \) | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$||' | LC_ALL=C sort -u > %{_builddir}/pkg-all.list
-
-# Runtime files: versioned shared libs, docs, man pages
-{
-  if [ -d .%{pkg_multilibdir} ]; then
-    find .%{pkg_multilibdir} -maxdepth 1 \( -type f -o -type l \) -name 'libpkgname.so.*'
-  fi
-  if [ -d ./usr/share/doc ]; then
-    find ./usr/share/doc -type f -o -type l
-  fi
-  if [ -d ./usr/share/man ]; then
-    find ./usr/share/man -type f -o -type l
-  fi
-  if [ -d ./usr/bin ]; then
-    find ./usr/bin -type f -o -type l
-  fi
-} | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$||' | LC_ALL=C sort -u > %{_builddir}/pkg-runtime.list
-
-%if %{pkg_enable_devel}
-# Development files: headers, pkgconfig, cmake, unversioned .so symlink
-{
-  if [ -d ./usr/include ]; then
-    find ./usr/include -type f -o -type l
-  fi
-  if [ -d .%{pkg_multilibdir} ]; then
-    find .%{pkg_multilibdir} -maxdepth 1 \( -type f -o -type l \) -name 'libpkgname.so'
-    if [ -d .%{pkg_multilibdir}/pkgconfig ]; then
-      find .%{pkg_multilibdir}/pkgconfig -type f -o -type l
-    fi
-    if [ -d .%{pkg_multilibdir}/cmake ]; then
-      find .%{pkg_multilibdir}/cmake -type f -o -type l
-    fi
-  fi
-} | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$||' | LC_ALL=C sort -u > %{_builddir}/pkg-devel.list
-%endif
-%endif
-```
-
-## Files Sections
-
-```spec
-%if "%{_target_cpu}" == "i686"
-%files -f %{_builddir}/pkg-files.list
-%defattr(-,root,root,-)
-%else
-%files -f %{_builddir}/pkg-runtime.list
-%defattr(-,root,root,-)
-
-%if %{pkg_enable_devel}
-%files devel -f %{_builddir}/pkg-devel.list
-%defattr(-,root,root,-)
-%endif
-%endif
-```
-
-## Post-install Scripts (for shared libraries)
-
-```spec
-%post
-%{_sbindir}/ldconfig
-
-%postun
-%{_sbindir}/ldconfig
-```
-
-## Checklist for New/Updated Specs
-
-- [ ] `%global debug_package %{nil}` and related disabled
-- [ ] `%global pkg_multilibdir` defined correctly for both arches
-- [ ] `%global pkg_enable_devel` conditional for i686 vs x86_64
-- [ ] Explicit `Provides: libX.so.N()(64bit)` for x86_64 (bootstrap requirement)
-- [ ] Real `%package devel` subpackage (not just `Provides: X-devel`)
-- [ ] Filelist normalization with `sed -e 's|//\+|/|g'` and `sort -u`
-- [ ] Runtime vs devel file separation
-- [ ] `%post/%postun ldconfig` for packages with shared libraries
-- [ ] Static libraries removed (`.a`, `.la`)
-- [ ] i686 build prunes non-library content
-- [ ] `rm -f %{buildroot}/usr/share/info/dir` to avoid conflicts
-
-## Common Soname Provides Reference
-
-| Package | Soname Provides |
-|---------|-----------------|
-| zlib | `libz.so.1()(64bit)` |
-| bzip2 | `libbz2.so.1.0()(64bit)` |
-| xz | `liblzma.so.5()(64bit)` |
-| zstd | `libzstd.so.1()(64bit)` |
-| lz4 | `liblz4.so.1()(64bit)` |
-| ncurses | `libncursesw.so.6()(64bit)` |
-| readline | `libreadline.so.8()(64bit)` |
-| gmp | `libgmp.so.10()(64bit)` |
-| mpfr | `libmpfr.so.6()(64bit)` |
-| mpc | `libmpc.so.3()(64bit)` |
-| libffi | `libffi.so.8()(64bit)` |
-| openssl | `libssl.so.3()(64bit)`, `libcrypto.so.3()(64bit)` |
-| sqlite | `libsqlite3.so.0()(64bit)` |
-| expat | `libexpat.so.1()(64bit)` |
-| libxml2 | `libxml2.so.2()(64bit)` |
-| curl | `libcurl.so.4()(64bit)` |
-| fmt | `libfmt.so.12()(64bit)` |
-| json-c | `libjson-c.so.5()(64bit)` |
+### REQ-16: Any unsatisfied Requires/BuildRequires MUST be recorded as a known gap with severity
+**Happy Path**: Given dependency gaps are identified during audit, when gaps are recorded, then each includes package name, dependent spec, severity (high/medium/low), and suggested resolution.
+**Edge Case**: Given no gaps exist in the dependency graph, when audit is performed, then no gaps are recorded and build-order.md can be generated successfully.

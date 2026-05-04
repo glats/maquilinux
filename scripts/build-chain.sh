@@ -37,6 +37,8 @@ LOG_DIR="$PROJECT_ROOT/logs"
 
 # shellcheck source=../lib/common.sh
 source "$SCRIPT_DIR/../lib/common.sh"
+# shellcheck source=../lib/repo.sh
+source "$SCRIPT_DIR/../lib/repo.sh"
 
 # Command line arguments
 SPECS_LIST=""
@@ -365,6 +367,45 @@ install_built_rpms() {
     fi
 }
 
+# Update repo metadata for the arch that just had a spec built.
+# Detects which arch (x86_64 or i686) has RPMs for the spec, then runs
+# createrepo_c on that arch dir. Called after each successful spec build
+# so the next spec in the chain can resolve BuildRequires immediately.
+update_repo_for_spec() {
+    local spec="$1"
+
+    if ! command -v createrepo_c &>/dev/null; then
+        log_warn "createrepo_c not found — run 'mql repo update' manually after the build"
+        return 0
+    fi
+
+    local rpms_dir="$PROJECT_ROOT/RPMS"
+    local detected_arch=""
+
+    for arch in x86_64 i686; do
+        local arch_dir="$rpms_dir/$arch"
+        [[ -d "$arch_dir" ]] || continue
+
+        # Check if this arch has an RPM for the just-built spec
+        if ls "$arch_dir"/${spec}-[0-9]*.rpm "$arch_dir"/${spec}-[a-z]*-[0-9]*.rpm &>/dev/null 2>&1; then
+            detected_arch="$arch"
+            break
+        fi
+    done
+
+    if [[ -z "$detected_arch" ]]; then
+        log_warn "Could not detect arch for $spec — skipping repo update"
+        return 0
+    fi
+
+    log_info "Updating repo metadata for $detected_arch..."
+    if mql_repo_update "$detected_arch" 2>/dev/null; then
+        log_ok "Repo metadata updated: $detected_arch"
+    else
+        log_warn "Failed to update repo metadata for $detected_arch"
+    fi
+}
+
 # Auto-heal common spec errors and return 0 if something was fixed
 heal_spec() {
     local spec="$1"
@@ -459,6 +500,12 @@ build_spec() {
     if [[ "$build_ok" == true ]]; then
         log_info "$spec built successfully in ${duration}s"
         update_state "$spec" "SUCCESS" "$log_file"
+
+        # Update repo metadata so DNF can see the new package immediately
+        # This runs after each individual spec succeeds so the next spec in the
+        # chain can resolve BuildRequires against the just-built package.
+        update_repo_for_spec "$spec"
+
         install_built_rpms "$spec" "$log_file" || true
         if [[ "$VERBOSE" != true ]]; then
             echo "  Last 5 lines of log:" >&2

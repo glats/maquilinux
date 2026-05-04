@@ -44,6 +44,22 @@ mql_chroot_mount() {
     # Bind workspace (project root) into chroot
     "$sudo_cmd" mount --bind "$(get_project_root)" "$disk/merged/mnt/workspace"
 
+    # Bind RPMS specifically at /mnt/repo for DNF5 local repo access
+    # gpgcheck=0: no rpm-sign/gpg-sequoia in bootstrap phase yet
+    "$sudo_cmd" mkdir -p "$disk/merged/mnt/repo"
+    "$sudo_cmd" mount --bind "$(get_project_root)/RPMS" "$disk/merged/mnt/repo"
+
+    # Ensure yum.repos.d exists in overlay and write local repo config
+    "$sudo_cmd" mkdir -p "$disk/merged/etc/yum.repos.d"
+    "$sudo_cmd" tee "$disk/merged/etc/yum.repos.d/maquilinux-local.repo" > /dev/null << 'REPOFILE'
+[maquilinux-local]
+name=Maqui Linux Local Repository
+baseurl=file:///mnt/repo
+enabled=1
+gpgcheck=0
+priority=1
+REPOFILE
+
     log_ok "Overlay mounted at $disk/merged"
 }
 
@@ -58,6 +74,7 @@ mql_chroot_umount() {
 
     # Unmount in reverse order (lazy -l to handle busy mounts)
     for mp in \
+        "$disk/merged/mnt/repo" \
         "$disk/merged/mnt/workspace" \
         "$disk/merged/dev/shm" \
         "$disk/merged/dev/pts" \

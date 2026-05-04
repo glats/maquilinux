@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR_EARLY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/common.sh
 source "$SCRIPT_DIR_EARLY/../lib/common.sh"
+# shellcheck source=../lib/chroot.sh
+source "$SCRIPT_DIR_EARLY/../lib/chroot.sh"
 
 # Install Maquilinux RPMs to the rootfs
 # Usage:
@@ -100,17 +102,27 @@ find_rpms() {
   fi
 }
 
-# Install RPM
+# Install RPM via dnf (with dep resolution), falling back to rpm --nodeps for bootstrap
 install_rpm() {
   local rpm_file="$1"
+
+  echo "[install] Installing $(basename "$rpm_file")..."
+
+  # Primary: use dnf5 inside chroot for proper dependency resolution
+  if mql_chroot_exec "dnf5 install -y --nogpgcheck '$rpm_file'" > /dev/null 2>&1; then
+    echo "[install]   dnf5 installed $(basename "$rpm_file")"
+    return 0
+  fi
+
+  # Fallback: rpm directly (bootstrap scenarios where dnf is not yet available)
+  echo "[install]   dnf5 failed, trying rpm --nodeps (bootstrap fallback)..."
+
   local rpm_args=(--nosignature --dbpath "$RPM_DB")
-  
+
   if [ "$INSTALL_NODEPS" = "true" ]; then
     rpm_args+=(--nodeps)
   fi
-  
-  echo "[install] Installing $(basename "$rpm_file")..."
-  
+
   LD_LIBRARY_PATH="$LD_PATH" \
   RPM_CONFIGDIR="$RPM_CONFIG" \
   "$RPM_CMD" -Uvh "${rpm_args[@]}" "$rpm_file"

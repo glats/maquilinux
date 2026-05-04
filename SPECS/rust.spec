@@ -39,7 +39,7 @@ BuildRequires:  make
 BuildRequires:  cmake
 BuildRequires:  ninja
 BuildRequires:  python3
-BuildRequires:  libcurl-devel
+BuildRequires:  curl-devel
 BuildRequires:  libssh2-devel
 BuildRequires:  openssl-devel
 BuildRequires:  zlib-devel
