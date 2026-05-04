@@ -1,12 +1,15 @@
-Summary:    Maquilinux
-Name:       maquilinux
-Version:    1
-Release:    1.m264%{?dist}
-License:    BSD-3-Clause
-Group:      Maquilinux/Base
-URL:        https://maquilinux.com
-BuildArch:  noarch
-Source0:    maquilinux.repo
+Summary: Maqui Linux base configuration
+Name: maquilinux
+Version: 2
+Release: 1.m264%{?dist}
+License: BSD-3-Clause
+Group: Maquilinux/Base
+URL: https://maquilinux.com
+BuildArch: noarch
+Source0: maquilinux.repo
+
+# Directory layout is now owned by filesystem.spec
+Requires: filesystem
 
 # Built inside a minimal Maqui Linux chroot without find-debuginfo or brp helpers.
 # Disable automatic debuginfo and BRP post scripts for consistent packaging.
@@ -15,73 +18,23 @@ Source0:    maquilinux.repo
 %global __debug_install_post %{nil}
 %global __os_install_post %{nil}
 
-# NOTE about dependencies for this base package:
-# rpmbuild normally scans the scripts in this spec (like %install and %pre)
-# and automatically adds Requires such as /bin/sh. In our Maqui Linux chroot
-# environment, /bin/sh already exists because it was created by the
-# bootstrap tools, but it is not yet owned by any RPM package. That makes
-# the automatically generated /bin/sh dependency fail, even though the
-# interpreter is really present and working.
-
-
 %description
-Maquilinux is an independent Linux distribution built from source, managed with RPM and DNF5.
-This package contains the basic directory layout for a Linux operating system,
-including the correct permissions for the directories.
-
+Maqui Linux is an independent Linux distribution built from source,
+managed with RPM and DNF5. This package provides the base system
+configuration files (passwd, group, network config, os-release,
+DNF repository setup) and log file seeds. Directory layout ownership
+was moved to the filesystem package in version 2.
 
 %prep
 %build
 %install
 
-# root directories
-install -vdm 755 %{buildroot}/{boot,dev,etc,home,media,mnt,opt,proc,run,srv,sys,usr,var}
-install -vdm 700 %{buildroot}/root
-install -vdm 1777 %{buildroot}/tmp
-# etc directories
-install -vdm 755 %{buildroot}/etc/{ld.so.conf.d,opt,profile.d,skel,sysconfig}
+# Create only the directories this package needs for its config files
+install -vdm 755 %{buildroot}/etc
+install -vdm 755 %{buildroot}/etc/ld.so.conf.d
 install -vdm 755 %{buildroot}/etc/yum.repos.d
 install -vdm 755 %{buildroot}/etc/dnf/vars
-# media directories
-install -vdm 755 %{buildroot}/media/{floppy,cdrom}
-# usr directories
-install -vdm 755 %{buildroot}/usr/{,local/}{bin,include,lib,sbin,src}
-install -vdm 755 %{buildroot}/usr/lib64
-install -vdm 755 %{buildroot}/usr/lib/i386-linux-gnu
-install -vdm 755 %{buildroot}/usr/lib/x86_64-linux-gnu
-install -vdm 755 %{buildroot}/usr/lib/locale
-
-# Multiarch symlinks: /usr/lib32 points to /usr/lib/i386-linux-gnu
-# This ensures that software installing 32-bit libs in /usr/lib32 automatically
-# ends up in the correct Debian-style multiarch directory.
-ln -sv i386-linux-gnu %{buildroot}/usr/lib/lib32
-ln -sv /usr/lib/i386-linux-gnu %{buildroot}/usr/lib32
-install -vdm 755 %{buildroot}/usr/{,local/}share/{color,dict,doc,info,locale,man}
-install -vdm 755 %{buildroot}/usr/{,local/}share/{misc,terminfo,zoneinfo}
-install -vdm 755 %{buildroot}/usr/libexec
-install -vdm 755 %{buildroot}/usr/{,local/}share/man/man{1..8}
-# var directories
-install -vdm 755 %{buildroot}/var/{log,spool}
-install -vdm 1777 %{buildroot}/var/tmp
-install -vdm 755 %{buildroot}/var/spool/mail
-install -vdm 755 %{buildroot}/var/opt
-install -vdm 755 %{buildroot}/var/cache
-install -vdm 755 %{buildroot}/var/lib
-install -vdm 755 %{buildroot}/var/lib/{misc,rpm}
-install -vdm 755 %{buildroot}/var/local
-# symlinks
-ln -sv usr/bin %{buildroot}/bin
-ln -sv usr/lib %{buildroot}/lib
-ln -sv usr/sbin %{buildroot}/sbin
-install -vdm 755 %{buildroot}/lib64
-ln -sv ../run %{buildroot}/var/run
-ln -sv ../run/lock %{buildroot}/var/lock
-ln -sv spool/mail %{buildroot}/var/mail
-ln -sv ../proc/self/mounts %{buildroot}/etc/mtab
-touch %{buildroot}/var/log/{btmp,lastlog,faillog,wtmp}
-chgrp -v 13	%{buildroot}/var/log/lastlog
-chmod -v 664	%{buildroot}/var/log/lastlog
-chmod -v 600	%{buildroot}/var/log/btmp
+install -vdm 755 %{buildroot}/var/log
 
 cat > %{buildroot}/etc/passwd <<- EOF
 root:x:0:0:root:/root:/bin/bash
@@ -161,7 +114,6 @@ cat > %{buildroot}/etc/fstab <<- EOF
 # /dev/sda1      /     ext4   defaults  1      1
 EOF
 
-echo %{version} > %{buildroot}/etc/os-release
 cat > %{buildroot}/etc/os-release <<- EOF
 NAME="Maqui Linux"
 VERSION="26.4"
@@ -177,139 +129,38 @@ install -Dm 644 %{_sourcedir}/maquilinux.repo %{buildroot}/etc/yum.repos.d/maqui
 # DNF releasever variable (ensures $releasever resolves correctly)
 echo "26.4" > %{buildroot}/etc/dnf/vars/releasever
 
-# Temporary workaround: on early systems /var/mail may exist as a directory
-# created by the bootstrap toolchain. We remove that directory here so the
-# maquilinux base package can own /var/mail as a symlink to /var/spool/mail.
-# Similarly, /usr/lib32 may exist as a real directory from the temporary toolchain.
-# We remove it so the package can create the symlink.
-%pre
-if [ -d /var/mail ] && [ ! -L /var/mail ]; then
-  rm -rf /var/mail
-fi
-
-if [ -d /usr/lib32 ] && [ ! -L /usr/lib32 ]; then
-  rm -rf /usr/lib32
-fi
+# Create log file seeds
+touch %{buildroot}/var/log/{btmp,lastlog,faillog,wtmp}
+chgrp -v 13 %{buildroot}/var/log/lastlog
+chmod -v 664 %{buildroot}/var/log/lastlog
+chmod -v 600 %{buildroot}/var/log/btmp
 
 %files
 %defattr(-,root,root)
-%attr(600,root,root)	/var/log/btmp
-%attr(664,root,utmp)	/var/log/lastlog
-%attr(664,root,utmp)	/var/log/wtmp
-%attr(750,root,root)	/root
-%attr(1777,root,root)	/tmp
-%attr(1777,root,root)	/var/tmp
-%attr(664,root,root)	/etc/ld.so.conf
-%attr(664,root,root)	/etc/nsswitch.conf
 
-# Directories created and owned by this package
-%dir /boot
-%dir /dev
-%dir /etc
-%dir /etc/ld.so.conf.d
-%dir /etc/opt
-%dir /etc/profile.d
-%dir /etc/skel
-%dir /etc/sysconfig
-%dir /etc/dnf
-%dir /etc/dnf/vars
-%dir /etc/yum.repos.d
-%dir /home
-%dir /media
-%dir /media/cdrom
-%dir /media/floppy
-%dir /mnt
-%dir /opt
-%dir /proc
-%dir /run
-%dir /srv
-%dir /sys
-%dir /usr
-%dir /usr/bin
-/usr/lib/lib32
-/usr/lib32
-%dir /usr/include
-%dir /usr/lib
-%dir /usr/lib64
-%dir /usr/lib/i386-linux-gnu
-%dir /usr/lib/locale
-%dir /usr/lib/x86_64-linux-gnu
-%dir /usr/libexec
-%dir /usr/local
-%dir /usr/local/bin
-%dir /usr/local/include
-%dir /usr/local/lib
-%dir /usr/local/sbin
-%dir /usr/local/share
-%dir /usr/local/share/color
-%dir /usr/local/share/dict
-%dir /usr/local/share/doc
-%dir /usr/local/share/info
-%dir /usr/local/share/locale
-%dir /usr/local/share/man
-%dir /usr/local/share/man/man1
-%dir /usr/local/share/man/man2
-%dir /usr/local/share/man/man3
-%dir /usr/local/share/man/man4
-%dir /usr/local/share/man/man5
-%dir /usr/local/share/man/man6
-%dir /usr/local/share/man/man7
-%dir /usr/local/share/man/man8
-%dir /usr/local/share/misc
-%dir /usr/local/share/terminfo
-%dir /usr/local/share/zoneinfo
-%dir /usr/local/src
-%dir /usr/sbin
-%dir /usr/share
-%dir /usr/share/color
-%dir /usr/share/dict
-%dir /usr/share/doc
-%dir /usr/share/info
-%dir /usr/share/locale
-%dir /usr/share/man
-%dir /usr/share/man/man1
-%dir /usr/share/man/man2
-%dir /usr/share/man/man3
-%dir /usr/share/man/man4
-%dir /usr/share/man/man5
-%dir /usr/share/man/man6
-%dir /usr/share/man/man7
-%dir /usr/share/man/man8
-%dir /usr/share/misc
-%dir /usr/share/terminfo
-%dir /usr/share/zoneinfo
-%dir /usr/src
-%dir /var
-%dir /var/cache
-%dir /var/lib
-%dir /var/lib/misc
-%dir /var/lib/rpm
-%dir /var/local
-%dir /var/log
-%dir /var/opt
-%dir /var/spool
-%dir /var/spool/mail
+# Log files with special permissions
+%attr(600,root,root) /var/log/btmp
+%attr(664,root,utmp) /var/log/lastlog
+%attr(664,root,utmp) /var/log/wtmp
+%config(noreplace) %attr(664,root,root) /var/log/faillog
 
-# Files and Symlinks
-/bin
-/etc/mtab
+# System configuration files
+%attr(664,root,root) /etc/ld.so.conf
+%attr(664,root,root) /etc/nsswitch.conf
+%config(noreplace) /etc/passwd
 %config(noreplace) /etc/group
 %config(noreplace) /etc/hosts
 %config(noreplace) /etc/hostname
 %config(noreplace) /etc/resolv.conf
 %config(noreplace) /etc/fstab
 %config(noreplace) /etc/os-release
-%config(noreplace) /etc/passwd
 %config(noreplace) /etc/yum.repos.d/maquilinux.repo
 %config(noreplace) /etc/dnf/vars/releasever
-/lib
-/lib64
-/sbin
-/var/lock
-/var/mail
-%config(noreplace) /var/log/faillog
-/var/run
 
 %changelog
+* Mon May 04 2026 Maqui Linux <info@maquilinux.org> - 2-1.m264
+- Version 2: directory ownership transferred to filesystem.spec.
+- Now owns only config files (passwd, group, os-release, etc.) and log seeds.
+- Added Requires: filesystem for directory layout.
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 1-1.m264
 - Maquilinux base package and filesystem layout.
