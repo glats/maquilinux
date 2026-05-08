@@ -1,9 +1,10 @@
 # SPECS/libdnf5.spec
 %define debug_package %{nil}
 
-# libdnf5 is built from the dnf5 source tree. The same CMake build
-# produces libdnf5, libdnf5-cli, and dnf5. This spec only packages
-# the core libdnf5 library and devel files. See also: libdnf5-cli.spec
+# libdnf5 and libdnf5-cli are built from the dnf5 source tree.
+# The same CMake build produces both libraries. This spec packages
+# both libdnf5 (core) and libdnf5-cli (CLI support) with their
+# respective -devel subpackages.
 
 Name: libdnf5
 Version:        5.3.0.0
@@ -23,6 +24,7 @@ BuildRequires:  pkgconfig(libsolv)
 BuildRequires:  pkgconfig(libsolvext)
 BuildRequires:  pkgconfig(popt)
 BuildRequires:  pkgconfig(sqlite3)
+BuildRequires:  pkgconfig(smartcols)
 BuildRequires:  rpm
 Requires:       libsolv
 Requires:       librepo
@@ -74,6 +76,8 @@ cmake --build build
 
 %install
 DESTDIR=%{buildroot} cmake --install build
+# Remove systemd files (not used in Maqui Linux)
+rm -rf %{buildroot}/usr/lib/systemd
 
 %files
 /usr/lib/x86_64-linux-gnu/libdnf5.so.2
@@ -83,14 +87,38 @@ Summary:        Development files for libdnf5
 Requires:       libdnf5%{?_isa} = %{version}-%{release}
 
 %description devel
-Development files for libdnf5: headers, cmake files, pkgconfig, and
-shared library symlinks needed for compiling against libdnf5.
+Development files for libdnf5: headers, pkgconfig, and shared library
+symlinks needed for compiling against libdnf5.
 
 %files devel
 /usr/lib/x86_64-linux-gnu/libdnf5.so
 /usr/include/libdnf5/
-/usr/lib/x86_64-linux-gnu/cmake/libdnf5/
 /usr/lib/x86_64-linux-gnu/pkgconfig/libdnf5.pc
+
+%package cli
+Summary:        CLI library for dnf5
+Requires:       libdnf5%{?_isa} = %{version}-%{release}
+
+%description cli
+Libdnf5-cli is the command-line interface library for dnf5. It provides
+the shared CLI functionality used by the dnf5 command and other tools
+that interact with the package manager.
+
+%files cli
+/usr/lib/x86_64-linux-gnu/libdnf5-cli.so.3
+
+%package cli-devel
+Summary:        Development files for libdnf5-cli
+Requires:       libdnf5-cli%{?_isa} = %{version}-%{release}
+
+%description cli-devel
+Development files for libdnf5-cli: headers, pkgconfig, and shared library
+symlinks needed for compiling against libdnf5-cli.
+
+%files cli-devel
+/usr/lib/x86_64-linux-gnu/libdnf5-cli.so
+/usr/include/libdnf5-cli/
+/usr/lib/x86_64-linux-gnu/pkgconfig/libdnf5-cli.pc
 
 %changelog
 * Mon May 04 2026 Maqui Linux <info@maquilinux.org> - 5.3.0.0-1.m264
