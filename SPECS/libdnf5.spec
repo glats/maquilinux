@@ -13,18 +13,17 @@ License:        LGPL-2.1-or-later
 URL:            https://github.com/rpm-software-management/dnf5
 Source0:        https://github.com/rpm-software-management/dnf5/archive/refs/tags/%{version}.tar.gz
 BuildRequires:  gcc
-BuildRequires: gcc
-BuildRequires: cmake
-BuildRequires: make
-BuildRequires: pkgconfig(fmt)
-BuildRequires: pkgconfig(glib-2.0)
-BuildRequires: pkgconfig(json-c)
-BuildRequires: pkgconfig(librepo)
-BuildRequires: pkgconfig(libsolv)
-BuildRequires: pkgconfig(libsolvext)
-BuildRequires: pkgconfig(popt)
-BuildRequires: pkgconfig(sqlite3)
-BuildRequires: rpm
+BuildRequires:  cmake
+BuildRequires:  make
+BuildRequires:  pkgconfig(fmt)
+BuildRequires:  pkgconfig(glib-2.0)
+BuildRequires:  pkgconfig(json-c)
+BuildRequires:  pkgconfig(librepo)
+BuildRequires:  pkgconfig(libsolv)
+BuildRequires:  pkgconfig(libsolvext)
+BuildRequires:  pkgconfig(popt)
+BuildRequires:  pkgconfig(sqlite3)
+BuildRequires:  rpm
 Requires:       libsolv
 Requires:       librepo
 Requires:       rpm-libs
@@ -40,34 +39,52 @@ the core functionality for resolving dependencies, querying packages,
 and performing transactions on an RPM-based system.
 
 %prep
-%autosetup -p1
+%autosetup -p1 -n dnf5-%{version}
 
 %build
+export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/i386-linux-gnu/pkgconfig:/usr/lib/pkgconfig
+rm -rf build
 cmake -B build \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=/usr/lib/x86_64-linux-gnu \
     -DWITH_SYSTEMD=OFF \
     -DWITH_DBUS=OFF \
-    -DWITH_PLUGIN_ACTIONS=ON
+    -DWITH_DNF5=OFF \
+    -DWITH_DNF5DAEMON_SERVER=OFF \
+    -DWITH_DNF5DAEMON_CLIENT=OFF \
+    -DWITH_DNF5_PLUGINS=OFF \
+    -DWITH_PLUGIN_ACTIONS=OFF \
+    -DWITH_PLUGIN_APPSTREAM=OFF \
+    -DWITH_PLUGIN_EXPIRED_PGP_KEYS=OFF \
+    -DWITH_PLUGIN_MANIFEST=OFF \
+    -DWITH_PLUGIN_LOCAL=OFF \
+    -DWITH_PYTHON_PLUGINS_LOADER=OFF \
+    -DWITH_MODULEMD=OFF \
+    -DWITH_PERL5=OFF \
+    -DWITH_PYTHON3=OFF \
+    -DWITH_RUBY=OFF \
+    -DWITH_GO=OFF \
+    -DWITH_HTML=OFF \
+    -DWITH_MAN=OFF \
+    -DWITH_TRANSLATIONS=OFF \
+    -DWITH_TESTS=OFF \
+    -DWITH_DNF5_OBSOLETES_DNF=OFF
 
 cmake --build build
 
 %install
-cmake --install build
+DESTDIR=%{buildroot} cmake --install build
 
 %files
-%config(noreplace) /etc/dnf/dnf.conf
-%dir %attr(0755, root, root) /etc/dnf/dnf5-aliases.d
-%dir %attr(0755, root, root) /etc/dnf/libdnf5-plugins
-%config(noreplace) /etc/dnf/libdnf5-plugins/local.conf
-%dir %attr(0755, root, root) /usr/lib/sysimage/libdnf5
 /usr/lib/x86_64-linux-gnu/libdnf5.so.2
-/usr/lib/x86_64-linux-gnu/libdnf5/plugins/local.so
-/usr/share/dnf5/aliases.d/compatibility.conf
 
 %package devel
 Summary:        Development files for libdnf5
 Requires:       libdnf5%{?_isa} = %{version}-%{release}
+
+%description devel
+Development files for libdnf5: headers, cmake files, pkgconfig, and
+shared library symlinks needed for compiling against libdnf5.
 
 %files devel
 /usr/lib/x86_64-linux-gnu/libdnf5.so
