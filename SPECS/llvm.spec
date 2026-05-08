@@ -146,7 +146,6 @@ cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/
 %{pkg_multilibdir}/libLTO.so
 %{pkg_multilibdir}/cmake/llvm
 %{pkg_multilibdir}/cmake/llvm*
-%{_datadir}/llvm
 
 %changelog
 * Fri Apr 25 2026 Maqui Linux
