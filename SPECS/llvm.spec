@@ -136,7 +136,6 @@ cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/
 %{pkg_multilibdir}/libLLVM.so.*
 %{pkg_multilibdir}/libRemarks.so.*
 %{pkg_multilibdir}/libLTO.so.*
-%{pkg_multilibdir}/LLVMHello.so
 %{pkg_multilibdir}/libLLVM-*.so
 
 %files devel
