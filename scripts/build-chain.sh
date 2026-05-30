@@ -337,7 +337,7 @@ install_built_rpms() {
     fi
 
     local chroot_target
-    chroot_target="${MQL_ROOTFS:-${MQL_LFS:-${MQL_DISK:-/run/media/glats/maquilinux}}}/merged"
+    chroot_target="${MQL_ROOTFS:-${MQL_LFS:-${MQL_DISK:-/mnt/maquilinux}}}/merged"
 
     local rpms_dir="$PROJECT_ROOT/RPMS"
     local rpms_installed=0

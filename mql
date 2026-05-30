@@ -147,6 +147,9 @@ COMMANDS:
     smoke               Run smoke tests
     verify              Verify LFS independence
 
+  audit [options]       Distro health audit (--json|--brief|--fix)
+  health                Alias for audit
+
   status                Show development environment status
   config                Show active configuration
   help                  Show this help message
@@ -166,7 +169,7 @@ EXAMPLES:
   mql build openrc --both              # Build openrc for 64+32 bit
   mql install openrc                   # Install RPM in chroot
   mql backup create pre-rust           # Create backup before risky changes
-  MQL_ROOTFS=/run/media/glats/maquilinux mql status   # Override mount point
+  MQL_ROOTFS=/mnt/maquilinux mql status   # Override mount point
 
 For full documentation:
   docs/MANUAL-NIX.md
@@ -333,6 +336,11 @@ main() {
                 verify) mql_test_verify "$@" ;;
                 *) log_error "Unknown test subcommand: $subcmd"; exit 1 ;;
             esac
+            ;;
+
+        audit|health)
+            source "$MQL_PROJECT_ROOT/lib/audit.sh"
+            mql_audit "$@"
             ;;
 
         *)

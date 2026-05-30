@@ -18,6 +18,9 @@ on:
     paths:
       - 'SPECS/*.spec'
       - 'SOURCES/*'
+  pull_request:
+    paths:
+      - 'SPECS/*.spec'
 
 jobs:
   build:
@@ -67,41 +70,43 @@ jobs:
         run: |
           source "$GITHUB_WORKSPACE/mql.conf" 2>/dev/null || true
           source "$GITHUB_WORKSPACE/mql.local" 2>/dev/null || true
-          echo "MQL_DISK=${MQL_DISK:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_ROOTFS=${MQL_ROOTFS:-/mnt/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_REPO_SYNC_HOST=${MQL_REPO_SYNC_HOST:-rog.local}" >> $GITHUB_ENV
+          echo "MQL_REPO_SYNC_PATH=${MQL_REPO_SYNC_PATH:-/srv/glats/nginx/repo/linux/maquilinux}" >> $GITHUB_ENV
       
       - name: Verify overlay and setup chroot
         run: |
           # Verify overlay mounted
-          if ! mountpoint -q "$MQL_DISK/merged" 2>/dev/null; then
-            echo "❌ Overlay not mounted at $MQL_DISK/merged"
-            echo "Mount with: sudo mount -t overlay overlay -o lowerdir=$MQL_DISK/base,upperdir=$MQL_DISK/layers/upper,workdir=$MQL_DISK/layers/work $MQL_DISK/merged"
+          if ! mountpoint -q "$MQL_ROOTFS/merged" 2>/dev/null; then
+            echo "Overlay not mounted at $MQL_ROOTFS/merged"
+            echo "Mount with: sudo mount -t overlay overlay -o lowerdir=$MQL_ROOTFS/base,upperdir=$MQL_ROOTFS/layers/upper,workdir=$MQL_ROOTFS/layers/work $MQL_ROOTFS/merged"
             exit 1
           fi
-          echo "✅ Overlay mounted"
+          echo "Overlay mounted"
           
           # Verify rpmbuild in chroot (rootfs must have it)
-          if [[ ! -x "$MQL_DISK/merged/usr/bin/rpmbuild" ]]; then
-            echo "❌ rpmbuild not found in chroot - rootfs must have rpm package installed"
+          if [[ ! -x "$MQL_ROOTFS/merged/usr/bin/rpmbuild" ]]; then
+            echo "rpmbuild not found in chroot - rootfs must have rpm package installed"
             exit 1
           fi
-          echo "✅ rpmbuild available in chroot"
+          echo "rpmbuild available in chroot"
           
           # Bind mount workspace into chroot
-          sudo mkdir -p "$MQL_DISK/merged/workspace"
-          if ! mountpoint -q "$MQL_DISK/merged/workspace" 2>/dev/null; then
-            sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_DISK/merged/workspace"
-            echo "✅ Workspace bind-mounted"
+          sudo mkdir -p "$MQL_ROOTFS/merged/workspace"
+          if ! mountpoint -q "$MQL_ROOTFS/merged/workspace" 2>/dev/null; then
+            sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_ROOTFS/merged/workspace"
+            echo "Workspace bind-mounted"
           fi
           
           # Mount virtual filesystems for chroot
-          if ! mountpoint -q "$MQL_DISK/merged/proc" 2>/dev/null; then
-            sudo mount -t proc proc "$MQL_DISK/merged/proc" || true
+          if ! mountpoint -q "$MQL_ROOTFS/merged/proc" 2>/dev/null; then
+            sudo mount -t proc proc "$MQL_ROOTFS/merged/proc" || true
           fi
-          if ! mountpoint -q "$MQL_DISK/merged/dev" 2>/dev/null; then
-            sudo mount --bind /dev "$MQL_DISK/merged/dev" || true
+          if ! mountpoint -q "$MQL_ROOTFS/merged/dev" 2>/dev/null; then
+            sudo mount --bind /dev "$MQL_ROOTFS/merged/dev" || true
           fi
           
-          echo "✅ Chroot environment ready"
+          echo "Chroot environment ready"
       
       - name: Determine build list
         id: list
@@ -124,19 +129,33 @@ jobs:
           echo "📋 Build order: $SPECS"
       
       - name: Backup before build
-        if: steps.list.outputs.specs != ''
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
       
       - name: Check disk space
         if: steps.list.outputs.specs != ''
         run: |
-          FREE_GB=$(df -BG "$MQL_DISK" | tail -1 | awk '{print $4}' | sed 's/G//')
-          [[ "$FREE_GB" -lt 10 ]] && { echo "❌ Need 10GB free, have ${FREE_GB}GB"; exit 1; }
-          echo "✅ Disk: ${FREE_GB}GB free"
+          FREE_GB=$(df -BG "$MQL_ROOTFS" | tail -1 | awk '{print $4}' | sed 's/G//')
+          [[ "$FREE_GB" -lt 10 ]] && { echo "Need 10GB free, have ${FREE_GB}GB"; exit 1; }
+          echo "Disk: ${FREE_GB}GB free"
+      
+      - name: Validate spec syntax (PR mode)
+        if: steps.list.outputs.specs != '' && github.event_name == 'pull_request'
+        run: |
+          IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
+          for spec in "${SPECS[@]}"; do
+            spec=$(echo "$spec" | xargs)
+            [ -z "$spec" ] && continue
+            echo "Validating $spec..."
+            rpmspec --parse "SPECS/${spec}.spec" > /dev/null 2>&1 && \
+              echo "OK: $spec" || \
+              { echo "FAIL: $spec has syntax errors"; exit 1; }
+          done
+          echo "All specs valid"
       
       - name: Fetch sources and build
-        if: steps.list.outputs.specs != ''
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
           
@@ -146,7 +165,7 @@ jobs:
             
             echo ""
             echo "=========================================="
-            echo "📦 Processing: $spec"
+            echo "Processing: $spec"
             echo "=========================================="
             
             # Fetch sources (on host, has internet)
@@ -157,7 +176,7 @@ jobs:
             
             # Build inside chroot (i686) - skip if spec is noarch or x86_64 only
             if ! grep -Eq '^ExclusiveArch:[[:space:]]*x86_64' "SPECS/${spec}.spec"; then
-              ./scripts/build-spec.sh "$spec" --arch i686 || echo "⚠️  i686 build failed or not supported"
+              ./scripts/build-spec.sh "$spec" --arch i686 || echo "i686 build failed or not supported"
             fi
             
             # Install to rootfs
@@ -166,39 +185,39 @@ jobs:
             done
             ./scripts/run-in-chroot.sh ldconfig
             
-            echo "✅ $spec complete"
+            echo "$spec complete"
           done
       
       - name: Sign RPMs
-        if: steps.list.outputs.specs != ''
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           # Fix permissions: RPMs created inside chroot as root, need access for signing
           sudo chown -R $(id -u):$(id -g) RPMS/ 2>/dev/null || true
           
-          # Sign RPMs with GPG
+          # Sign RPMs with GPG (graceful fallback if rpmsign unavailable)
           for rpm in RPMS/x86_64/*.rpm; do
             [ -f "$rpm" ] && nix shell nixpkgs#rpm -c rpmsign \
               --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
-              --addsign "$rpm" 2>&1 || true
+              --addsign "$rpm" 2>&1 || echo "::warning::Signing failed or skipped for $(basename "$rpm")"
           done
       
       - name: Update local repo
-        if: steps.list.outputs.specs != ''
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           # Create repo directories if they don't exist
-          sudo mkdir -p /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
-          sudo mkdir -p /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
+          sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
+          sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
           
           # Copy RPMs
-          sudo cp RPMS/x86_64/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ 2>/dev/null || true
-          sudo cp RPMS/i686/*.rpm /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ 2>/dev/null || true
+          sudo cp RPMS/x86_64/*.rpm "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" 2>/dev/null || true
+          sudo cp RPMS/i686/*.rpm "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" 2>/dev/null || true
           
           # Update repo metadata
-          nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/
-          nix shell nixpkgs#createrepo_c -c sudo createrepo_c /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
       
-      - name: Setup SSH for sync
-        if: steps.list.outputs.specs != ''
+- name: Setup SSH for sync
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           # Ensure SSH directory and known_hosts
           mkdir -p ~/.ssh
@@ -206,34 +225,35 @@ jobs:
           
           # Add rog.local to known_hosts if not present
           if ! grep -q "rog.local" ~/.ssh/known_hosts 2>/dev/null; then
-            ssh-keyscan -H rog.local >> ~/.ssh/known_hosts 2>/dev/null || echo "⚠️  Could not get rog.local host key"
+            ssh-keyscan -H rog.local >> ~/.ssh/known_hosts 2>/dev/null || echo "Could not get rog.local host key"
           fi
           
           # Check SSH key exists
           if [ -f ~/.ssh/id_ed25519 ] || [ -f ~/.ssh/id_rsa ]; then
-            echo "✅ SSH key found for sync"
+            echo "SSH key found for sync"
             # Also verify rog.local key works
             if ssh -o BatchMode=yes -o ConnectTimeout=5 rog.local 'echo SSH OK' 2>/dev/null; then
-              echo "✅ SSH to rog.local works"
+              echo "SSH to rog.local works"
             else
-              echo "⚠️  SSH to rog.local not working yet. Run: ssh-copy-id -i ~/.ssh/id_ed25519 rog.local"
+              echo "SSH to rog.local not working yet. Run: ssh-copy-id -i ~/.ssh/id_ed25519 rog.local"
             fi
           else
-            echo "⚠️  No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog.local"
+            echo "No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog.local"
           fi
-      
+       
       - name: Sync to repo.glats.org
-        if: steps.list.outputs.specs != '' && success()
+        if: steps.list.outputs.specs != '' && success() && github.event_name == 'push'
         run: |
-          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/x86_64/stable/ rog.local:/srv/repo/linux/maquilinux/26.4/x86_64/stable/
-          rsync -avz --delete /srv/glats/nginx/repo/linux/maquilinux/26.4/i686/stable/ rog.local:/srv/repo/linux/maquilinux/26.4/i686/stable/
-          echo "✅ Synced to repo.glats.org"
+          # Note: no --delete flag — additive sync only, preserves existing packages
+          rsync -avz "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
+          rsync -avz "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
+          echo "Synced to repo.glats.org"
       
       - name: Success backup
-        if: success() && steps.list.outputs.specs != ''
+        if: success() && steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
-          echo "✅ Build complete!"
+          echo "Build complete!"
       
       - name: Failure notification
         if: failure() && steps.list.outputs.specs != ''

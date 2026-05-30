@@ -165,7 +165,15 @@ get_project_root() {
 # Path helper functions - always read from env so overrides are picked up
 get_repo_dest() {
     local releasever="${MQL_RELEASEVER:-26.4}"
-    echo "${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/${releasever}}"
+    echo "${MQL_REPO_DEST:-${MQL_REPO_SYNC_PATH:-/srv/glats/nginx/repo/linux/maquilinux}/${releasever}}"
+}
+
+# get_repo_sync_target - returns [user@]host:path for rsync
+# Uses MQL_REPO_SYNC_HOST + MQL_REPO_SYNC_PATH (with MQL_RELEASEVER appended)
+get_repo_sync_target() {
+    local host="${MQL_REPO_SYNC_HOST:-rog.local}"
+    local path="${MQL_REPO_SYNC_PATH:-/srv/glats/nginx/repo/linux/maquilinux}/${MQL_RELEASEVER:-26.4}"
+    echo "${host}:${path}"
 }
 
 get_repo_url() {

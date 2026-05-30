@@ -70,3 +70,41 @@ mql_build() {
     # Run build-spec.sh with all arguments
     "$MQL_PROJECT_ROOT/scripts/build-spec.sh" "$spec_name" "${extra_args[@]}"
 }
+
+# mql_install - Install RPM into chroot
+# Delegates to scripts/install-spec.sh
+mql_install() {
+    local spec_name="${1:-}"
+    local extra_args=()
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help|-h)
+                echo "Usage: mql install <spec> [--both] [--arch=<arch>]"
+                exit 0
+                ;;
+            *)
+                if [[ -z "$spec_name" ]]; then
+                    spec_name="$1"
+                else
+                    extra_args+=("$1")
+                fi
+                ;;
+        esac
+        shift
+    done
+    
+    if [[ -z "$spec_name" ]]; then
+        log_error "Missing spec name"
+        exit 1
+    fi
+    
+    local spec_file="$MQL_PROJECT_ROOT/SPECS/${spec_name}.spec"
+    if [[ ! -f "$spec_file" ]]; then
+        log_error "Spec not found: $spec_name"
+        exit 1
+    fi
+    
+    log_step "Installing $spec_name into chroot"
+    "$MQL_PROJECT_ROOT/scripts/install-spec.sh" "$spec_name" "${extra_args[@]}"
+}

@@ -19,9 +19,9 @@ Environment variables override both files. Key variable:
 
 ```bash
 # If your disk is auto-mounted at a different path:
-echo "MQL_LFS=/run/media/glats/maquilinux" >> mql.local
+echo "MQL_ROOTFS=/mnt/maquilinux" >> mql.local
 # Or per-session:
-export MQL_LFS=/run/media/glats/maquilinux
+export MQL_ROOTFS=/mnt/maquilinux
 ```
 
 Show active config: `mql config`

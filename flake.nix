@@ -81,7 +81,7 @@
 
             # Auto-detect MQL_ROOTFS if not set
             _detect_rootfs() {
-              local rootfs="''${MQL_ROOTFS:-''${MQL_LFS:-/run/media/glats/maquilinux}}"
+              local rootfs="''${MQL_ROOTFS:-''${MQL_LFS:-/mnt/maquilinux}}"
               local label="maquilinux"
 
               if mountpoint -q "$rootfs" 2>/dev/null; then

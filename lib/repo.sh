@@ -76,13 +76,13 @@ mql_repo_list() {
 }
 
 # mql_repo_sync
-# Update metadata then rsync to MQL_REPO_DEST.
+# Update metadata then rsync to remote repo.
 mql_repo_sync() {
     local dest
-    dest="$(get_repo_dest)"
+    dest="$(get_repo_sync_target)"
 
-    if [[ -z "${MQL_REPO_DEST:-}" ]]; then
-        log_warn "MQL_REPO_DEST not set — syncing to default: $dest"
+    if [[ -z "${MQL_REPO_SYNC_HOST:-}" ]]; then
+        log_warn "MQL_REPO_SYNC_HOST not set — syncing to default: $dest"
     fi
 
     log_step "Syncing to $dest"
@@ -100,7 +100,8 @@ mql_repo_sync() {
         mkdir -p "$dest"
     fi
 
-    rsync -avz --delete "$MQL_PROJECT_ROOT/RPMS/" "$dest/"
+    # NOTE: no --delete flag — additive sync only, preserves existing packages on remote
+    rsync -avz "$MQL_PROJECT_ROOT/RPMS/" "$dest/"
     log_ok "Sync complete: $dest"
 }
 

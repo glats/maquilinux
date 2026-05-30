@@ -10,6 +10,10 @@ jobs:
   build-iso:
     runs-on: [self-hosted, maquilinux]
     
+    env:
+      MQL_ROOTFS: /mnt/maquilinux
+      MQL_WORKSPACE: /home/glats/Work/maquilinux
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,8 +30,8 @@ jobs:
       
       - name: Prepare ISO directory
         run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
-          ROOTFS="/run/media/glats/maquilinux"
+          WORKSPACE="$MQL_WORKSPACE"
+          ROOTFS="$MQL_ROOTFS"
           ISODIR="$WORKSPACE/iso"
           
           mkdir -p "$ISODIR"
@@ -42,8 +46,8 @@ jobs:
       
       - name: Create squashfs
         run: |
-          ROOTFS="/run/media/glats/maquilinux"
-          WORKSPACE="/home/glats/Work/maquilinux"
+          ROOTFS="$MQL_ROOTFS"
+          WORKSPACE="$MQL_WORKSPACE"
           
           # Create squashfs from rootfs (excluding some dirs)
           nix shell nixpkgs#squashfs-tools -c mksquashfs "$ROOTFS" "$WORKSPACE/iso/rootfs.squashfs" \
@@ -53,7 +57,7 @@ jobs:
       
       - name: Create ISO
         run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
+          WORKSPACE="$MQL_WORKSPACE"
           VERSION="${{ steps.version.outputs.version }}"
           
           # Create basic bootable ISO with grub
@@ -74,7 +78,7 @@ jobs:
       
       - name: Generate checksums
         run: |
-          WORKSPACE="/home/glats/Work/maquilinux"
+          WORKSPACE="$MQL_WORKSPACE"
           VERSION="${{ steps.version.outputs.version }}"
           
           cd "$WORKSPACE"

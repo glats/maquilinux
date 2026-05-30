@@ -42,7 +42,7 @@ jobs:
       - name: Load configuration
         run: |
           source mql.conf 2>/dev/null || true
-          echo "MQL_DISK=${MQL_DISK:-/run/media/glats/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_ROOTFS=${MQL_ROOTFS:-/mnt/maquilinux}" >> $GITHUB_ENV
       
       - name: Verify confirmation
         run: |
@@ -66,8 +66,8 @@ jobs:
           echo "🔍 Checking overlay status..."
           
           # Check if overlay has changes
-          UPPER_SIZE=$(du -sh "$MQL_DISK/layers/upper" 2>/dev/null | cut -f1)
-          UPPER_FILES=$(find "$MQL_DISK/layers/upper" -type f 2>/dev/null | wc -l)
+          UPPER_SIZE=$(du -sh "$MQL_ROOTFS/layers/upper" 2>/dev/null | cut -f1)
+          UPPER_FILES=$(find "$MQL_ROOTFS/layers/upper" -type f 2>/dev/null | wc -l)
           
           echo "Overlay upper layer:"
           echo "  Size: $UPPER_SIZE"
@@ -90,10 +90,10 @@ jobs:
           echo "🔧 Preparing for promote..."
           
           # Unmount virtual filesystems from merged
-          sudo umount -l "$MQL_DISK/merged/proc" 2>/dev/null || true
-          sudo umount -l "$MQL_DISK/merged/dev" 2>/dev/null || true
-          sudo umount -l "$MQL_DISK/merged/workspace" 2>/dev/null || true
-          sudo umount -l "$MQL_DISK/merged" 2>/dev/null || true
+          sudo umount -l "$MQL_ROOTFS/merged/proc" 2>/dev/null || true
+          sudo umount -l "$MQL_ROOTFS/merged/dev" 2>/dev/null || true
+          sudo umount -l "$MQL_ROOTFS/merged/workspace" 2>/dev/null || true
+          sudo umount -l "$MQL_ROOTFS/merged" 2>/dev/null || true
           
           echo "✅ Overlay unmounted"
       
@@ -101,22 +101,22 @@ jobs:
         run: |
           echo "🚀 Promoting overlay to base..."
           echo "  This will merge all overlay changes to the base rootfs."
-          echo "  Source: $MQL_DISK/layers/upper/"
-          echo "  Target: $MQL_DISK/base/"
+          echo "  Source: $MQL_ROOTFS/layers/upper/"
+          echo "  Target: $MQL_ROOTFS/base/"
           echo ""
           
           # Use rsync to merge upper to base
           # --inplace for speed on large files
           # NOTE: NO --delete! We only want to ADD overlay changes, not replace base
           sudo rsync -a --inplace \
-            "$MQL_DISK/layers/upper/" \
-            "$MQL_DISK/base/"
+            "$MQL_ROOTFS/layers/upper/" \
+            "$MQL_ROOTFS/base/"
           
           echo "✅ Overlay merged to base"
           
           # Clear upper layer
           echo "🧹 Clearing overlay upper layer..."
-          sudo rm -rf "$MQL_DISK/layers/upper"/*
+          sudo rm -rf "$MQL_ROOTFS/layers/upper"/*
           
           echo "✅ Upper layer cleared"
       
@@ -126,16 +126,16 @@ jobs:
           
           # Remount the overlay
           sudo mount -t overlay overlay \
-            -o lowerdir="$MQL_DISK/base",upperdir="$MQL_DISK/layers/upper",workdir="$MQL_DISK/layers/work" \
-            "$MQL_DISK/merged"
+            -o lowerdir="$MQL_ROOTFS/base",upperdir="$MQL_ROOTFS/layers/upper",workdir="$MQL_ROOTFS/layers/work" \
+            "$MQL_ROOTFS/merged"
           
           # Remount workspace
-          sudo mkdir -p "$MQL_DISK/merged/workspace"
-          sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_DISK/merged/workspace"
+          sudo mkdir -p "$MQL_ROOTFS/merged/workspace"
+          sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_ROOTFS/merged/workspace"
           
           # Remount virtual filesystems
-          sudo mount -t proc proc "$MQL_DISK/merged/proc" || true
-          sudo mount --bind /dev "$MQL_DISK/merged/dev" || true
+          sudo mount -t proc proc "$MQL_ROOTFS/merged/proc" || true
+          sudo mount --bind /dev "$MQL_ROOTFS/merged/dev" || true
           
           echo "✅ Overlay remounted"
       
@@ -144,15 +144,15 @@ jobs:
           echo "🔍 Verifying promote..."
           
           # Check that tree is now in base
-          if [ -f "$MQL_DISK/base/usr/bin/tree" ]; then
+          if [ -f "$MQL_ROOTFS/base/usr/bin/tree" ]; then
             echo "✅ tree is now in base rootfs:"
-            "$MQL_DISK/base/usr/bin/tree" --version 2>/dev/null || true
+            "$MQL_ROOTFS/base/usr/bin/tree" --version 2>/dev/null || true
           else
             echo "⚠️  tree not found in base (may need manual check)"
           fi
           
           # Check overlay is clean
-          UPPER_FILES=$(find "$MQL_DISK/layers/upper" -type f 2>/dev/null | wc -l)
+          UPPER_FILES=$(find "$MQL_ROOTFS/layers/upper" -type f 2>/dev/null | wc -l)
           if [ "$UPPER_FILES" -eq 0 ]; then
             echo "✅ Overlay upper layer is clean ($UPPER_FILES files)"
           else
@@ -160,7 +160,7 @@ jobs:
           fi
           
           # Verify overlay is properly remounted
-          if mountpoint -q "$MQL_DISK/merged" 2>/dev/null; then
+          if mountpoint -q "$MQL_ROOTFS/merged" 2>/dev/null; then
             echo "✅ Overlay filesystem remounted"
           else
             echo "❌ Overlay not mounted - manual intervention needed"
