@@ -10,6 +10,7 @@ Source0: maquilinux.repo
 
 # Directory layout is now owned by filesystem.spec
 Requires: filesystem
+Requires:       maquilinux-release
 
 # Built inside a minimal Maqui Linux chroot without find-debuginfo or brp helpers.
 # Disable automatic debuginfo and BRP post scripts for consistent packaging.
@@ -103,11 +104,6 @@ cat > %{buildroot}/etc/hostname <<- EOF
 # maquilinux
 EOF
 
-cat > %{buildroot}/etc/resolv.conf <<- EOF
-# DNS resolver configuration. Example:
-# nameserver 1.1.1.1
-# nameserver 8.8.8.8
-EOF
 
 cat > %{buildroot}/etc/fstab <<- EOF
 # <file system> <dir> <type> <options> <dump> <pass>
@@ -124,8 +120,6 @@ HOME_URL="https://maquilinux.org/"
 EOF
 
 # DNF/YUM repository configuration
-install -Dm 644 %{_sourcedir}/maquilinux.repo %{buildroot}/etc/yum.repos.d/maquilinux.repo
-
 # DNF releasever variable (ensures $releasever resolves correctly)
 echo "26.4" > %{buildroot}/etc/dnf/vars/releasever
 
@@ -151,10 +145,10 @@ chmod -v 600 %{buildroot}/var/log/btmp
 %config(noreplace) /etc/group
 %config(noreplace) /etc/hosts
 %config(noreplace) /etc/hostname
-%config(noreplace) /etc/resolv.conf
+# /etc/resolv.conf now owned by maquilinux-release
 %config(noreplace) /etc/fstab
 %config(noreplace) /etc/os-release
-%config(noreplace) /etc/yum.repos.d/maquilinux.repo
+# /etc/yum.repos.d/maquilinux.repo now owned by maquilinux-release
 %config(noreplace) /etc/dnf/vars/releasever
 
 %changelog

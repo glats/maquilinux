@@ -1,6 +1,7 @@
 [maquilinux]
-name=Maquilinux $releasever - $basearch
+name=Maqui Linux $releasever - $basearch
 baseurl=https://repo.glats.org/linux/maquilinux/$releasever/$basearch/stable
 enabled=1
-gpgcheck=0
-sslverify=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-maquilinux
+sslcacert=/etc/ssl/certs/ca-certificates.crt
