@@ -20,7 +20,8 @@ on:
       - 'SOURCES/*'
   pull_request:
     paths:
-      - 'SPECS/*.spec'
+    - 'SPECS/*.spec'
+    - 'SOURCES/*'
 
 jobs:
   build:

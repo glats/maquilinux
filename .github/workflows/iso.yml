@@ -12,7 +12,7 @@ jobs:
     
     env:
       MQL_ROOTFS: /mnt/maquilinux
-      MQL_WORKSPACE: /home/glats/Work/maquilinux
+      MQL_WORKSPACE: ${{ github.workspace }}
     
     steps:
       - name: Checkout
