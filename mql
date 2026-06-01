@@ -111,6 +111,11 @@ mql - Maqui Linux Development CLI
 USAGE: mql <command> [options] [arguments]
 
 COMMANDS:
+  init                  Initialize developer environment from rootfs tarball
+    --from-file <path>  Path to rootfs tarball (.tar.gz or .tar.xz)
+    --rootfs <path>     Override target directory (default: /mnt/maquilinux)
+    --force             Overwrite existing base/ and mql.local
+
   chroot                Enter the overlay chroot
     --reset             Discard overlay changes
     --persist <name>    Save snapshot of current overlay
@@ -164,6 +169,7 @@ CONFIGURATION:
     MQL_REPO_DEST=${MQL_REPO_DEST:-/srv/glats/nginx/repo/maquilinux/26.4}
 
 EXAMPLES:
+  mql init --from-file rootfs.tar.xz  # Initialize from tarball
   mql chroot                           # Enter interactive chroot
   mql chroot --exec "rpm -qa"          # Run single command in chroot
   mql build openrc --both              # Build openrc for 64+32 bit
@@ -205,9 +211,9 @@ show_status() {
         echo "  Upper:     $(du -sh "$rootfs/layers/upper" 2>/dev/null | cut -f1)"
         echo "  Snapshots: $(ls "$rootfs/layers/snapshots/" 2>/dev/null | wc -l)"
     elif [[ -d "$rootfs" ]]; then
-        log_warn "Disk mounted but overlay not set up (run setup first)"
+        log_warn "Disk mounted but overlay not set up (run 'mql init --from-file <tarball>' first)"
     else
-        log_warn "Overlay structure not set up"
+        log_warn "Overlay structure not set up (run 'mql init --from-file <tarball>')"
     fi
     echo ""
 
@@ -341,6 +347,11 @@ main() {
         audit|health)
             source "$MQL_PROJECT_ROOT/lib/audit.sh"
             mql_audit "$@"
+            ;;
+
+        init)
+            source "$MQL_PROJECT_ROOT/lib/init.sh"
+            mql_init "$@"
             ;;
 
         *)
