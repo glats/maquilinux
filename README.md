@@ -140,3 +140,4 @@ See `SPECS/SPEC_TEMPLATE.md` for the full Gen3 spec template.
 | `docs/DECISION-FRAMEWORK.md` | Mandatory process before any tool/library decision |
 | `docs/DECISIONS.md` | Log of all tool and architecture decisions with rationale |
 | `SPECS/SPEC_TEMPLATE.md` | Gen3 spec template and authoring guide |
+
