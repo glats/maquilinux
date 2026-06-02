@@ -217,7 +217,7 @@ jobs:
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
       
-- name: Setup SSH for sync
+      - name: Setup SSH for sync
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           # Ensure SSH directory and known_hosts
