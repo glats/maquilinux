@@ -205,19 +205,20 @@ jobs:
       - name: Update local repo
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
-          # Create repo directories if they don't exist
-          sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
-          sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
+          # Use local staging directory (MQL_REPO_SYNC_PATH may not exist on runner)
+          STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
+          sudo mkdir -p "$STAGING/x86_64/stable/"
+          sudo mkdir -p "$STAGING/i686/stable/"
           
-          # Copy RPMs
-          sudo cp RPMS/x86_64/*.rpm "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" 2>/dev/null || true
-          sudo cp RPMS/i686/*.rpm "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" 2>/dev/null || true
+          # Copy RPMs to staging
+          sudo cp RPMS/x86_64/*.rpm "$STAGING/x86_64/stable/" 2>/dev/null || true
+          sudo cp RPMS/i686/*.rpm "$STAGING/i686/stable/" 2>/dev/null || true
           
-          # Update repo metadata
-          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
-          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
-      
-- name: Setup SSH for sync
+          # Regenerate repo metadata
+          nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/x86_64/stable/"
+          nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/i686/stable/"
+
+      - name: Setup SSH for sync
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           # Ensure SSH directory and known_hosts
@@ -241,13 +242,16 @@ jobs:
           else
             echo "No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog.local"
           fi
-       
+      
       - name: Sync to repo.glats.org
         if: steps.list.outputs.specs != '' && success() && github.event_name == 'push'
         run: |
+          STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
+          REMOTE_BASE="$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER"
+          # Note: --ignore-existing prevents overwriting already-signed RPMs
           # Note: no --delete flag — additive sync only, preserves existing packages
-          rsync -avz "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
-          rsync -avz "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
+          rsync -avz --ignore-existing "$STAGING/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/x86_64/stable/"
+          rsync -avz --ignore-existing "$STAGING/i686/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/i686/stable/"
           echo "Synced to repo.glats.org"
       
       - name: Success backup
