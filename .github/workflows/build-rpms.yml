@@ -195,8 +195,8 @@ jobs:
         run: |
           # Copy RPMs from workspace (where chroot builds) to local directory
           mkdir -p RPMS/x86_64 RPMS/i686
-          cp /workspace/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
-          cp /workspace/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
+          cp ~/Work/maquilinux/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
+          cp ~/Work/maquilinux/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
           ls -la RPMS/x86_64/ 2>/dev/null || echo "No x86_64 RPMs"
       
       - name: Sign RPMs
@@ -256,9 +256,9 @@ jobs:
         if: steps.list.outputs.specs != '' && always() && github.event_name == 'push'
         run: |
           # Note: no --delete flag — additive sync only, preserves existing packages
-          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
-          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
-          echo "Synced to repo.glats.org"
+          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" 2>&1 || echo "::warning::x86_64 sync had issues"
+          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" 2>&1 || echo "::warning::i686 sync had issues"
+          echo "Sync attempted — check warnings above"
       
       - name: Success backup
         if: always() && steps.list.outputs.specs != '' && github.event_name == 'push'
