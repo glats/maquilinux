@@ -1,6 +1,6 @@
 Name:           grep
 Version:        3.12
-Release:        2.m264%{?dist}
+Release:        3.m264%{?dist}
 Summary:        Print lines matching a pattern
 
 # Built inside a minimal Maqui Linux chroot; disable helpers not available here.
