@@ -134,7 +134,7 @@ jobs:
       - name: Backup before build
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
-          ./scripts/run-in-chroot.sh --preserve-env /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
+          ./mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
       
       - name: Check disk space
         if: steps.list.outputs.specs != ''
@@ -276,7 +276,7 @@ jobs:
         if: always() && steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           echo "[$(date +%H:%M:%S)] Step: Creating post-build backup..."
-          ./scripts/run-in-chroot.sh --preserve-env /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
+          ./mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
           echo "[$(date +%H:%M:%S)] Step: Backup complete"
           echo "✅ Build pipeline complete!"
       
