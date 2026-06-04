@@ -8,7 +8,7 @@
 
 Name:           tree
 Version:        %{pkg_version}
-Release:        3.m264%{?dist}
+Release:        4.m264%{?dist}
 Summary:        List directory contents in a tree-like format
 
 License:        GPL-2.0-or-later
