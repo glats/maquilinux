@@ -190,6 +190,15 @@ jobs:
             echo "$spec complete"
           done
       
+      - name: Collect RPMs
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
+        run: |
+          # Copy RPMs from workspace (where chroot builds) to local directory
+          mkdir -p RPMS/x86_64 RPMS/i686
+          cp /workspace/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
+          cp /workspace/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
+          ls -la RPMS/x86_64/ 2>/dev/null || echo "No x86_64 RPMs"
+      
       - name: Sign RPMs
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
@@ -244,15 +253,15 @@ jobs:
           fi
        
       - name: Sync to repo.glats.org
-        if: steps.list.outputs.specs != '' && success() && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && always() && github.event_name == 'push'
         run: |
           # Note: no --delete flag — additive sync only, preserves existing packages
-          rsync -avz "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
-          rsync -avz "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
+          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
+          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
           echo "Synced to repo.glats.org"
       
       - name: Success backup
-        if: success() && steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: always() && steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
           echo "Build complete!"
