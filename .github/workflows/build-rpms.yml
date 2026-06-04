@@ -74,6 +74,7 @@ jobs:
           echo "MQL_ROOTFS=${MQL_ROOTFS:-/mnt/maquilinux}" >> $GITHUB_ENV
           echo "MQL_REPO_SYNC_HOST=${MQL_REPO_SYNC_HOST:-rog.local}" >> $GITHUB_ENV
           echo "MQL_REPO_SYNC_PATH=${MQL_REPO_SYNC_PATH:-/srv/glats/nginx/repo/linux/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_RELEASEVER=${MQL_RELEASEVER:-26.4}" >> $GITHUB_ENV
       
       - name: Verify overlay and setup chroot
         run: |
