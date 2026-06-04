@@ -10,6 +10,7 @@ Summary:        Print lines matching a pattern
 
 License:        GPLv3+
 URL:            https://www.gnu.org/software/grep/
+# Download URL: https://ftp.gnu.org/gnu/grep/grep-3.12.tar.xz
 Source0:        grep-%{version}.tar.xz
 
 %description
