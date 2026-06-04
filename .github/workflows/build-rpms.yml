@@ -165,6 +165,7 @@ jobs:
             spec=$(echo "$spec" | xargs)
             [ -z "$spec" ] && continue
             
+            echo "[$(date +%H:%M:%S)] Step: Build starting for $spec..."
             echo ""
             echo "=========================================="
             echo "Processing: $spec"
@@ -188,33 +189,41 @@ jobs:
             ./scripts/run-in-chroot.sh ldconfig
             
             echo "$spec complete"
+            echo "[$(date +%H:%M:%S)] Step: Build complete for $spec"
           done
+          echo "[$(date +%H:%M:%S)] Step: All builds finished"
       
       - name: Collect RPMs
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Collecting RPMs..."
           # Copy RPMs from workspace (where chroot builds) to local directory
           mkdir -p RPMS/x86_64 RPMS/i686
           cp ~/Work/maquilinux/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
           cp ~/Work/maquilinux/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
-          ls -la RPMS/x86_64/ 2>/dev/null || echo "No x86_64 RPMs"
+          RPM_COUNT=$(ls RPMS/x86_64/*.rpm 2>/dev/null | wc -l)
+          echo "[$(date +%H:%M:%S)] Step: Collected $RPM_COUNT x86_64 RPMs"
       
       - name: Sign RPMs
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Signing RPMs..."
           # Fix permissions: RPMs created inside chroot as root, need access for signing
           sudo chown -R $(id -u):$(id -g) RPMS/ 2>/dev/null || true
           
           # Sign RPMs with GPG (graceful fallback if rpmsign unavailable)
+          SIGNED=0
           for rpm in RPMS/x86_64/*.rpm; do
             [ -f "$rpm" ] && nix shell nixpkgs#rpm -c rpmsign \
               --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
-              --addsign "$rpm" 2>&1 || echo "::warning::Signing failed or skipped for $(basename "$rpm")"
+              --addsign "$rpm" 2>&1 && ((SIGNED++)) || echo "::warning::Signing failed or skipped for $(basename "$rpm")"
           done
+          echo "[$(date +%H:%M:%S)] Step: Signed $SIGNED RPMs"
       
       - name: Update local repo
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Updating local repo..."
           # Create repo directories if they don't exist
           sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
           sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
@@ -226,6 +235,7 @@ jobs:
           # Update repo metadata
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
           nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
+          echo "[$(date +%H:%M:%S)] Step: Local repo updated"
       
       - name: Setup SSH for sync
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
@@ -255,16 +265,19 @@ jobs:
       - name: Sync to repo.glats.org
         if: steps.list.outputs.specs != '' && always() && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Syncing to repo.glats.org..."
           # Note: no --delete flag — additive sync only, preserves existing packages
           rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" 2>&1 || echo "::warning::x86_64 sync had issues"
           rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" 2>&1 || echo "::warning::i686 sync had issues"
-          echo "Sync attempted — check warnings above"
+          echo "[$(date +%H:%M:%S)] Step: Sync to repo.glats.org complete"
       
       - name: Success backup
         if: always() && steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Creating post-build backup..."
           ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
-          echo "Build complete!"
+          echo "[$(date +%H:%M:%S)] Step: Backup complete"
+          echo "✅ Build pipeline complete!"
       
       - name: Failure notification
         if: failure() && steps.list.outputs.specs != ''
