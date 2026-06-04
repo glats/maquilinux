@@ -1,6 +1,6 @@
 Name:           vim
 Version:        9.1.1934
-Release:        1.m264%{?dist}
+Release:        2.m264%{?dist}
 Summary:        Vi IMproved text editor
 
 %define debug_package        %{nil}
