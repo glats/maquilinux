@@ -134,7 +134,7 @@ jobs:
       - name: Backup before build
         if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
-          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
+          ./scripts/run-in-chroot.sh --preserve-env /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
       
       - name: Check disk space
         if: steps.list.outputs.specs != ''
@@ -185,9 +185,9 @@ jobs:
             
             # Install to rootfs
             for rpm in RPMS/x86_64/${spec}-[0-9]*.rpm RPMS/i686/${spec}-[0-9]*.rpm; do
-              [ -f "$rpm" ] && ./scripts/run-in-chroot.sh dnf install -y "/workspace/$rpm" || true
+              [ -f "$rpm" ] && ./scripts/run-in-chroot.sh --preserve-env dnf install -y "/workspace/$rpm" || true
             done
-            ./scripts/run-in-chroot.sh ldconfig
+            ./scripts/run-in-chroot.sh --preserve-env ldconfig
             
             echo "$spec complete"
             echo "[$(date +%H:%M:%S)] Step: Build complete for $spec"
@@ -276,7 +276,7 @@ jobs:
         if: always() && steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           echo "[$(date +%H:%M:%S)] Step: Creating post-build backup..."
-          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
+          ./scripts/run-in-chroot.sh --preserve-env /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
           echo "[$(date +%H:%M:%S)] Step: Backup complete"
           echo "✅ Build pipeline complete!"
       
