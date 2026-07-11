@@ -5,6 +5,7 @@ Summary:        General-purpose cryptographic library based on code from GnuPG
 
 %define debug_package %{nil}
 %define __os_install_post %{nil}
+%define pkg_multilibdir /usr/lib/x86_64-linux-gnu
 
 License:        LGPL-2.1-or-later
 URL:            https://www.gnupg.org/related_software/libgcrypt/
@@ -42,7 +43,7 @@ export CFLAGS="-std=gnu17 ${CFLAGS:-}"
 
 ./configure \
     --prefix=%{_prefix} \
-    --libdir=%{_libdir} \
+    --libdir=%{pkg_multilibdir} \
     --enable-shared \
     --disable-static \
     --disable-doc \
@@ -56,25 +57,25 @@ make %{?_smp_mflags} CFLAGS="${CFLAGS}"
 make DESTDIR=%{buildroot} install
 
 # Remove static libraries
-rm -f %{buildroot}%{_libdir}/*.la
-rm -f %{buildroot}%{_libdir}/*.a
+rm -f %{buildroot}%{pkg_multilibdir}/*.la
+rm -f %{buildroot}%{pkg_multilibdir}/*.a
 
 %check
 make check || true
 
 %files
 %license COPYING* AUTHORS THANKS
-%{_libdir}/libgcrypt.so.20*
+%{pkg_multilibdir}/libgcrypt.so.20*
 %{_bindir}/libgcrypt-config
 %{_bindir}/dumpsexp
 %{_bindir}/hmac256
-# %{_libdir}/libgcrypt - commented out, verify if this directory exists
+%{_bindir}/mpicalc
 
 %files devel
 %{_includedir}/gcrypt.h
-%{_libdir}/libgcrypt.so
-%{_libdir}/pkgconfig/libgcrypt.pc
-%{_aclocaldir}/libgcrypt.m4
+%{pkg_multilibdir}/libgcrypt.so
+%{pkg_multilibdir}/pkgconfig/libgcrypt.pc
+%{_datadir}/aclocal/libgcrypt.m4
 
 %changelog
 * Sun Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 1.11.0-1.m264

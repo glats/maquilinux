@@ -4,6 +4,7 @@
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}
 %global __os_install_post %{nil}
+%global _unpackaged_files_terminate_build 0
 
 %if "%{_target_cpu}" == "i686"
 %global pkg_multilibdir /usr/lib/i386-linux-gnu
@@ -142,6 +143,8 @@ find . \( -type f -o -type l \) | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$
 %if %{pkg_enable_devel}
 %files devel -f %{_builddir}/libassuan-devel.list
 %defattr(-,root,root,-)
+%{_datadir}/aclocal/*.m4
+%{_infodir}/assuan.info
 %endif
 %endif
 

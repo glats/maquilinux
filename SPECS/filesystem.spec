@@ -40,7 +40,6 @@ install -vdm 755 %{buildroot}/etc/dnf/vars
 install -vdm 755 %{buildroot}/media/{floppy,cdrom}
 # usr directories
 install -vdm 755 %{buildroot}/usr/{,local/}{bin,include,lib,sbin,src}
-install -vdm 755 %{buildroot}/usr/lib64
 install -vdm 755 %{buildroot}/usr/lib/i386-linux-gnu
 install -vdm 755 %{buildroot}/usr/lib/x86_64-linux-gnu
 install -vdm 755 %{buildroot}/usr/lib/locale
@@ -68,7 +67,10 @@ install -vdm 755 %{buildroot}/var/local
 ln -sv usr/bin %{buildroot}/bin
 ln -sv usr/lib %{buildroot}/lib
 ln -sv usr/sbin %{buildroot}/sbin
-install -vdm 755 %{buildroot}/lib64
+# /usr/lib64 compatibility symlink for packages using Fedora-style %{_libdir}
+ln -sv x86_64-linux-gnu %{buildroot}/usr/lib64
+# /lib64 symlink for FHS compatibility (points into /usr/lib hierarchy)
+ln -sv usr/lib/x86_64-linux-gnu %{buildroot}/lib64
 ln -sv ../run %{buildroot}/var/run
 ln -sv ../run/lock %{buildroot}/var/lock
 ln -sv spool/mail %{buildroot}/var/mail
@@ -108,7 +110,6 @@ ln -sv ../proc/self/mounts %{buildroot}/etc/mtab
 %dir /usr/bin
 %dir /usr/include
 %dir /usr/lib
-%dir /usr/lib64
 %dir /usr/lib/i386-linux-gnu
 %dir /usr/lib/locale
 %dir /usr/lib/x86_64-linux-gnu

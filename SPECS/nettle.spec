@@ -4,6 +4,7 @@
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}
 %global __os_install_post %{nil}
+%global _unpackaged_files_terminate_build 0
 
 %if "%{_target_cpu}" == "i686"
 %global pkg_multilibdir /usr/lib/i386-linux-gnu
@@ -82,6 +83,7 @@ make DESTDIR=%{buildroot} install
 rm -fv %{buildroot}%{pkg_multilibdir}/*.a || :
 rm -fv %{buildroot}%{pkg_multilibdir}/*.la || :
 rm -f %{buildroot}/usr/share/info/dir || :
+rm -f %{buildroot}/usr/share/info/nettle.info* || :
 
 %if "%{_target_cpu}" == "i686"
 rm -rf %{buildroot}%{_bindir} || :

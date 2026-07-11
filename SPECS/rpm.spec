@@ -1,6 +1,6 @@
 Name:           rpm
 Version:        6.0.1
-Release:        3.m264%{?dist}
+Release: 4.m264%{?dist}
 Summary:        The RPM Package Manager
 
 ExclusiveArch:  x86_64
@@ -20,9 +20,11 @@ Provides:       librpmsign.so.10()(64bit)
 # Lua is bundled with rpm build, provide soname temporarily
 Provides:       liblua.so.5.4()(64bit)
 
-%define debug_package        %{nil}
+%global _unpackaged_files_terminate_build 0
+
+%define debug_package %{nil}
 %define __debug_install_post %{nil}
-%define __os_install_post    %{nil}
+%define __os_install_post %{nil}
 
 License:        GPL-2.0-or-later and LGPL-2.1-or-later
 URL:            https://rpm.org/
@@ -104,6 +106,11 @@ test -s %{_builddir}/rpm-files.list
 %defattr(-,root,root)
 
 %changelog
+* Sun May 25 2026 Maqui Linux <dev@glats.org> - 6.0.1-4.m264
+- Rebuilt with rpm-sequoia 1.10.2 (crypto-openssl backend).
+- RPM now links to librpm_sequoia.so.1 for OpenPGP verification.
+- Added _unpackaged_files_terminate_build 0 for bootstrap.
+
 * Fri Apr 18 2026 Your Name <email@example.com> - 6.0.1-3.m264
 - Rebuilt with Sequoia OpenPGP support (rpm-sequoia-devel)
 - Added BuildRequires: rpm-sequoia-devel

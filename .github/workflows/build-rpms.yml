@@ -13,6 +13,14 @@ on:
         required: false
         type: string
         default: 'manual'
+      mode:
+        description: 'Build mode (publish: build+sign+sync to repo.glats.org; build-only: build into chroot without publishing)'
+        required: true
+        type: choice
+        default: 'build-only'
+        options:
+          - build-only
+          - publish
   push:
     branches: [main]
     paths:
@@ -130,7 +138,7 @@ jobs:
           echo "📋 Build order: $SPECS"
       
       - name: Backup before build
-        if: steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
       
@@ -156,7 +164,7 @@ jobs:
           echo "All specs valid"
       
       - name: Fetch sources and build
-        if: steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
         run: |
           IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
           
@@ -189,8 +197,17 @@ jobs:
             echo "$spec complete"
           done
       
+      - name: Collect RPMs
+        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        run: |
+          # Copy RPMs from workspace (where chroot builds) to local directory
+          mkdir -p RPMS/x86_64 RPMS/i686
+          cp /workspace/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
+          cp /workspace/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
+          ls -la RPMS/x86_64/ 2>/dev/null || echo "No x86_64 RPMs"
+      
       - name: Sign RPMs
-        if: steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
         run: |
           # Fix permissions: RPMs created inside chroot as root, need access for signing
           sudo chown -R $(id -u):$(id -g) RPMS/ 2>/dev/null || true
@@ -203,7 +220,7 @@ jobs:
           done
       
       - name: Update local repo
-        if: steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
         run: |
           # Use local staging directory (MQL_REPO_SYNC_PATH may not exist on runner)
           STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
@@ -219,7 +236,7 @@ jobs:
           nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/i686/stable/"
 
       - name: Setup SSH for sync
-        if: steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
         run: |
           # Ensure SSH directory and known_hosts
           mkdir -p ~/.ssh
@@ -244,18 +261,18 @@ jobs:
           fi
       
       - name: Sync to repo.glats.org
-        if: steps.list.outputs.specs != '' && success() && github.event_name == 'push'
+        if: steps.list.outputs.specs != '' && always() && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
         run: |
           STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
           REMOTE_BASE="$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER"
           # Note: --ignore-existing prevents overwriting already-signed RPMs
           # Note: no --delete flag — additive sync only, preserves existing packages
-          rsync -avz --ignore-existing "$STAGING/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/x86_64/stable/"
-          rsync -avz --ignore-existing "$STAGING/i686/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/i686/stable/"
+          rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/x86_64/stable/"
+          rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/i686/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/i686/stable/"
           echo "Synced to repo.glats.org"
       
       - name: Success backup
-        if: success() && steps.list.outputs.specs != '' && github.event_name == 'push'
+        if: always() && steps.list.outputs.specs != '' && github.event_name != 'pull_request'
         run: |
           ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
           echo "Build complete!"

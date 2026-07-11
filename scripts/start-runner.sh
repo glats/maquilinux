@@ -76,7 +76,11 @@ start_runner() {
         log_step "WARNING: Runner may not be fully registered yet"
     fi
 
-    return 0
+    log_step "Waiting for runner process to exit..."
+    wait "$runner_pid"
+    local exit_code=$?
+    log_step "Runner process exited with code $exit_code"
+    return "$exit_code"
 }
 
 # Main loop with restart on failure

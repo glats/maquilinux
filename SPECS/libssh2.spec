@@ -5,6 +5,7 @@ Summary:        A library implementing the SSH2 protocol
 
 %define debug_package %{nil}
 %define __os_install_post %{nil}
+%define pkg_multilibdir /usr/lib/x86_64-linux-gnu
 
 License:        BSD-3-Clause
 URL:            https://www.libssh2.org/
@@ -40,16 +41,18 @@ applications that use libssh2.
 %build
 # GCC 15/C23 compatibility: use C17 standard
 export CFLAGS="-std=gnu17 ${CFLAGS:-}"
+export CC="gcc"
 
 mkdir -p build
 cd build
 cmake .. \
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+    -DCMAKE_INSTALL_LIBDIR=%{pkg_multilibdir} \
+    -DCMAKE_C_COMPILER=%{_bindir}/gcc \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=ON \
     -DBUILD_TESTING=OFF \
-    -DCMAKE_C_FLAGS="${CFLAGS}" \
-    -DCMAKE_C_COMPILER="gcc ${CFLAGS}"
+    -DCMAKE_C_FLAGS="${CFLAGS}"
 
 make %{?_smp_mflags}
 
@@ -58,22 +61,25 @@ cd build
 make DESTDIR=%{buildroot} install
 
 # Remove static libraries
-rm -f %{buildroot}%{_libdir}/*.a
+rm -f %{buildroot}%{pkg_multilibdir}/*.a
 
 %check
 cd build
 make test || true
 
 %files
-%license COPYING LICENSE
-%{_libdir}/libssh2.so.1*
+%license COPYING
+%{pkg_multilibdir}/libssh2.so.1*
+%{_mandir}/man3/
 
 %files devel
 %{_includedir}/libssh2.h
 %{_includedir}/libssh2_publickey.h
 %{_includedir}/libssh2_sftp.h
-%{_libdir}/libssh2.so
-%{_libdir}/pkgconfig/libssh2.pc
+%{pkg_multilibdir}/libssh2.so
+%{pkg_multilibdir}/pkgconfig/libssh2.pc
+%{pkg_multilibdir}/cmake/libssh2/
+%{_docdir}/libssh2/
 
 %changelog
 * Sun Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 1.11.1-1.m264

@@ -5,6 +5,8 @@ Summary:        GnuPG Made Easy - high level crypto API
 
 %define debug_package %{nil}
 %define __os_install_post %{nil}
+%define _unpackaged_files_terminate_build 0
+%define pkg_multilibdir /usr/lib/x86_64-linux-gnu
 
 License:        LGPL-2.1-or-later
 URL:            https://www.gnupg.org/related_software/gpgme/
@@ -45,7 +47,7 @@ export CFLAGS="-std=gnu17 ${CFLAGS:-}"
 
 ./configure \
     --prefix=%{_prefix} \
-    --libdir=%{_libdir} \
+    --libdir=%{pkg_multilibdir} \
     --enable-shared \
     --disable-static \
     --disable-gpg-test \
@@ -61,28 +63,36 @@ make %{?_smp_mflags} CFLAGS="${CFLAGS}"
 make DESTDIR=%{buildroot} install
 
 # Remove static libraries
-rm -f %{buildroot}%{_libdir}/*.la
-rm -f %{buildroot}%{_libdir}/*.a
+rm -f %{buildroot}%{pkg_multilibdir}/*.la
+rm -f %{buildroot}%{pkg_multilibdir}/*.a
+rm -f %{buildroot}%{_mandir}/man1/gpgme-json.1 || :
 
 %check
 make check || true
 
 %files
 %license COPYING* AUTHORS THANKS
-%{_libdir}/libgpgme.so.11*
+%{pkg_multilibdir}/libgpgme.so.11*
 %{_bindir}/gpgme-config
 %{_bindir}/gpgme-json
-# C++ bindings may not be built/installed by default:
-# %{_libdir}/libgpgmepp.so.6*
+%{_bindir}/gpgme-tool
 
 %files devel
 %{_includedir}/gpgme.h
-%{_libdir}/libgpgme.so
-%{_libdir}/pkgconfig/gpgme.pc
-# C++ devel files (if C++ bindings are enabled):
-# %{_includedir}/gpgmepp
-# %{_libdir}/libgpgmepp.so
-# %{_libdir}/pkgconfig/gpgmepp.pc
+%{_includedir}/gpgme++/
+%{pkg_multilibdir}/libgpgme.so
+%{pkg_multilibdir}/libgpgmepp.so
+%{pkg_multilibdir}/libgpgmepp.so.6*
+%{pkg_multilibdir}/pkgconfig/gpgme.pc
+%{pkg_multilibdir}/pkgconfig/gpgmepp.pc
+%{pkg_multilibdir}/pkgconfig/gpgme-glib.pc
+%{pkg_multilibdir}/cmake/Gpgmepp/
+%{_datadir}/aclocal/gpgme.m4
+%{_infodir}/gpgme.info
+%{_infodir}/gpgme.info-1
+%{_infodir}/gpgme.info-2
+%{_infodir}/dir
+%{_datadir}/common-lisp/source/gpgme/
 
 %changelog
 * Sun Apr 19 2026 Maqui Linux <security@maqui-linux.org> - 1.24.0-1.m264

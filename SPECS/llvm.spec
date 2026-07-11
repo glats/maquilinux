@@ -119,11 +119,14 @@ cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/
 %{_bindir}/opt
 %{_bindir}/llc
 %{_bindir}/lli
+%{_bindir}/lli-child-target
 %{_bindir}/bugpoint
 %{_bindir}/dsymutil
 %{_bindir}/FileCheck
 %{_bindir}/count
 %{_bindir}/not
+%{_bindir}/reduce-chunk-list
+%{_bindir}/verify-uselistorder
 %{_bindir}/UnicodeNameMappingGenerator
 %{_bindir}/yaml-bench
 %{_bindir}/split-file
@@ -132,6 +135,7 @@ cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/
 %{_bindir}/sancov
 %{_bindir}/sanstats
 %{_bindir}/llvm-tblgen
+%{_datadir}/opt-viewer
 # Libraries - use multiarch path
 %{pkg_multilibdir}/libLLVM.so.*
 %{pkg_multilibdir}/libRemarks.so.*
@@ -145,7 +149,6 @@ cp -a ../LICENSE.TXT ../README.md %{buildroot}%{_docdir}/%{name}-%{version}/ 2>/
 %{pkg_multilibdir}/libRemarks.so
 %{pkg_multilibdir}/libLTO.so
 %{pkg_multilibdir}/cmake/llvm
-%{pkg_multilibdir}/cmake/llvm*
 
 %changelog
 * Fri Apr 25 2026 Maqui Linux

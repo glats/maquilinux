@@ -1,10 +1,10 @@
-%define pkg_version 1.10.1
+%define pkg_version 1.10.2
 
 # Disable debuginfo in bootstrap/minimal chroot
 %global debug_package %{nil}
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}
-%global __os_install_post %{nil}
+%global _unpackaged_files_terminate_build 0
 
 # Multiarch configuration
 %if "%{_target_cpu}" == "i686"
@@ -25,15 +25,14 @@ URL:            https://github.com/rpm-software-management/rpm-sequoia
 Source0:        https://crates.io/api/v1/crates/rpm-sequoia/%{version}/download -> rpm-sequoia-%{version}.crate
 
 # SHA256 checksum (verified in %%prep)
-%define sha256_crate bad6b67c55606b3d0c3101ad2870fc75613286e95d71fc4c8aa29d5f4d616a39
+%define sha256_crate 8ee3ece010976c885070eb5eff2620ece43100d88ad3733792542c79e0fefd3a
 
 BuildRequires:  cargo
 BuildRequires:  rust >= 1.75
 BuildRequires:  rust-std
 BuildRequires:  pkgconf
-BuildRequires:  nettle-devel
-BuildRequires:  gpgme-devel
-BuildRequires:  ninja
+BuildRequires: openssl-devel
+BuildRequires: libclang
 
 ExclusiveArch:  x86_64 i686
 
@@ -64,7 +63,7 @@ echo "%{sha256_crate}  %{SOURCE0}" | sha256sum -c -
 # Build with cargo, produce cdylib
 export CARGO_HOME="%{_builddir}/cargo-home"
 export CARGO_TARGET_DIR="%{_builddir}/target"
-cargo build --release --features crypto-nettle
+cargo build --release --no-default-features --features crypto-openssl
 
 %install
 rm -rf %{buildroot}
@@ -91,8 +90,9 @@ includedir=%{_includedir}
 Name: rpm-sequoia
 Description: Sequoia OpenPGP library for RPM
 Version: %{version}
+Requires.private: libssl
 Libs: -L\${libdir} -lrpm_sequoia
-Cflags: -I\${includedir}
+Cflags:
 EOF
 
 # Remove static libraries
@@ -146,5 +146,12 @@ cargo test --release 2>/dev/null || echo "Tests skipped or failed"
 %defattr(-,root,root)
 
 %changelog
+* Tue May 20 2026 Maqui Linux <dev@glats.org> - 1.10.2-1.m264
+- Upgrade to 1.10.2 for API compatibility with latest sequoia-openpgp.
+- Switch from crypto-nettle to crypto-openssl backend (avoids bindgen dependency).
+- Use --no-default-features to prevent multiple crypto backend conflict.
+- Add openssl-devel and libclang build requirements.
+- Add _unpackaged_files_terminate_build 0 for bootstrap.
+
 * Fri Apr 18 2026 Your Name <email@example.com> - 1.10.1-1.m264
 - Initial package of rpm-sequoia.

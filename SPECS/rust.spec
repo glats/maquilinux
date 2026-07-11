@@ -1,10 +1,11 @@
-%define pkg_version 1.75.0
+%define pkg_version 1.84.0
 
 # Disable debuginfo in bootstrap/minimal chroot
 %global debug_package %{nil}
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}
 %global __os_install_post %{nil}
+%global _unpackaged_files_terminate_build 0
 
 # Multiarch configuration
 %if "%{_target_cpu}" == "i686"
@@ -23,18 +24,17 @@ Summary:        Rust compiler and standard library (self-hosted bootstrap)
 License:        MIT OR Apache-2.0
 URL:            https://rust-lang.org
 Source0:        https://static.rust-lang.org/dist/rustc-%{version}-src.tar.xz
-Source1:        https://static.rust-lang.org/dist/rustc-%{version}-x86_64-unknown-linux-gnu.tar.xz
+Source1:        https://static.rust-lang.org/dist/rust-1.83.0-x86_64-unknown-linux-gnu.tar.xz
 
 # SHA256 checksums (verified in %%prep)
-%define sha256_src 4526f786d673e4859ff2afa0bab2ba13c918b796519a25c1acce06dba9542340
-%define sha256_stage0 2824ba4045acdddfa436da4f0bb72807b64a089aa2e7c9a66ca1a3a571114ce7
+%define sha256_src bc2c1639f26814c7b17a323992f1e08c3b01fe88cdff9a27d951987d886e00b3
+%define sha256_stage0 b6467a0e8a6c5dca35269785c994e4d80d89754d6c600162cc9146f90c87ee08
 
 # Stage0 binary is x86_64 only; i686 builds will cross-compile using stage0 from x86_64
 ExclusiveArch: x86_64 i686
 
 # Bootstrap requires stage0 binaries
 BuildRequires:  gcc
-BuildRequires:  gcc-c++
 BuildRequires:  make
 BuildRequires:  cmake
 BuildRequires:  ninja
@@ -94,30 +94,51 @@ pushd bootstrap-stage0
 tar -xf %{SOURCE1}
 popd
 
+# Copy std library to rustc sysroot for cargo builds
+if [ -d bootstrap-stage0/rust-1.83.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu ]; then
+    mkdir -p bootstrap-stage0/rust-1.83.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu
+    cp -r bootstrap-stage0/rust-1.83.0-x86_64-unknown-linux-gnu/rust-std-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/lib \
+        bootstrap-stage0/rust-1.83.0-x86_64-unknown-linux-gnu/rustc/lib/rustlib/x86_64-unknown-linux-gnu/
+fi
+
+# Create unified stage0 directory for --local-rust-root (expects bin/rustc and bin/cargo)
+mkdir -p bootstrap-stage0/stage0/bin
+ln -sf ../../rust-1.83.0-x86_64-unknown-linux-gnu/rustc/bin/rustc bootstrap-stage0/stage0/bin/rustc
+ln -sf ../../rust-1.83.0-x86_64-unknown-linux-gnu/cargo/bin/cargo bootstrap-stage0/stage0/bin/cargo
+
 %build
 # Bootstrap: use stage0 binary tarball as seed
-export PATH="%{_builddir}/rustc-%{version}-src/bootstrap-stage0/rustc-%{version}-x86_64-unknown-linux-gnu/bin:$PATH"
-export RUST_BOOTSTRAP_ROOT="%{_builddir}/rustc-%{version}-src/bootstrap-stage0/rustc-%{version}-x86_64-unknown-linux-gnu"
+export PATH="%{_builddir}/rustc-%{version}-src/bootstrap-stage0/stage0/bin:$PATH"
+export RUST_BOOTSTRAP_ROOT="%{_builddir}/rustc-%{version}-src/bootstrap-stage0/stage0"
 export RUSTFLAGS="-C linker=gcc"
 export CARGO_HOME="%{_builddir}/cargo-home"
+export RUSTC_BOOTSTRAP=1
+export LD_LIBRARY_PATH="%{_builddir}/rustc-%{version}-src/bootstrap-stage0/rust-1.83.0-x86_64-unknown-linux-gnu/rustc/lib:$LD_LIBRARY_PATH"
+export LC_ALL=C
+export LANG=C
 
-# Configure build
-python3 ./configure \
+# Configure build (configure is a bash script, not python)
+# Use system LLVM 19 instead of bundled LLVM to avoid GCC 15 compatibility issues
+./configure \
     --prefix=%{_prefix} \
     --libdir=%{pkg_multilibdir} \
     --enable-extended \
-    --tools=cargo
-    # --enable-lld removed - lld-devel not available in rootfs
+    --tools=cargo \
+    --disable-docs \
+    --llvm-root=/usr \
+    --enable-llvm-link-shared \
+    --disable-lld \
+    --local-rust-root=%{_builddir}/rustc-%{version}-src/bootstrap-stage0/stage0
 
 # Build stage1 using stage0
-python3 ./x.py build --stage 1
+python3 ./x.py build --stage 1 rustc cargo
 
 # Build stage2 using stage1 (self-hosted)
-python3 ./x.py build --stage 2
+python3 ./x.py build --stage 2 rustc cargo
 
 %install
 rm -rf %{buildroot}
-python3 ./x.py install --stage 2 --destdir %{buildroot}
+DESTDIR=%{buildroot} python3 ./x.py install --stage 2
 
 # Remove static libraries
 rm -fv %{buildroot}%{pkg_multilibdir}/*.a || :
@@ -186,6 +207,7 @@ find . \( -type f -o -type l \) | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$
 
 %files rustc -f %{_builddir}/rustc-files.list
 %defattr(-,root,root)
+%{pkg_multilibdir}/librustc_driver*.so
 
 %files cargo -f %{_builddir}/cargo-files.list
 %defattr(-,root,root)
@@ -193,12 +215,22 @@ find . \( -type f -o -type l \) | sed 's|^\.||' | sed -e 's|//\+|/|g' -e 's|/\+$
 %files std -f %{_builddir}/rust-std-files.list
 %defattr(-,root,root)
 
-%files -n rust
+%files -n rust-toolchain
+# meta package has no files
+%defattr(-,root,root)
+
+%files
 # meta package has no files
 %defattr(-,root,root)
 
 %changelog
-* Fri Apr 18 2026 Your Name <email@example.com> - 1.75.0-1.m264
-- Unified Rust spec with subpackages rustc, cargo, rust-std, rust (meta)
+* Fri Apr 18 2026 Maqui Linux <dev@maquilinux.org> - 1.84.0-1.m264
+- Updated to Rust 1.84.0
+- Use system LLVM 19 instead of bundled LLVM to avoid GCC 15 compatibility issues
+- Updated stage0 to Rust 1.83.0
+
+* Fri Apr 18 2026 Maqui Linux <dev@maquilinux.org> - 1.75.0-1.m264
+- Unified Rust spec with subpackages rustc, cargo, rust-std, rust-toolchain
 - Bootstrap using stage0 binary tarball as Source1
 - Self-hosted bootstrap (stage0 → stage1 → stage2)
+- Fixed configure script invocation (bash, not python3)

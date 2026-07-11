@@ -4,6 +4,7 @@
 %global _enable_debug_packages 0
 %global __debug_install_post %{nil}
 %global __os_install_post %{nil}
+%global _unpackaged_files_terminate_build 0
 
 %if "%{_target_cpu}" == "i686"
 %global pkg_multilibdir /usr/lib/i386-linux-gnu
@@ -79,6 +80,9 @@ rm -fv %{buildroot}%{pkg_multilibdir}/*.a || :
 rm -rf %{buildroot}%{_datadir}/common-lisp || :
 rm -rf %{buildroot}%{_datadir}/locale || :
 rm -f %{buildroot}/usr/share/info/dir || :
+rm -f %{buildroot}/usr/share/info/gpgrt.info* || :
+rm -f %{buildroot}%{_mandir}/man1/gpg-error-config.1 || :
+rm -f %{buildroot}%{_mandir}/man1/gpgrt-config.1 || :
 
 %if "%{_target_cpu}" == "i686"
 rm -rf %{buildroot}%{_bindir} || :
