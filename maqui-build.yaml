@@ -1,0 +1,34 @@
+# maqui-build.yaml - Declarative per-spec build configuration
+#
+# This file is OPTIONAL. When absent, all specs use defaults:
+#   verbose: false, skip_tests: false, arch: [x86_64]
+#
+# Unknown fields emit a warning and are ignored.
+
+# Defaults applied to all specs without explicit overrides
+defaults:
+  arch: [x86_64]      # Target architectures: x86_64, i686, or both
+  verbose: false      # Enable verbose build logs (full rpmbuild output)
+  skip_tests: false   # Skip acceptance tests and rpmbuild %check
+
+# Per-spec build configuration overrides
+specs:
+  # Each entry maps a spec name to its settings.
+  # Use the spec name without the .spec extension.
+  #
+  # Example:
+  #   - path: bash
+  #     arch: [x86_64, i686]
+  #     skip_tests: false
+  #     verbose: true
+
+# Job trigger configuration (used by CI pipeline in Phase 2)
+# Each job defines what happens on a given trigger event.
+#
+# Example:
+#   jobs:
+#     - trigger: push
+#       branch: main
+#       mode: publish
+#     - trigger: pull_request
+#       mode: validate

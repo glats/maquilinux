@@ -1,0 +1,420 @@
+# build-rpms-v2.yml - Refactored CI pipeline using build-chain.sh for orchestration
+#
+# This workflow replaces the inline build loop of build-rpms.yml with delegation
+# to scripts/build-chain.sh --json for structured per-spec status tracking,
+# acceptance test verification, and artifact upload.
+#
+# PUSH-VS-READ BOUNDARY:
+#   Push (internal): SSH + rsync to rog.local (thinkcentre.local only)
+#   Push (internal): bind-mount host workspace into chroot
+#   Read (public):   HTTPS via repo.glats.org
+#   Artifacts:       GitHub Actions artifact storage (internal to GitHub)
+#
+# Design: openspec/changes/remote-spec-build-pipeline/design.md
+# Tasks:  openspec/changes/remote-spec-build-pipeline/tasks.md
+
+name: Build RPMs v2
+
+on:
+  workflow_dispatch:
+    inputs:
+      specs:
+        description: 'Specs to build (comma-separated, in exact order)'
+        required: true
+        type: string
+        default: ''
+      tag:
+        description: 'Build tag (for backup naming)'
+        required: false
+        type: string
+        default: 'manual'
+      mode:
+        description: 'Build mode (publish: build+sign+sync; build-only: build without publishing)'
+        required: true
+        type: choice
+        default: 'build-only'
+        options:
+          - build-only
+          - publish
+  push:
+    branches: [main]
+    paths:
+      - 'SPECS/*.spec'
+  pull_request:
+    paths:
+      - 'SPECS/*.spec'
+
+jobs:
+  build:
+    name: Build RPM packages (v2)
+    runs-on: [self-hosted, maquilinux]
+    timeout-minutes: 360
+
+    env:
+      # NixOS: ensure wrappers bin is first for sudo with setuid
+      PATH: "/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
+
+    steps:
+      - name: Verify runner environment
+        run: |
+          # Verify sudo works (required for chroot)
+          if ! sudo -n true 2>/dev/null; then
+            echo "ERROR: Sudo requires password - configure passwordless sudo for runner user"
+            exit 1
+          fi
+          echo "SUCCESS: Sudo ready"
+
+          # Verify chroot command available
+          if ! command -v chroot &> /dev/null; then
+            echo "ERROR: chroot not found - install util-linux"
+            exit 1
+          fi
+          echo "SUCCESS: chroot: $(which chroot)"
+
+      - name: Cleanup previous artifacts
+        run: |
+          # Remove ALL files owned by root from previous chroot builds
+          sudo rm -rf "$GITHUB_WORKSPACE/BUILD" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/BUILDROOT" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/RPMS" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/SRPMS" || true
+          sudo rm -rf "$GITHUB_WORKSPACE/SOURCES"/*.tar.* || true
+          rm -rf "$GITHUB_WORKSPACE/.git/config.lock" || true
+          echo "SUCCESS: Cleanup complete"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Load configuration
+        run: |
+          source "$GITHUB_WORKSPACE/mql.conf" 2>/dev/null || true
+          source "$GITHUB_WORKSPACE/mql.local" 2>/dev/null || true
+          echo "MQL_ROOTFS=${MQL_ROOTFS:-/mnt/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_REPO_SYNC_HOST=${MQL_REPO_SYNC_HOST:-rog.local}" >> $GITHUB_ENV
+          echo "MQL_REPO_SYNC_PATH=${MQL_REPO_SYNC_PATH:-/srv/glats/nginx/repo/linux/maquilinux}" >> $GITHUB_ENV
+
+      - name: Verify overlay and setup chroot
+        run: |
+          # Verify overlay mounted
+          if ! mountpoint -q "$MQL_ROOTFS/merged" 2>/dev/null; then
+            echo "Overlay not mounted at $MQL_ROOTFS/merged"
+            echo "Mount with: sudo mount -t overlay overlay -o lowerdir=$MQL_ROOTFS/base,upperdir=$MQL_ROOTFS/layers/upper,workdir=$MQL_ROOTFS/layers/work $MQL_ROOTFS/merged"
+            exit 1
+          fi
+          echo "Overlay mounted"
+
+          # Verify rpmbuild in chroot (rootfs must have it)
+          if [[ ! -x "$MQL_ROOTFS/merged/usr/bin/rpmbuild" ]]; then
+            echo "rpmbuild not found in chroot - rootfs must have rpm package installed"
+            exit 1
+          fi
+          echo "rpmbuild available in chroot"
+
+          # Bind mount workspace into chroot
+          sudo mkdir -p "$MQL_ROOTFS/merged/workspace"
+          if ! mountpoint -q "$MQL_ROOTFS/merged/workspace" 2>/dev/null; then
+            sudo mount --bind "$GITHUB_WORKSPACE" "$MQL_ROOTFS/merged/workspace"
+            echo "Workspace bind-mounted"
+          fi
+
+          # Mount virtual filesystems for chroot
+          if ! mountpoint -q "$MQL_ROOTFS/merged/proc" 2>/dev/null; then
+            sudo mount -t proc proc "$MQL_ROOTFS/merged/proc" || true
+          fi
+          if ! mountpoint -q "$MQL_ROOTFS/merged/dev" 2>/dev/null; then
+            sudo mount --bind /dev "$MQL_ROOTFS/merged/dev" || true
+          fi
+
+          echo "Chroot environment ready"
+
+      - name: Determine build list
+        id: list
+        run: |
+          if [ -n "${{ github.event.inputs.specs }}" ]; then
+            SPECS="${{ github.event.inputs.specs }}"
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'SPECS/*.spec' | sed 's|SPECS/||; s|\.spec$||' | tr '\n' ',' | sed 's/,$//')
+            if [ -n "$CHANGED" ]; then
+              SPECS="$CHANGED"
+            else
+              echo "No specs changed"
+              exit 0
+            fi
+            TAG="auto-$(date +%Y%m%d-%H%M%S)"
+          fi
+          echo "specs=$SPECS" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Build order: $SPECS"
+
+      # PUSH: Pre-build backup writes to local hot storage (internal boundary)
+      - name: Backup before build
+        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        run: |
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
+
+      - name: Check disk space
+        if: steps.list.outputs.specs != ''
+        run: |
+          FREE_GB=$(df -BG "$MQL_ROOTFS" | tail -1 | awk '{print $4}' | sed 's/G//')
+          [[ "$FREE_GB" -lt 10 ]] && { echo "Need 10GB free, have ${FREE_GB}GB"; exit 1; }
+          echo "Disk: ${FREE_GB}GB free"
+
+      - name: Validate spec syntax (PR mode)
+        if: steps.list.outputs.specs != '' && github.event_name == 'pull_request'
+        run: |
+          IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
+          for spec in "${SPECS[@]}"; do
+            spec=$(echo "$spec" | xargs)
+            [ -z "$spec" ] && continue
+            echo "Validating $spec..."
+            rpmspec --parse "SPECS/${spec}.spec" > /dev/null 2>&1 && \
+              echo "OK: $spec" || \
+              { echo "FAIL: $spec has syntax errors"; exit 1; }
+          done
+          echo "All specs valid"
+
+      # ======================================================================
+      # Build phase: delegate to build-chain.sh with structured JSON output
+      # Build-chain.sh handles: source fetching, build, install, repo update
+      # ======================================================================
+      - name: Build specs via build-chain.sh
+        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        id: build
+        run: |
+          mkdir -p logs
+
+          # Build with structured output for CI consumption
+          # --json-file writes structured results to .ci-build-state.json
+          # --state-file tracks individual spec states
+          # --continue-on-failure builds remaining specs even if one fails
+          ./scripts/build-chain.sh \
+            "${{ steps.list.outputs.specs }}" \
+            --json-file "$GITHUB_WORKSPACE/.ci-build-state.json" \
+            --state-file "$GITHUB_WORKSPACE/.ci-build-state" \
+            --continue-on-failure \
+            2>&1 | tee logs/build-chain-output.log
+
+          # Capture exit code from build-chain.sh
+          echo "chain_exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+          # Save JSON state for later steps
+          if [ -f "$GITHUB_WORKSPACE/.ci-build-state.json" ]; then
+            echo "Build state JSON:"
+            cat "$GITHUB_WORKSPACE/.ci-build-state.json"
+          fi
+
+      # READ: acceptance tests run inside chroot, results stored locally
+      - name: Run acceptance tests
+        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        run: |
+          mkdir -p acceptance-results
+
+          # Parse JSON state to find specs that built successfully
+          if [ -f "$GITHUB_WORKSPACE/.ci-build-state.json" ]; then
+            SUCCESSFUL_SPECS=$(jq -r '.specs[] | select(.status == "SUCCESS") | .name' "$GITHUB_WORKSPACE/.ci-build-state.json" 2>/dev/null || echo "")
+            if [ -z "$SUCCESSFUL_SPECS" ]; then
+              echo "WARNING: No successful builds to test"
+            else
+              echo "$SUCCESSFUL_SPECS" | while IFS= read -r spec; do
+                [ -z "$spec" ] && continue
+                echo ""
+                echo "Running acceptance tests for: $spec"
+                echo "---"
+                if ./scripts/acceptance-test.sh "$spec" --json > "acceptance-results/${spec}.json" 2>&1; then
+                  echo "PASS: $spec"
+                else
+                  echo "FAIL: $spec"
+                fi
+                cat "acceptance-results/${spec}.json"
+              done
+
+              # Summary
+              echo ""
+              echo "Acceptance test summary:"
+              ls -la acceptance-results/
+            fi
+          else
+            echo "No build state file found. Skipping acceptance tests."
+          fi
+
+      # PUSH: Build artifacts and logs uploaded to GitHub Actions (internal)
+      - name: Upload build logs
+        if: always() && steps.list.outputs.specs != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ steps.list.outputs.tag }}
+          path: |
+            logs/
+            acceptance-results/
+            .ci-build-state.json
+            .ci-build-state
+          if-no-files-found: warn
+
+      # ======================================================================
+      # Publish phase (push and workflow_dispatch publish mode only)
+      # Steps below require internal network access (rog.local SSH)
+      # ======================================================================
+
+      - name: Collect RPMs
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        run: |
+          # Copy RPMs from chroot workspace to host
+          sudo mkdir -p RPMS/x86_64 RPMS/i686
+          sudo cp /workspace/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
+          sudo cp /workspace/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
+          ls -la RPMS/x86_64/ 2>/dev/null || echo "No x86_64 RPMs"
+
+      - name: Sign RPMs
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        run: |
+          # Fix permissions: RPMs created inside chroot as root, need access for signing
+          sudo chown -R $(id -u):$(id -g) RPMS/ 2>/dev/null || true
+
+          # Sign RPMs with GPG (graceful fallback if rpmsign unavailable)
+          for rpm in RPMS/x86_64/*.rpm; do
+            [ -f "$rpm" ] && nix shell nixpkgs#rpm -c rpmsign \
+              --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
+              --addsign "$rpm" 2>&1 || echo "WARNING: Signing failed or skipped for $(basename "$rpm")"
+          done
+
+      - name: Update local repo
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        run: |
+          # Use local staging directory
+          STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
+          sudo mkdir -p "$STAGING/x86_64/stable/"
+          sudo mkdir -p "$STAGING/i686/stable/"
+
+          # Copy RPMs to staging
+          sudo cp RPMS/x86_64/*.rpm "$STAGING/x86_64/stable/" 2>/dev/null || true
+          sudo cp RPMS/i686/*.rpm "$STAGING/i686/stable/" 2>/dev/null || true
+
+          # Regenerate repo metadata
+          nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/x86_64/stable/"
+          nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/i686/stable/"
+
+      - name: Setup SSH for sync
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        run: |
+          # Ensure SSH directory and known_hosts
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Add rog.local to known_hosts if not present
+          if ! grep -q "rog.local" ~/.ssh/known_hosts 2>/dev/null; then
+            ssh-keyscan -H rog.local >> ~/.ssh/known_hosts 2>/dev/null || echo "Could not get rog.local host key"
+          fi
+
+          # Check SSH key exists
+          if [ -f ~/.ssh/id_ed25519 ] || [ -f ~/.ssh/id_rsa ]; then
+            echo "SSH key found for sync"
+            if ssh -o BatchMode=yes -o ConnectTimeout=5 rog.local 'echo SSH OK' 2>/dev/null; then
+              echo "SSH to rog.local works"
+            else
+              echo "SSH to rog.local not working yet. Run: ssh-copy-id -i ~/.ssh/id_ed25519 rog.local"
+            fi
+          else
+            echo "No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog.local"
+          fi
+
+      # PUSH (internal): SSH + rsync to rog.local (thinkcentre.local only)
+      - name: Sync to repo.glats.org
+        if: steps.list.outputs.specs != '' && always() && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        run: |
+          STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
+          REMOTE_BASE="$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER"
+          # Note: --ignore-existing prevents overwriting already-signed RPMs
+          # Note: no --delete flag -- additive sync only, preserves existing packages
+          rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/x86_64/stable/"
+          rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/i686/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/i686/stable/"
+          echo "Synced to repo.glats.org"
+
+      # ======================================================================
+      # Post-build backup and cleanup
+      # ======================================================================
+
+      # PUSH: Post-build backup writes to local hot storage (internal boundary)
+      - name: Success backup
+        if: success() && steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        run: |
+          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
+          echo "Build complete!"
+
+      # PUSH: On failure, restore pre-build backup to leave chroot clean
+      # The restore reverts the overlay upper layer to its pre-build state
+      - name: Restore on failure
+        if: failure() && steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        run: |
+          echo "Build failed. Restoring pre-build backup..."
+          ./scripts/run-in-chroot.sh /workspace/mql backup restore "pre-build-${{ steps.list.outputs.tag }}" || \
+            echo "WARNING: Restore failed. You may need to reset the chroot manually."
+
+      # ======================================================================
+      # PR comment with per-spec status
+      # ======================================================================
+
+      - name: Post PR comment with build results
+        if: always() && steps.list.outputs.specs != '' && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const stateFile = '${{ github.workspace }}/.ci-build-state.json';
+            const resultsFile = '${{ github.workspace }}/.ci-build-state';
+
+            let commentBody = '## Build RPMs v2 Results\n\n';
+
+            if (fs.existsSync(stateFile)) {
+              const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+              const specs = state.specs || [];
+              const summary = state.summary || {};
+
+              commentBody += '| Spec | Status | Duration |\n';
+              commentBody += '|------|--------|----------|\n';
+
+              for (const spec of specs) {
+                const statusIcon = spec.status === 'SUCCESS' ? 'PASS' : (spec.status === 'FAILED' ? 'FAIL' : spec.status);
+                const duration = spec.duration_s ? spec.duration_s + 's' : '-';
+                commentBody += `| ${spec.name} | ${statusIcon} | ${duration} |\n`;
+              }
+
+              commentBody += '\n**Summary**: ';
+              commentBody += `${summary.success || 0} passed, `;
+              commentBody += `${summary.failed || 0} failed, `;
+              commentBody += `${summary.skipped || 0} skipped`;
+              commentBody += ` (${summary.total || 0} total)\n`;
+
+              // Add acceptance test results if available
+              const resultsDir = '${{ github.workspace }}/acceptance-results';
+              if (fs.existsSync(resultsDir)) {
+                const resultFiles = fs.readdirSync(resultsDir).filter(f => f.endsWith('.json'));
+                if (resultFiles.length > 0) {
+                  commentBody += '\n### Acceptance Tests\n\n';
+                  commentBody += '| Spec | Status |\n';
+                  commentBody += '|------|--------|\n';
+                  for (const file of resultFiles) {
+                    const content = JSON.parse(fs.readFileSync(`${resultsDir}/${file}`, 'utf8'));
+                    const specName = content.spec || file.replace('.json', '');
+                    const status = content.status === 'pass' ? 'PASS' : 'FAIL';
+                    commentBody += `| ${specName} | ${status} |\n`;
+                  }
+                }
+              }
+
+              // Add artifact download link
+              commentBody += '\n### Artifacts\n\n';
+              commentBody += 'Build logs and acceptance test results are available as [GitHub Actions artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n';
+            } else {
+              commentBody += 'No build state file found. The build may have been skipped.\n';
+            }
+
+            // Post the comment
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody
+            });

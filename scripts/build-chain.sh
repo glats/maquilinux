@@ -52,6 +52,9 @@ SKIP_TESTS=false
 HEAL_MODE=false
 ASYNC_MODE=false
 STATE_FILE="$DEFAULT_STATE_FILE"
+JSON_MODE=false
+JSON_FILE=""
+CONTINUE_ON_FAILURE=false
 MAX_HEAL_RETRIES=3
 
 # Parse arguments
@@ -92,6 +95,19 @@ parse_args() {
                 ;;
             --async)
                 ASYNC_MODE=true
+                shift
+                ;;
+            --json)
+                JSON_MODE=true
+                shift
+                ;;
+            --json-file)
+                JSON_FILE="$2"
+                JSON_MODE=true
+                shift 2
+                ;;
+            --continue-on-failure)
+                CONTINUE_ON_FAILURE=true
                 shift
                 ;;
             --state-file)
@@ -135,6 +151,9 @@ Options:
   --dry-run       Show what would be built without executing
   --heal          Auto-fix common spec errors on failure and retry
   --async         Run build in detached tmux session (for long builds like Rust)
+  --json          Output structured build results as JSON (implies --continue-on-failure)
+  --json-file FILE Output JSON results to FILE instead of stdout
+  --continue-on-failure  Continue building remaining specs after a failure
   --help, -h      Show this help
 
 Features:
@@ -165,8 +184,16 @@ Examples:
   ./build-chain.sh rust --async
 
 State File Format:
-  Each line: spec_name|status|timestamp|log_file
+  Each line: spec_name|status|timestamp|log_file|duration_s
   Status: PENDING, BUILDING, SUCCESS, FAILED, SKIPPED
+
+JSON Output Format:
+  {
+    "specs": [
+      {"name":"bash","status":"SUCCESS","duration_s":45,"log":"logs/...","arch":"x86_64","rpm_count":3}
+    ],
+    "summary": {"success":1,"failed":0,"skipped":0,"total":1}
+  }
 EOF
 }
 
@@ -237,7 +264,7 @@ init_state() {
         log_info "Creating new state file: $STATE_FILE"
         : > "$STATE_FILE"
         for spec in "${SPECS_ARRAY[@]}"; do
-            echo "${spec}|PENDING|$(date -Iseconds)|" >> "$STATE_FILE"
+            echo "${spec}|PENDING|$(date -Iseconds)|||" >> "$STATE_FILE"
         done
     fi
 }
@@ -247,14 +274,15 @@ update_state() {
     local spec="$1"
     local status="$2"
     local log_file="${3:-}"
+    local duration="${4:-}"
 
     local temp_file
     temp_file="$(mktemp)"
-    while IFS='|' read -r name old_status timestamp old_log; do
+    while IFS='|' read -r name old_status timestamp old_log old_duration; do
         if [[ "$name" == "$spec" ]]; then
-            echo "${spec}|${status}|$(date -Iseconds)|${log_file}" >> "$temp_file"
+            echo "${spec}|${status}|$(date -Iseconds)|${log_file}|${duration}" >> "$temp_file"
         else
-            echo "${name}|${old_status}|${timestamp}|${old_log}" >> "$temp_file"
+            echo "${name}|${old_status}|${timestamp}|${old_log}|${old_duration}" >> "$temp_file"
         fi
     done < "$STATE_FILE"
     mv "$temp_file" "$STATE_FILE"
@@ -499,7 +527,7 @@ build_spec() {
 
     if [[ "$build_ok" == true ]]; then
         log_info "$spec built successfully in ${duration}s"
-        update_state "$spec" "SUCCESS" "$log_file"
+        update_state "$spec" "SUCCESS" "$log_file" "$duration"
 
         # Update repo metadata so DNF can see the new package immediately
         # This runs after each individual spec succeeds so the next spec in the
@@ -529,8 +557,94 @@ build_spec() {
             fi
         fi
 
-        update_state "$spec" "FAILED" "$log_file"
+        update_state "$spec" "FAILED" "$log_file" "$duration"
         return 1
+    fi
+}
+
+# Count RPMs built for a spec
+count_rpms() {
+    local spec="$1"
+    local count=0
+    for arch_dir in x86_64 i686; do
+        local dir="$PROJECT_ROOT/RPMS/$arch_dir"
+        [[ -d "$dir" ]] || continue
+        for f in "$dir/${spec}"-[0-9]*.rpm "$dir/${spec}"-[a-z]*-[0-9]*.rpm; do
+            [[ -f "$f" ]] && ((count++)) || true
+        done
+    done
+    echo "$count"
+}
+
+# Detect which archs have RPMs for a spec
+detect_archs() {
+    local spec="$1"
+    local archs=""
+    for arch_dir in x86_64 i686; do
+        local dir="$PROJECT_ROOT/RPMS/$arch_dir"
+        [[ -d "$dir" ]] || continue
+        if ls "$dir/${spec}"-[0-9]*.rpm "$dir/${spec}"-[a-z]*-[0-9]*.rpm &>/dev/null 2>&1; then
+            if [[ -n "$archs" ]]; then
+                archs="${archs},${arch_dir}"
+            else
+                archs="${arch_dir}"
+            fi
+        fi
+    done
+    echo "${archs:-none}"
+}
+
+# Generate JSON output from state file
+generate_json_output() {
+    local output_file="${1:-}"
+
+    if [[ ! -f "$STATE_FILE" ]]; then
+        log_error "No state file found at $STATE_FILE"
+        return 1
+    fi
+
+    local json="{"
+    json+='"specs":['
+
+    local first=true
+    while IFS='|' read -r name status timestamp log_file duration; do
+        [[ "$first" == true ]] || json+=','
+        first=false
+
+        local rpm_count=0
+        local archs=""
+        if [[ "$status" == "SUCCESS" ]]; then
+            rpm_count=$(count_rpms "$name")
+            archs=$(detect_archs "$name")
+        fi
+
+        local log_entry="${log_file:-}"
+        local log_escaped="${log_entry//\\/\\\\}"
+        log_escaped="${log_escaped//\"/\\\"}"
+
+        json+='{"name":"'"$name"'","status":"'"$status"'","duration_s":'"${duration:-0}"',"log":"'"$log_escaped"'","arch":"'"$archs"'","rpm_count":'"$rpm_count"'}'
+    done < "$STATE_FILE"
+
+    json+='],'
+
+    local success=0 failed=0 skipped=0 total=0
+    while IFS='|' read -r name status timestamp log_file duration; do
+        case "$status" in
+            SUCCESS) ((success++));;
+            FAILED) ((failed++));;
+            SKIPPED) ((skipped++));;
+        esac
+        ((total++))
+    done < "$STATE_FILE"
+
+    json+='"summary":{"success":'"$success"',"failed":'"$failed"',"skipped":'"$skipped"',"total":'"$total"'}'
+    json+='}'
+
+    if [[ -n "$output_file" ]]; then
+        echo "$json" > "$output_file"
+        log_info "JSON output written to: $output_file"
+    else
+        echo "$json"
     fi
 }
 
@@ -585,7 +699,7 @@ print_summary() {
     log_info "BUILD SUMMARY"
     log_info "=========================================="
 
-    while IFS='|' read -r name status timestamp log_file; do
+    while IFS='|' read -r name status timestamp log_file duration; do
         case "$status" in
             SUCCESS)
                 success=$((success + 1))
@@ -633,6 +747,11 @@ print_summary() {
 main() {
     parse_args "$@"
 
+    # --json implies --continue-on-failure (don't stop at first failure)
+    if [[ "$JSON_MODE" == true ]]; then
+        CONTINUE_ON_FAILURE=true
+    fi
+
     # Collect spec list
     if [[ "$BUILD_ALL" == true ]]; then
         SPECS_LIST="$(collect_all_specs)"
@@ -670,16 +789,29 @@ main() {
 
         if ! build_spec "$spec"; then
             exit_code=1
-            if [[ "$DRY_RUN" != true ]]; then
+            if [[ "$CONTINUE_ON_FAILURE" != true ]]; then
                 log_error ""
                 log_error "Build chain stopped at: $spec"
                 log_error "Fix the issue and resume with: --resume"
+                log_error "Or use --continue-on-failure to skip failed specs and continue."
                 break
+            else
+                log_warn "Continuing with next spec after failure (--continue-on-failure)..."
             fi
         fi
     done
 
     print_summary
+
+    # Generate JSON output if requested
+    if [[ "$JSON_MODE" == true ]]; then
+        if [[ -n "$JSON_FILE" ]]; then
+            generate_json_output "$JSON_FILE"
+        else
+            generate_json_output
+        fi
+    fi
+
     exit $exit_code
 }
 

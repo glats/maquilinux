@@ -280,9 +280,14 @@ check_sources "$SPEC_FILE" || exit 1
 
 if [[ "$BUILD_BOTH" = "true" ]]; then
   run_rpmbuild_in_chroot x86_64
-  # Note: for --both, we'd need to call twice but exec replaces process
-  # For now, --both requires refactoring to not use exec
-  echo "[build] Note: --both builds x86_64 only in this version. Re-run with --arch i686 for 32-bit."
+  # After x86_64 succeeds, build i686 variant if spec supports it
+  if supports_i686; then
+    echo "[build] Building i686 variant..."
+    run_rpmbuild_in_chroot i686
+    echo "[build] Both x86_64 and i686 built successfully."
+  else
+    echo "[build] Spec does not support i686 (no conditionals found) -- skipping 32-bit build"
+  fi
 elif [[ -n "$TARGET_CPU" ]]; then
   run_rpmbuild_in_chroot "$TARGET_CPU"
 else

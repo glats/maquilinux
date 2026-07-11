@@ -1,210 +1,123 @@
 # AGENTS.md -- Maqui Linux
+<!-- agent-context-version: "2" -->
 
 ## Project
 
-Maqui Linux is an independent Linux distribution based on Linux From
-Scratch. It uses RPM + DNF5 as the package manager and OpenRC as the
-init system. The architecture is x86_64 with i686 multilib.
+Maqui Linux is an independent Linux distribution built from source, packaged
+with RPM and DNF5, initialized by OpenRC, with x86_64 and i686 multiarch
+support, and self-hosting as of April 2026. See `docs/DISTRO-IDENTITY.md`.
+
+## Critical Constraints
+
+- All code, comments, commit messages, and documentation in English.
+- No emojis in code or output.
+- RPM spec files are the single source of truth for package definitions.
+- Builds happen inside the overlay chroot, not on the host.
+
+## Quick Commands
+
+```
+mql chroot                       Enter overlay chroot
+mql chroot --exec "<cmd>"        Run command in chroot
+mql build <spec>                 Build RPM (x86_64)
+mql build <spec> --both          Build 64+32 bit
+mql install <spec>               Install RPM in chroot
+mql repo update                  Regenerate repo metadata
+mql chroot --reset               Discard overlay changes
+```
+
+For the full CLI reference, see `agent_docs/mql-cli-reference.md`.
+
+## Critical Gotchas
+
+1. **`dnf install` for package installs.** Use DNF5 inside the chroot:
+   `mql chroot --exec "dnf install /mnt/repo/<pkg>-*.rpm"`
+
+2. **`mql chroot --promote` requires interactive confirmation.** Cannot be
+   scripted silently. Manual alternative:
+   `sudo rsync -a $MQL_LFS/layers/upper/ $MQL_LFS/base/ && sudo rm -rf $MQL_LFS/layers/upper/*`
+
+3. **Stale overlay mounts after crash.** Lazy unmount:
+   `sudo umount -l $MQL_LFS/merged/{mnt/repo,dev/shm,dev/pts,dev,run,sys,proc}`
+   then `sudo umount -l $MQL_LFS/merged`
+
+4. **Sources must be in `SOURCES/` before building.** Use
+   `scripts/fetch-spec-sources.sh <spec>` or place tarballs manually.
+
+## Agent Documentation Index
+
+| File | What it covers | Stability |
+|------|---------------|-----------|
+| `agent_docs/distro-identity.md` | What Maqui is, characteristics, versioning | stable |
+| `agent_docs/build-workflow.md` | Spec to RPM pipeline step-by-step | mostly-stable |
+| `agent_docs/spec-conventions.md` | Spec format, release tag, multiarch macros | stable |
+| `agent_docs/chroot-lifecycle.md` | Overlay layers, bind mounts, state management | mostly-stable |
+| `agent_docs/dependency-resolution.md` | BuildRequires chain, build order, dnf install | mostly-stable |
+| `agent_docs/multiarch-guide.md` | i686 conditionals, library dirs, 32-bit patterns | stable |
+| `agent_docs/mql-cli-reference.md` | Full CLI reference, regenerable from `mql --help` | evolvable |
+| `agent_docs/troubleshooting.md` | Failure modes, diagnostics, recovery commands | evolvable |
+| `agent_docs/acceptance-tests.md` | Post-build verification: rpm -q, rpm -V, binary exec, ldd, multiarch | stable |
+| `agent_docs/backup-flow.md` | Backup lifecycle: pre-build, post-build, restore on failure, push-vs-read boundary | mostly-stable |
+| `agent_docs/external-contributors.md` | External contributor design: per-PR overlay isolation, auhtor gating, Phase 3 vision | design-only |
+
+Additional context:
+| `docs/DISTRO-IDENTITY.md` | Canonical distro definition (human reference) |
+| `docs/agents/runner-setup.md` | Self-hosted GitHub Actions runner |
+| `docs/agents/backup-system.md` | Rootfs backup strategy |
+| `docs/agents/standalone-developer.md` | Download rootfs, local development |
 
 ## Configuration
 
 `mql` uses a two-file config system:
 
 | File | Purpose | In git? |
-| ---- | ------- | ------- |
-| `mql.conf` | Project defaults (committed) | Yes |
-| `mql.local` | User overrides (gitignored) | No |
+|------|---------|---------|
+| `mql.conf` | Project defaults | Yes |
+| `mql.local` | User overrides | No |
 
-Environment variables override both files. Key variable:
-
-```bash
-# If your disk is auto-mounted at a different path:
-echo "MQL_ROOTFS=/mnt/maquilinux" >> mql.local
-# Or per-session:
-export MQL_ROOTFS=/mnt/maquilinux
-```
+Key variable: `MQL_ROOTFS` (default: `/mnt/maquilinux`). Override per-session:
+`export MQL_ROOTFS=/mnt/maquilinux` or in `mql.local`.
 
 Show active config: `mql config`
 
 ## Key Paths
 
 | Path | What |
-| ---- | ---- |
-| `SPECS/` | 109+ RPM spec files |
+|------|------|
+| `SPECS/` | RPM spec files |
 | `SOURCES/` | Source tarballs and patches |
 | `RPMS/` | Built RPMs (gitignored) |
-| `scripts/` | Build scripts (`build-spec.sh`, `install-spec.sh`) |
-| `tools/` | Maintenance tools (`create-clean-rootfs.sh`, `verify-independence.sh`) |
-| `lib/` | `mql` CLI library functions (bash) |
-| `release/` | ISO configs, dracut, branding |
-| `mql.conf` | Default configuration (MQL_LFS, MQL_DISK, MQL_RELEASEVER, etc.) |
-| `mql.local` | User overrides (gitignored, create as needed) |
-| `flake.nix` | Nix development shell (optional, provides all tools) |
-| `$MQL_LFS/base/` | Immutable rootfs (overlay lower layer, default: `/mnt/maquilinux/base/`) |
-| `$MQL_LFS/merged/` | Overlay chroot target |
-| `$MQL_LFS/repo/` | Local RPM repo (bind-mounted in chroot as `/mnt/repo`) |
-| `/srv/glats/nginx/repo/` | Production repo served at `repo.glats.org` |
+| `scripts/` | Build scripts |
+| `lib/` | `mql` CLI library (bash) |
+| `$MQL_LFS/base/` | Immutable rootfs (overlay lower) |
+| `$MQL_LFS/merged/` | Active overlay chroot |
+| `$MQL_LFS/repo/` | Local RPM repo |
 
-## Working with the Rootfs
+## Key URLs
 
-- The disk is mounted at `$MQL_LFS` (default: `/mnt/maquilinux`, configurable).
-- Files in the rootfs are at `$MQL_LFS/merged/...` (overlay active)
-  or `$MQL_LFS/base/...` (overlay not mounted).
-- To run commands inside the chroot: `sudo mql chroot --exec "<cmd>"`
-- Or manually: `sudo chroot $MQL_LFS/merged <cmd>`
-- The chroot has its own GCC 15.2, Python 3.14, rpmbuild, dnf5.
+| URL | What |
+|-----|------|
+| `https://repo.glats.org` | Production RPM repository (DNF5 target) |
+| `https://maquiroot.glats.org/latest/` | Latest rootfs tarball for developer download |
+| `https://maquiroot.glats.org/history/` | Rootfs archive |
 
-## Spec Conventions
+## Language and Policy
 
-- Gen3 template: see `SPECS/SPEC_TEMPLATE.md`.
-- Release tag: `1.m264` (m264 = maquilinux 26.4).
-- Debug packages disabled in all specs.
-- Multiarch: `%if "%{_target_cpu}" == "i686"` conditionals.
-- Library dirs: `/usr/lib/x86_64-linux-gnu/` (64-bit),
-  `/usr/lib/i386-linux-gnu/` (32-bit).
+All code, comments, and docs in English. Before choosing any tool, library,
+or architecture component, follow the research process: verify via MCP tools
+rather than guessing. Record decisions.
 
-## `mql` CLI Quick Reference
+## Context Stack Structure
 
-**With Nix (recommended):**
-```bash
-nix develop                      # Enter Nix dev shell
-# Inside nix shell:
-mql chroot                       Enter overlay chroot
-```
-
-**Without Nix (standalone):**
-See `docs/MANUAL-STANDALONE.md` for tool installation per distro.
-All `mql` commands work the same after prerequisites are installed.
-
-**Common commands (both):**
-```
-mql chroot                       Enter overlay chroot
-mql chroot --exec "<cmd>"        Run command in chroot
-mql chroot --reset               Discard overlay changes
-mql chroot --persist <name>      Save snapshot
-mql chroot --promote             Merge overlay into base
-mql build <spec>                 Build RPM
-mql build <spec> --both          Build 64+32 bit
-mql install <spec>               Install RPM in chroot
-mql backup create [tag]          Create rootfs backup (museum style)
-mql backup list                  List all backups with metadata
-mql backup restore <name>        Restore from backup
-mql repo update                  Regenerate repo metadata
-mql repo sync                    Publish to repo.glats.org
-mql release rootfs               Generate rootfs from RPMs
-mql release tarball              Package rootfs as .tar.xz
-mql release iso                  Generate bootable live ISO
-  mql test vm                    Boot in QEMU
-  mql test smoke                 Run smoke tests
-```
-
-## Self-Hosting: Critical Packages
-
-These 7 packages enable Maqui Linux to build itself and generate releases:
-
-| Spec | Purpose | For |
-| ---- | ------- | --- |
-| `dracut.spec` | Initramfs generation (dracut-ng 110) | Live ISO boot |
-| `busybox.spec` | Static binaries | Initramfs support |
-| `dhcpcd.spec` | DHCP client | Live networking |
-| `createrepo_c.spec` | Repo metadata | Publishing RPMs |
-| `libisoburn.spec` | ISO creation (xorriso) | Generating ISOs |
-| `squashfs-tools.spec` | Rootfs compression | Live ISO squashfs |
-| `mtools.spec` | EFI image creation | UEFI boot support |
-
-**Status:** ✅ All packages built and installed in base rootfs (2026-04-02)
-
-## CI/CD and Operations
-
-| Topic | Document | Key Points |
-|--------|----------|------------|
-| Self-hosted runner | `docs/agents/runner-setup.md` | NixOS or standalone Linux, any machine |
-| Rootfs backups | `docs/agents/backup-system.md` | Museum style, never delete, archive to cold storage |
-| Standalone developer | `docs/agents/standalone-developer.md` | Download rootfs, work locally, push optional |
-| Key workflows | `bootstrap-rust.yml` (6hr timeout), `build.yml` (5-30 min) | Automatic backup before risky builds |
-
-Quick reference (adapt `<your-runner-host>` to your setup):
-```bash
-# === NixOS Way (recommended) ===
-# Start/restart runner
-ssh <your-runner-host> "cd ~/Work/maquilinux && \
-  tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
-  tmux new-session -d -s github-runner 'nix run .#runner'"
-
-# Check runner environment
-ssh <your-runner-host> "cd ~/Work/maquilinux && nix run .#runner-status"
-
-# === Standalone Way (any Linux) ===
-# See docs/agents/runner-setup.md for dependencies per distro
-ssh <your-runner-host> "tmux kill-session -t github-runner 2>/dev/null; sleep 1; \
-  tmux new-session -d -s github-runner '~/bin/Runner.Listener run'"
-
-# === Common operations ===
-# Create backup
-ssh <your-runner-host> "cd ~/Work/maquilinux && ./mql backup create pre-<tag>"
-
-# View runner logs
-ssh <your-runner-host> "tmux capture-pane -t github-runner -p | tail -20"
-
-# Check runner status from GitHub
-gh api repos/glats/maquilinux/actions/runners | \
-  jq -r '.runners[] | "\(.name): \(.status)"'
-```
-
-## Documentation Index
-
-| Document | Covers |
-| -------- | ------ |
-| `docs/DEVELOPMENT-SYSTEM-PLAN.md` | Full architecture, overlay system, CLI design, build pipeline, dracut-ng/initramfs, ISO pipeline, repo structure, implementation phases, self-hosting roadmap, rootfs lifecycle |
-| `docs/MANUAL-NIX.md` | Developer manual for NixOS/Nix users: `nix develop`, disk setup, daily workflow, building, repo management, testing, releases, NixOS host config, troubleshooting |
-| `docs/MANUAL-STANDALONE.md` | Developer manual without Nix: tool installation per distro, manual chroot procedure, self-hosting setup, same workflow/build/release sections |
-| `docs/agents/runner-setup.md` | Self-hosted GitHub Actions runner: NixOS or any Linux, configuration, troubleshooting |
-| `docs/agents/backup-system.md` | Rootfs backup strategy: museum style, incremental backups, cold storage, restoration |
-| `docs/agents/standalone-developer.md` | Download pre-built rootfs from maquiroot.glats.org, local development without runner, push optional |
-| `docs/DEVELOPMENT.md` | Contribution workflow, CODEOWNERS, branch protection, CI/CD overview |
-| `docs/PIPELINES.md` | GitHub Actions and GitLab CI pipeline details |
-| `docs/DECISION-FRAMEWORK.md` | Mandatory research and presentation process before any tool/library decision |
-| `docs/DECISIONS.md` | Log of all tool and architecture decisions with rationale and alternatives |
-| `docs/GETTING-STARTED.md` | New developer onboarding: prerequisites, first build, daily workflow, troubleshooting |
-| `SPECS/SPEC_TEMPLATE.md` | Gen3 spec template and authoring guide |
-| `README.md` | Project overview, getting started, spec conventions, multiarch strategy |
-
-## Critical Gotchas
-
-1. **`dnf install` for package installs.** The Maqui Linux rootfs now uses DNF5
-   for package management with proper dependency resolution. Use:
-   `mql chroot --exec "dnf install /mnt/repo/<pkg>-*.rpm"`
-   Legacy: `--nodeps` was required for LFS-era libraries (now fixed with proper specs).
-
-2. **`scripts/run-in-chroot.sh` for chroot commands.** Use the wrapper script
-   which handles Nix PATH, bind mounts, and network setup automatically.
-   Example: `./scripts/run-in-chroot.sh dnf install /workspace/RPMS/pkg.rpm`
-
-3. **`mql chroot --promote` requires interactive confirmation.** It cannot be
-   scripted silently. Manual alternative:
-   `sudo rsync -a $MQL_LFS/layers/upper/ $MQL_LFS/base/ && sudo rm -rf $MQL_LFS/layers/upper/*`
-
-4. **Stale overlay mounts after crash.** Use lazy unmount:
-   `sudo umount -l $MQL_LFS/merged/{mnt/repo,dev/shm,dev/pts,dev,run,sys,proc}`
-   then `sudo umount -l $MQL_LFS/merged`
-
-## Language
-
-All code, comments, commit messages, and documentation must be in
-English.
+This file is **Layer 0**: always loaded by the agent (<200 lines, high-signal
+content at the top). Files in `agent_docs/` are **Layer 1**: loaded on demand
+when the agent's task matches that domain. Build tasks load `build-workflow.md`,
+`spec-conventions.md`, and `dependency-resolution.md`. Debug tasks load
+`troubleshooting.md`. `distro-identity.md` provides stable reference for any
+domain.
 
 ## Rules for This File
 
-This AGENTS.md must stay under 200 lines. When a new topic requires
-detailed agent instructions that would exceed this limit, create a
-dedicated document in `docs/agents/` instead and add a one-line
-reference to the documentation index above. Keep this file as a brief
-entry point, not a comprehensive manual.
-
-## Decision Policy
-
-Before choosing any tool, library, package format, or architecture
-component with two or more viable options, follow the process in
-`docs/DECISION-FRAMEWORK.md`. Never pick a default silently. Present
-options to the developer and wait for an explicit decision. Record the
-outcome in `docs/DECISIONS.md`.
+Keep under 200 lines. When a topic needs detail beyond the pointer index, create
+or update a file in `agent_docs/`. Bump `agent-context-version` when structure
+changes (file renames, new required files, reorganization).
