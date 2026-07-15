@@ -13,14 +13,6 @@ on:
         required: false
         type: string
         default: 'manual'
-      mode:
-        description: 'Build mode (publish: build+sign+sync to repo.glats.org; build-only: build into chroot without publishing)'
-        required: true
-        type: choice
-        default: 'build-only'
-        options:
-          - build-only
-          - publish
   push:
     branches: [main]
     paths:
@@ -28,8 +20,8 @@ on:
       - 'SOURCES/*'
   pull_request:
     paths:
-    - 'SPECS/*.spec'
-    - 'SOURCES/*'
+      - 'SOURCES/*'
+      - 'SPECS/*.spec'
 
 jobs:
   build:
@@ -82,6 +74,8 @@ jobs:
           echo "MQL_ROOTFS=${MQL_ROOTFS:-/mnt/maquilinux}" >> $GITHUB_ENV
           echo "MQL_REPO_SYNC_HOST=${MQL_REPO_SYNC_HOST:-rog.local}" >> $GITHUB_ENV
           echo "MQL_REPO_SYNC_PATH=${MQL_REPO_SYNC_PATH:-/srv/glats/nginx/repo/linux/maquilinux}" >> $GITHUB_ENV
+          echo "MQL_RELEASEVER=${MQL_RELEASEVER:-26.4}" >> $GITHUB_ENV
+          echo "USER=$(whoami)" >> $GITHUB_ENV
       
       - name: Verify overlay and setup chroot
         run: |
@@ -138,9 +132,9 @@ jobs:
           echo "📋 Build order: $SPECS"
       
       - name: Backup before build
-        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
-          ./scripts/run-in-chroot.sh /workspace/mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true
+          # ./mql backup create "pre-build-${{ steps.list.outputs.tag }}" || true  # Disabled: backup takes too long
       
       - name: Check disk space
         if: steps.list.outputs.specs != ''
@@ -164,7 +158,7 @@ jobs:
           echo "All specs valid"
       
       - name: Fetch sources and build
-        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           IFS=',' read -ra SPECS <<< "${{ steps.list.outputs.specs }}"
           
@@ -172,6 +166,7 @@ jobs:
             spec=$(echo "$spec" | xargs)
             [ -z "$spec" ] && continue
             
+            echo "[$(date +%H:%M:%S)] Step: Build starting for $spec..."
             echo ""
             echo "=========================================="
             echo "Processing: $spec"
@@ -190,53 +185,61 @@ jobs:
             
             # Install to rootfs
             for rpm in RPMS/x86_64/${spec}-[0-9]*.rpm RPMS/i686/${spec}-[0-9]*.rpm; do
-              [ -f "$rpm" ] && ./scripts/run-in-chroot.sh dnf install -y "/workspace/$rpm" || true
+              [ -f "$rpm" ] && ./scripts/run-in-chroot.sh --preserve-env dnf install -y "/workspace/$rpm" || true
             done
-            ./scripts/run-in-chroot.sh ldconfig
+            ./scripts/run-in-chroot.sh --preserve-env ldconfig
             
             echo "$spec complete"
+            echo "[$(date +%H:%M:%S)] Step: Build complete for $spec"
           done
+          echo "[$(date +%H:%M:%S)] Step: All builds finished"
       
       - name: Collect RPMs
-        if: steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Collecting RPMs..."
           # Copy RPMs from workspace (where chroot builds) to local directory
           mkdir -p RPMS/x86_64 RPMS/i686
-          cp /workspace/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
-          cp /workspace/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
-          ls -la RPMS/x86_64/ 2>/dev/null || echo "No x86_64 RPMs"
+          cp ~/Work/maquilinux/RPMS/x86_64/*.rpm RPMS/x86_64/ 2>/dev/null || true
+          cp ~/Work/maquilinux/RPMS/i686/*.rpm RPMS/i686/ 2>/dev/null || true
+          RPM_COUNT=$(ls RPMS/x86_64/*.rpm 2>/dev/null | wc -l)
+          echo "[$(date +%H:%M:%S)] Step: Collected $RPM_COUNT x86_64 RPMs"
       
       - name: Sign RPMs
-        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
+          echo "[$(date +%H:%M:%S)] Step: Signing RPMs..."
           # Fix permissions: RPMs created inside chroot as root, need access for signing
           sudo chown -R $(id -u):$(id -g) RPMS/ 2>/dev/null || true
           
           # Sign RPMs with GPG (graceful fallback if rpmsign unavailable)
+          SIGNED=0
           for rpm in RPMS/x86_64/*.rpm; do
             [ -f "$rpm" ] && nix shell nixpkgs#rpm -c rpmsign \
               --define '_gpg_name Maqui Linux <security@maqui-linux.org>' \
-              --addsign "$rpm" 2>&1 || echo "::warning::Signing failed or skipped for $(basename "$rpm")"
+              --addsign "$rpm" 2>&1 && ((SIGNED++)) || echo "::warning::Signing failed or skipped for $(basename "$rpm")"
           done
+          echo "[$(date +%H:%M:%S)] Step: Signed $SIGNED RPMs"
       
       - name: Update local repo
-        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
-          # Use local staging directory (MQL_REPO_SYNC_PATH may not exist on runner)
-          STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
-          sudo mkdir -p "$STAGING/x86_64/stable/"
-          sudo mkdir -p "$STAGING/i686/stable/"
+          echo "[$(date +%H:%M:%S)] Step: Updating local repo..."
+          # Create repo directories if they don't exist
+          sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
+          sudo mkdir -p "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
           
-          # Copy RPMs to staging
-          sudo cp RPMS/x86_64/*.rpm "$STAGING/x86_64/stable/" 2>/dev/null || true
-          sudo cp RPMS/i686/*.rpm "$STAGING/i686/stable/" 2>/dev/null || true
+          # Copy RPMs
+          sudo cp RPMS/x86_64/*.rpm "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" 2>/dev/null || true
+          sudo cp RPMS/i686/*.rpm "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" 2>/dev/null || true
           
-          # Regenerate repo metadata
-          nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/x86_64/stable/"
-          nix shell nixpkgs#createrepo_c -c createrepo_c "$STAGING/i686/stable/"
-
+          # Update repo metadata
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/"
+          nix shell nixpkgs#createrepo_c -c sudo createrepo_c "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/"
+          echo "[$(date +%H:%M:%S)] Step: Local repo updated"
+      
       - name: Setup SSH for sync
-        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        if: steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
           # Ensure SSH directory and known_hosts
           mkdir -p ~/.ssh
@@ -259,23 +262,23 @@ jobs:
           else
             echo "No SSH key found. Sync may fail. Run: ssh-keygen -t ed25519 && ssh-copy-id rog.local"
           fi
-      
+       
       - name: Sync to repo.glats.org
-        if: steps.list.outputs.specs != '' && always() && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        if: steps.list.outputs.specs != '' && always() && github.event_name == 'push'
         run: |
-          STAGING="$GITHUB_WORKSPACE/repo-staging/$MQL_RELEASEVER"
-          REMOTE_BASE="$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER"
-          # Note: --ignore-existing prevents overwriting already-signed RPMs
+          echo "[$(date +%H:%M:%S)] Step: Syncing to repo.glats.org..."
           # Note: no --delete flag — additive sync only, preserves existing packages
-          rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/x86_64/stable/"
-          rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/i686/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/i686/stable/"
-          echo "Synced to repo.glats.org"
+          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/x86_64/stable/" 2>&1 || echo "::warning::x86_64 sync had issues"
+          rsync -rlDvz --no-times --omit-dir-times "$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" "$MQL_REPO_SYNC_HOST:$MQL_REPO_SYNC_PATH/$MQL_RELEASEVER/i686/stable/" 2>&1 || echo "::warning::i686 sync had issues"
+          echo "[$(date +%H:%M:%S)] Step: Sync to repo.glats.org complete"
       
       - name: Success backup
-        if: always() && steps.list.outputs.specs != '' && github.event_name != 'pull_request'
+        if: always() && steps.list.outputs.specs != '' && github.event_name == 'push'
         run: |
-          ./scripts/run-in-chroot.sh /workspace/mql backup create "post-build-${{ steps.list.outputs.tag }}" || true
-          echo "Build complete!"
+          echo "[$(date +%H:%M:%S)] Step: Creating post-build backup..."
+          # ./mql backup create "post-build-${{ steps.list.outputs.tag }}" || true  # Disabled: backup takes too long
+          echo "[$(date +%H:%M:%S)] Step: Backup complete"
+          echo "✅ Build pipeline complete!"
       
       - name: Failure notification
         if: failure() && steps.list.outputs.specs != ''

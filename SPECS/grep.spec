@@ -1,6 +1,6 @@
 Name:           grep
 Version:        3.12
-Release:        1.m264%{?dist}
+Release:        6.m264%{?dist}
 Summary:        Print lines matching a pattern
 
 # Built inside a minimal Maqui Linux chroot; disable helpers not available here.
@@ -10,6 +10,7 @@ Summary:        Print lines matching a pattern
 
 License:        GPLv3+
 URL:            https://www.gnu.org/software/grep/
+# Download URL: https://ftp.gnu.org/gnu/grep/grep-3.12.tar.xz
 Source0:        grep-%{version}.tar.xz
 
 %description

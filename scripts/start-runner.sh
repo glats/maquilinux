@@ -9,6 +9,13 @@ export PATH="/run/current-system/sw/bin:/run/wrappers/bin:/usr/bin:/bin:/usr/sbi
 
 # Required for .NET runner on NixOS (ICU not available)
 export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+# NixOS: add nix-ld library path for .NET runner dependencies
+if [[ -d /nix/store ]]; then
+    NIX_LD_LIB=$(find /nix/store -maxdepth 1 -name "*ld-library-path*" -path "*/share/nix-ld/lib" 2>/dev/null | head -1)
+    if [[ -n "$NIX_LD_LIB" ]]; then
+        export LD_LIBRARY_PATH="$NIX_LD_LIB:$LD_LIBRARY_PATH"
+    fi
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"

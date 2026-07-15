@@ -125,8 +125,7 @@ mql_init() {
     if [[ -f "${tarball}.sha256" ]]; then
         if check_cmd sha256sum; then
             log_step "Verifying checksum"
-            # cd to tarball directory so .sha256's relative path resolves correctly
-            if (cd "$(dirname "$tarball")" && sha256sum -c "$(basename "$tarball").sha256") >/dev/null 2>&1; then
+            if sha256sum -c "${tarball}.sha256" >/dev/null 2>&1 || (cd "$(dirname "$tarball")" && sha256sum -c "$(basename "$tarball").sha256") >/dev/null 2>&1; then
                 log_ok "Checksum verified"
             else
                 log_error "Checksum verification failed. Tarball may be corrupted."
