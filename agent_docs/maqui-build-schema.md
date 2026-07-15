@@ -25,7 +25,7 @@ Array of per-spec overrides. Each entry:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `path` | string | yes | Spec name without extension (e.g., `bash`) |
+| `path` | string | yes | Spec name without extension (e.g., `<package>`) |
 | `arch` | array of string | no | Override default arch |
 | `verbose` | boolean | no | Override default verbose |
 | `skip_tests` | boolean | no | Override default skip_tests |
@@ -51,7 +51,7 @@ defaults:
   skip_tests: false
 
 specs:
-  - path: bash
+  - path: <package>
     arch: [x86_64, i686]
     skip_tests: false
   - path: linux

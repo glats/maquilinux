@@ -10,8 +10,8 @@ Every spec declares what it needs to build:
 
 ```spec
 BuildRequires: gcc
-BuildRequires: zlib-devel
-BuildRequires: pkgconfig(openssl)
+BuildRequires: libfoo-devel
+BuildRequires: pkgconfig(libbar)
 ```
 
 When building a new package, all BuildRequires must already be installed in
@@ -38,10 +38,11 @@ build from.
    ITS dependencies by starting from step 1 for the new spec. Build
    and install the dependency before returning to the target package.
 
-   Example: `neovim` needs `libuv`. No spec for `libuv`. Create
-   `SPECS/libuv.spec`. `libuv` needs `cmake`. `cmake` already has spec
-   + RPM -- installed. Build `libuv`. Now `neovim`'s `libuv` dep is
-   satisfied. Repeat for `msgpack-c`, `unibilium`.
+   Example: `package-a` needs `library-b`. No spec for `library-b`.
+   Create `SPECS/library-b.spec`. `library-b` needs `library-c`.
+   `library-c` already has spec + RPM -- installed. Build `library-b`.
+   Now `package-a`'s `library-b` dep is satisfied. Repeat for each
+   missing dependency.
 6. If a spec exists but no RPM: recursively build that package's
    dependencies, then build the package itself.
 
@@ -68,8 +69,9 @@ When using `--both` to build x86_64 and i686:
 
 ## Circular Dependencies
 
-Some packages form dependency cycles (e.g., rpm needs zstd, zstd needs gcc,
-gcc needs m4). The existing toolchain handles these. For new packages with
+Some packages form dependency cycles (e.g., package A needs package B,
+package B needs package C, package C needs package A). The existing
+toolchain handles these. For new packages with
 potential cycles, bootstrap with a minimal first build, install it, then
 rebuild with full features.
 

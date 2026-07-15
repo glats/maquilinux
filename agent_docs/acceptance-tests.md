@@ -76,7 +76,7 @@ collects all results into a structured JSON report:
 
 ```json
 {
-  "spec": "bash",
+  "spec": "<package>",
   "status": "pass",
   "checks": [
     {"name": "rpm_installed", "status": "pass"},
