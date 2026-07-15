@@ -25,10 +25,19 @@ Downloads tarballs to `SOURCES/`. Alternatively, place sources manually.
 mql chroot
 ```
 
-Mounts the overlay (if not already) and drops into a shell inside the chroot.
-Workspace at `/mnt/workspace`, local RPM repo at `/mnt/repo`.
+Mounts overlay and drops into shell. Workspace: `/mnt/workspace`, repo: `/mnt/repo`.
 
-### 4. Build the RPM
+### 4. Pre-build backup
+
+```bash
+mql backup create pre-build-<package>
+```
+
+Creates a rootfs snapshot before building. Restore with
+`mql backup restore pre-build-<package>` if the build fails.
+See [backup-flow.md](backup-flow.md).
+
+### 5. Build the RPM
 
 ```bash
 mql build <package>
@@ -42,7 +51,7 @@ mql build <package> --both
 
 Output lands in `RPMS/`. See [spec-conventions.md](spec-conventions.md).
 
-### 5. Install the RPM
+### 6. Install the RPM
 
 ```bash
 mql install <package>
@@ -50,7 +59,7 @@ mql install <package>
 
 Runs `dnf install` inside the chroot from `/mnt/repo`.
 
-### 5.5 Verify the installation
+### 7. Verify the installation
 
 Run acceptance tests to confirm the package is functional:
 
@@ -63,15 +72,25 @@ mql chroot --exec "ldd /usr/lib/<lib>.so"  # Shared libs linked (if any)
 
 See [acceptance-tests.md](acceptance-tests.md) for full test specification.
 
-### 6. Regenerate repo metadata
+### 8. Regenerate repo metadata
 
 ```bash
 mql repo update
 ```
 
-Rebuilds the DNF repository index so newly-installed packages are available as
-dependencies for future builds. Pre-build and post-build backups run
-automatically in CI -- see [backup-flow.md](backup-flow.md).
+Rebuilds repo index so new packages are available as dependencies.
+
+### 9. Post-build backup
+
+```bash
+mql backup create post-build-<package>
+```
+
+Snapshot after a successful build. On failure, restore pre-build instead:
+```bash
+mql backup restore pre-build-<package>
+```
+See [backup-flow.md](backup-flow.md).
 
 ## Related Docs
 
