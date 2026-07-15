@@ -15,7 +15,8 @@ BuildRequires: pkgconfig(openssl)
 ```
 
 When building a new package, all BuildRequires must already be installed in
-the chroot or available as RPMs in the local repo.
+the chroot, available as RPMs in the local repo, or have their own spec to
+build from.
 
 ## Determining Build Order
 
@@ -28,7 +29,15 @@ the chroot or available as RPMs in the local repo.
    ```bash
    ls RPMS/<package>-*.rpm
    ```
-4. If no RPM exists, recursively resolve that package's dependencies.
+4. If no RPM, check if a spec exists:
+   ```bash
+   ls SPECS/<package>.spec
+   ```
+5. If no spec exists: **create it first.** Follow
+   [spec-conventions.md](spec-conventions.md). Build and install the
+   dependency before returning to the target package.
+6. If a spec exists but no RPM: recursively build that package's
+   dependencies, then build the package itself.
 
 ## Installing Dependencies
 
