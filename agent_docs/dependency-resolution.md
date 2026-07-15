@@ -34,8 +34,14 @@ build from.
    ls SPECS/<package>.spec
    ```
 5. If no spec exists: **create it first.** Follow
-   [spec-conventions.md](spec-conventions.md). Build and install the
-   dependency before returning to the target package.
+   [spec-conventions.md](spec-conventions.md). Then recursively resolve
+   ITS dependencies by starting from step 1 for the new spec. Build
+   and install the dependency before returning to the target package.
+
+   Example: `neovim` needs `libuv`. No spec for `libuv`. Create
+   `SPECS/libuv.spec`. `libuv` needs `cmake`. `cmake` already has spec
+   + RPM -- installed. Build `libuv`. Now `neovim`'s `libuv` dep is
+   satisfied. Repeat for `msgpack-c`, `unibilium`.
 6. If a spec exists but no RPM: recursively build that package's
    dependencies, then build the package itself.
 
