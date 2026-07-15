@@ -31,7 +31,7 @@ mql_release_rootfs() {
     mql_repo_update
 
     # Install all packages from local repo into chroot
-    mql_chroot_exec "dnf install -y --allowerasing /mnt/workspace/RPMS/x86_64/*.rpm" || {
+    mql_chroot_exec "dnf install -y --allowerasing /mnt/repo/x86_64/*.rpm" || {
         log_error "dnf install failed"
         return 1
     }

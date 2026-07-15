@@ -50,6 +50,14 @@ jobs:
     runs-on: [self-hosted, maquilinux]
     timeout-minutes: 360
 
+    outputs:
+      chain_exit_code:
+        description: 'build-chain.sh exit code (0 = all specs passed)'
+        value: ${{ steps.build.outputs.chain_exit_code }}
+      tag:
+        description: 'Build tag from step output'
+        value: ${{ steps.list.outputs.tag }}
+
     env:
       # NixOS: ensure wrappers bin is first for sudo with setuid
       PATH: "/run/wrappers/bin:/run/current-system/sw/bin:/usr/bin:/bin"
@@ -332,6 +340,17 @@ jobs:
           rsync -rlDvz --no-times --omit-dir-times --ignore-existing "$STAGING/i686/stable/" "$MQL_REPO_SYNC_HOST:$REMOTE_BASE/i686/stable/"
           echo "Synced to repo.glats.org"
 
+      # PUSH: Upload RPMs as artifact for downstream ISO workflow
+      - name: Upload RPMs for ISO build
+        if: steps.list.outputs.specs != '' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpms
+          path: |
+            RPMS/x86_64/*.rpm
+            RPMS/i686/*.rpm
+          if-no-files-found: warn
+
       # ======================================================================
       # Post-build backup and cleanup
       # ======================================================================
@@ -418,3 +437,19 @@ jobs:
               issue_number: context.issue.number,
               body: commentBody
             });
+
+  # ======================================================================
+  # ISO build (downstream artifact, run only after clean build)
+  # ======================================================================
+  iso-build:
+    name: Build and publish ISO
+    needs: build
+    if: |
+      github.event_name != 'pull_request'
+      && needs.build.outputs.chain_exit_code == '0'
+      && needs.build.result == 'success'
+    uses: ./.github/workflows/iso.yml
+    with:
+      version: ${{ needs.build.outputs.tag }}
+      publish: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish') }}
+      caller_run_id: ${{ github.run_id }}

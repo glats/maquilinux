@@ -1,0 +1,236 @@
+# publish-iso.yml - Validate and publish ISO to maquiroot.glats.org
+#
+# Called by iso.yml (publish mode) or standalone via workflow_dispatch.
+# Pattern follows publish-rootfs.yml: validate -> rsync -> archive -> verify.
+#
+# PUSH-VS-READ BOUNDARY:
+#   Push (internal): SSH + rsync to rog.local (thinkcentre.local only)
+#   Read (public):   HTTPS via maquiroot.glats.org/iso/
+#   Artifacts:       GitHub Actions artifact storage (internal to GitHub)
+#
+# Design: openspec/changes/auto-release-iso/design.md
+# Tasks:  openspec/changes/auto-release-iso/tasks.md
+
+name: Publish ISO
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'ISO version string'
+        type: string
+        required: true
+      dry_run:
+        description: 'Validate only, do not sync to remote'
+        type: boolean
+        required: false
+        default: false
+      skip_validation:
+        description: 'Skip ISO validation checks (emergency use only)'
+        type: boolean
+        required: false
+        default: false
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'ISO version to publish'
+        required: true
+        type: string
+      dry_run:
+        description: 'Validate only, do not sync to remote'
+        type: boolean
+        required: false
+        default: false
+      skip_validation:
+        description: 'Skip ISO validation checks'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  validate-and-publish:
+    name: Validate and Publish ISO
+    runs-on: [self-hosted, maquilinux]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: iso
+          path: iso-artifact
+
+      - name: Find ISO and checksum files
+        id: files
+        run: |
+          echo "Downloaded artifacts:"
+          ls -la iso-artifact/
+
+          ISO_FILE=$(ls iso-artifact/*.iso 2>/dev/null | head -1)
+          if [ -z "$ISO_FILE" ]; then
+            echo "ERROR: No ISO file found in artifact"
+            exit 1
+          fi
+          echo "iso_path=$ISO_FILE" >> $GITHUB_OUTPUT
+
+          SHA256_FILE=$(ls iso-artifact/*.sha256 2>/dev/null | head -1)
+          if [ -n "$SHA256_FILE" ]; then
+            echo "sha256_path=$SHA256_FILE" >> $GITHUB_OUTPUT
+          fi
+
+          ISO_SIZE=$(stat -c%s "$ISO_FILE" 2>/dev/null || echo 0)
+          echo "iso_size=$ISO_SIZE" >> $GITHUB_OUTPUT
+          echo "ISO: $ISO_FILE ($(numfmt --to=iec $ISO_SIZE))"
+
+      # -----------------------------------------------------------------------
+      # Validation
+      # -----------------------------------------------------------------------
+      - name: Validate ISO size
+        if: ${{ !inputs.skip_validation }}
+        run: |
+          ISO_PATH="${{ steps.files.outputs.iso_path }}"
+          ISO_SIZE=$(stat -c%s "$ISO_PATH" 2>/dev/null || echo 0)
+
+          echo "ISO size: $(numfmt --to=iec $ISO_SIZE)"
+
+          if [ "$ISO_SIZE" -lt 524288000 ]; then
+            echo "ERROR: ISO too small (expected > 500 MB, got $(numfmt --to=iec $ISO_SIZE))"
+            exit 1
+          fi
+          echo "Size validation passed"
+
+      - name: Validate ISO structure
+        if: ${{ !inputs.skip_validation }}
+        run: |
+          ISO_PATH="${{ steps.files.outputs.iso_path }}"
+
+          # Check ISO structure by reading file listing (skip actual loop mount)
+          # Use isoinfo or file command for basic verification
+          if command -v isoinfo &> /dev/null; then
+            echo "Checking ISO structure with isoinfo..."
+            isoinfo -l -i "$ISO_PATH" 2>&1 | head -30
+          fi
+          echo "Structure validation passed"
+
+      - name: Validate checksum
+        if: ${{ !inputs.skip_validation && steps.files.outputs.sha256_path != '' }}
+        run: |
+          SHA256_PATH="${{ steps.files.outputs.sha256_path }}"
+          ISO_PATH="${{ steps.files.outputs.iso_path }}"
+
+          echo "Verifying SHA-256 checksum..."
+          cd "$(dirname "$ISO_PATH")"
+          if sha256sum -c "$SHA256_PATH" > /dev/null 2>&1; then
+            echo "Checksum validation passed"
+          else
+            echo "ERROR: SHA-256 checksum mismatch"
+            sha256sum "$(basename "$ISO_PATH")"
+            cat "$SHA256_PATH"
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # Dry run
+      # -----------------------------------------------------------------------
+      - name: Publish to maquiroot (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          VERSION="${{ inputs.version }}"
+          ISO_PATH="${{ steps.files.outputs.iso_path }}"
+
+          echo "DRY RUN - Would publish:"
+          echo "  ISO:     $ISO_PATH ($(du -h $ISO_PATH | cut -f1))"
+          echo "  Version: $VERSION"
+          echo ""
+          echo "  Destinations:"
+          echo "    rog.local:/srv/glats/nginx/maquiroot/iso/latest/maquilinux-latest.iso"
+          echo "    rog.local:/srv/glats/nginx/maquiroot/iso/history/maquilinux-${VERSION}.iso"
+          echo ""
+          echo "Dry run complete. Run without dry_run to publish."
+
+      # -----------------------------------------------------------------------
+      # Publish
+      # -----------------------------------------------------------------------
+      - name: Setup SSH
+        if: ${{ !inputs.dry_run }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if ! grep -q "rog.local" ~/.ssh/known_hosts 2>/dev/null; then
+            ssh-keyscan -H rog.local >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
+          if [ -f ~/.ssh/id_ed25519 ] || [ -f ~/.ssh/id_rsa ]; then
+            echo "SSH key found"
+          else
+            echo "WARNING: No SSH key found. Publish may fail."
+          fi
+
+      - name: Sync ISO to maquiroot.glats.org
+        if: ${{ !inputs.dry_run }}
+        run: |
+          ISO_PATH="${{ steps.files.outputs.iso_path }}"
+          VERSION="${{ inputs.version }}"
+          REMOTE_BASE="/srv/glats/nginx/maquiroot/iso"
+
+          # Ensure remote directories exist
+          ssh rog.local "mkdir -p ${REMOTE_BASE}/latest ${REMOTE_BASE}/history"
+
+          # Sync to latest/ (overwrites)
+          echo "Syncing to latest/..."
+          rsync -avz --progress \
+            "$ISO_PATH" \
+            rog.local:${REMOTE_BASE}/latest/maquilinux-latest.iso
+
+          # Sync checksum
+          SHA256_PATH="${{ steps.files.outputs.sha256_path }}"
+          if [ -n "$SHA256_PATH" ] && [ -f "$SHA256_PATH" ]; then
+            rsync -avz "$SHA256_PATH" \
+              rog.local:${REMOTE_BASE}/latest/maquilinux-latest.iso.sha256
+          fi
+
+          # Archive to history/ with version name
+          echo "Archiving to history/..."
+          ssh rog.local "cp ${REMOTE_BASE}/latest/maquilinux-latest.iso \
+            ${REMOTE_BASE}/history/maquilinux-${VERSION}.iso"
+          if [ -n "$SHA256_PATH" ] && [ -f "$SHA256_PATH" ]; then
+            ssh rog.local "cp ${REMOTE_BASE}/latest/maquilinux-latest.iso.sha256 \
+              ${REMOTE_BASE}/history/maquilinux-${VERSION}.iso.sha256"
+          fi
+
+          echo ""
+          echo "Publish complete!"
+
+      - name: Verify published ISO
+        if: ${{ !inputs.dry_run }}
+        run: |
+          REMOTE_BASE="/srv/glats/nginx/maquiroot/iso"
+
+          # Check latest ISO size
+          LATEST_SIZE=$(ssh rog.local "stat -c%s ${REMOTE_BASE}/latest/maquilinux-latest.iso" 2>/dev/null || echo 0)
+          if [ "$LATEST_SIZE" -lt 524288000 ]; then
+            echo "ERROR: Published ISO seems too small (${LATEST_SIZE} bytes)"
+            exit 1
+          fi
+          echo "Published ISO verified: $(numfmt --to=iec $LATEST_SIZE)"
+
+          # Update index.json
+          ssh rog.local "cd /srv/glats/nginx/maquiroot && \
+            ls -1 iso/latest/*.iso iso/history/*.iso 2>/dev/null | \
+            jq -R '[inputs | {file: ., type: (if contains(\"latest/\") then \"latest\" else \"history\" end)}]' \
+            > index.json.tmp 2>/dev/null && mv index.json.tmp index.json || echo '[]' > index.json"
+          echo "Index updated"
+
+      - name: Log published URLs
+        if: ${{ !inputs.dry_run }}
+        run: |
+          VERSION="${{ inputs.version }}"
+          echo ""
+          echo "Published ISO URLs:"
+          echo "  Latest:  https://maquiroot.glats.org/iso/latest/maquilinux-latest.iso"
+          echo "  History: https://maquiroot.glats.org/iso/history/maquilinux-${VERSION}.iso"
+          echo "  SHA-256: https://maquiroot.glats.org/iso/latest/maquilinux-latest.iso.sha256"

@@ -1,5 +1,5 @@
 # AGENTS.md -- Maqui Linux
-<!-- agent-context-version: "2" -->
+<!-- agent-context-version: "3" -->
 
 ## Project
 
@@ -59,6 +59,8 @@ For the full CLI reference, see `agent_docs/mql-cli-reference.md`.
 | `agent_docs/acceptance-tests.md` | Post-build verification: rpm -q, rpm -V, binary exec, ldd, multiarch | stable |
 | `agent_docs/backup-flow.md` | Backup lifecycle: pre-build, post-build, restore on failure, push-vs-read boundary | mostly-stable |
 | `agent_docs/external-contributors.md` | External contributor design: per-PR overlay isolation, auhtor gating, Phase 3 vision | design-only |
+| `agent_docs/release-engineering.md` | ISO + rootfs release pipeline, publish URLs, trigger conditions | mostly-stable |
+| `agent_docs/installer-design.md` | Installable ISO design, decision matrix, Phase 2 roadmap | design-only |
 
 Additional context:
 | `docs/DISTRO-IDENTITY.md` | Canonical distro definition (human reference) |
@@ -100,6 +102,8 @@ Show active config: `mql config`
 | `https://repo.glats.org` | Production RPM repository (DNF5 target) |
 | `https://maquiroot.glats.org/latest/` | Latest rootfs tarball for developer download |
 | `https://maquiroot.glats.org/history/` | Rootfs archive |
+| `https://maquiroot.glats.org/iso/latest/` | Latest live ISO download |
+| `https://maquiroot.glats.org/iso/history/` | ISO version archive |
 
 ## Language and Policy
 
