@@ -39,3 +39,5 @@ Thumbs.db
 session-*.md
 spec-summary.md
 mql.local
+# Local AI runtime state
+.atl/
