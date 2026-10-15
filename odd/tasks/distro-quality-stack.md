@@ -16,23 +16,38 @@ Branch: `feat/distro-quality-stack` | Delivery: `ask-on-risk` | Test runner: `ba
 - **S5** -- "ship distro iso con desktop y todo". A bootable live ISO with a desktop environment and an installer, built and smoke-tested by the pipeline.
 - **S6** -- "una distro al nivel de fedora. guardando proporcopnes". Proportional equivalents of Fedora's dist-git, Koji, Bodhi, Pungi/Lorax, openQA, and Anaconda.
 - **S7** -- "usado ODD por supuesto para lgorar eos". Tracked in this document and its Engram mirror `odd/distro-quality-stack/tasks`.
+- **S8** -- "tambien hay que tener un stack web con lso repos y todo los rootfs igual para que developers peudan trabjar local". The public web endpoints (RPM repo, rootfs, ISO) are current and match the documented developer path, so an external developer can work locally. Assumption: a project landing page (`maquilinux.org`) belongs here too.
+- **S9** -- "el ci con mi maquina [build host]". CI runs on the self-hosted build host. Host names stay out of versioned files (Engram #2690); agents read them from `mql config` / `mql.local`.
+
+## Phases
+
+Each phase closes a loop the next one relies on; desktop work starts only once the loop and gates are trustworthy.
+
+- **Phase 0, the loop**: a developer downloads the rootfs, builds a spec, opens a PR; CI on the build host builds and publishes; the web serves the result. T13, T15, T16.
+- **Phase 1, quality gates and agents**: T1, T2, T4, T5. T11 (Herd) is evaluated only after this phase.
+- **Phase 2, base product**: T6, T3, T12, T14.
+- **Phase 3, desktop**: T7, T8, T9, T10.
 
 ## Tasks
 
-| ID | Specs | Route | Status | Evidence |
-|----|-------|-------|--------|----------|
-| T1 | S1, S2 | inline | done | `mql lint fhs`: Debian path policy over built RPM file lists; RED 9/9 fail, GREEN 9/9 pass (`tests/lint-fhs.bats`), shellcheck clean; commit `0fde7e5` |
-| T2 | S2, S3 | inline | pending | `mql lint spec`: spec policy (Release tag, debug_package, multiarch block, no hardcoded lib64); wire into PR CI |
-| T3 | S2, S3 | TBD, high risk | pending | macros package setting `%_libdir`/`%_libexecdir` to Debian multiarch paths; gated on T1/T2 reports |
-| T4 | S1 | inline | pending | doc drift: spec-conventions, multiarch-guide counts, AGENTS.md dead links, acceptance multiarch check accepting `/usr/lib64` |
-| T5 | S1 | inline | pending | project agents in `.opencode/` (spec steward, FHS auditor, release engineer, boot QA) calling T1/T2/T6 gates |
-| T6 | S5, S6 | TBD, high risk | pending | ISO pipeline defects (grub.cfg/label, rootfs.img vs squashfs.img, base vs overlay) + CI QEMU boot smoke |
-| T7 | S5 | TBD | pending | desktop foundation specs: dbus, eudev/elogind decision, PAM, polkit, sudo, openssh, network |
-| T8 | S5 | TBD | pending | graphics stack: libdrm, Mesa, Wayland/X, fonts, cairo, pango, GTK |
-| T9 | S5 | TBD | blocked on decision | desktop environment: MATE (Engram #2682) vs Cinnamon (Distro.md:128) |
-| T10 | S5 | TBD | pending | installer: parted, dosfstools, efibootmgr, then Calamares |
-| T11 | S4 | inline | pending | Herd tool-adoption evaluation |
-| T12 | S6 | TBD | pending | release gate (Bodhi-lite): testing to stable promotion |
+| ID | Phase | Specs | Route | Status | Evidence |
+|----|-------|-------|-------|--------|----------|
+| T13 | 0 | S8 | inline | pending | developer loop: documented rootfs URL `latest/maquilinux-rootfs-latest.tar.xz` returns 404 while the server holds `.tar.gz` dated 2026-04-19; `iso/latest/` returns 404 (never published); align artifact name/format, freshness, and `mql init` download |
+| T15 | 0 | S9 | TBD, high risk | pending | CI on the build host: retire duplicate `build-rpms.yml` (v1) vs v2, publish rootfs after promote, artifact freshness probe in `mql audit` |
+| T16 | 0 | S9 | TBD, high risk | pending | move host names out of versioned workflows (`publish-iso.yml` hardcodes them) into runner-local config |
+| T1 | 1 | S1, S2 | inline | done | `mql lint fhs`: Debian path policy over built RPM file lists; RED 9/9 fail, GREEN 9/9 pass (`tests/lint-fhs.bats`), shellcheck clean; commit `0fde7e5` |
+| T2 | 1 | S2, S3 | inline | pending | `mql lint spec`: spec policy (Release tag, debug_package, multiarch block, no hardcoded lib64); wire into PR CI |
+| T4 | 1 | S1 | inline | pending | doc drift: spec-conventions, multiarch-guide counts, AGENTS.md dead links, acceptance multiarch check accepting `/usr/lib64`, standalone-developer rootfs URL |
+| T5 | 1 | S1 | inline | pending | project agents in `.opencode/` (spec steward, FHS auditor, release engineer, boot QA) calling the gates |
+| T11 | 1+ | S4 | inline | pending | Herd tool-adoption evaluation |
+| T6 | 2 | S5, S6 | TBD, high risk | pending | ISO pipeline defects (grub.cfg/label, rootfs.img vs squashfs.img, base vs overlay) + CI QEMU boot smoke |
+| T3 | 2 | S2, S3 | TBD, high risk | pending | macros package setting `%_libdir`/`%_libexecdir` to Debian multiarch paths; gated on T1/T2 reports |
+| T12 | 2 | S6 | TBD | pending | release gate (Bodhi-lite): testing to stable promotion |
+| T14 | 2 | S8 | TBD | pending | project landing page listing repo, rootfs, ISO, checksums, signatures (`maquilinux.org` does not respond today) |
+| T7 | 3 | S5 | TBD | pending | desktop foundation specs: dbus, eudev/elogind decision, PAM, polkit, sudo, openssh, network |
+| T8 | 3 | S5 | TBD | pending | graphics stack: libdrm, Mesa, Wayland/X, fonts, cairo, pango, GTK |
+| T9 | 3 | S5 | TBD | blocked on decision | desktop environment: MATE (Engram #2682) vs Cinnamon (Distro.md:128) |
+| T10 | 3 | S5 | TBD | pending | installer: parted, dosfstools, efibootmgr, then Calamares |
 
 ## Log
 
@@ -42,3 +57,5 @@ Branch: `feat/distro-quality-stack` | Delivery: `ask-on-risk` | Test runner: `ba
 - **L4** (2026-10-15, research): Herd-OS/herd is Go, Apache-2.0, created 2026-03, 4 stars, 153 open issues, "in active development"; it runs agents on self-hosted GitHub runners. The Maqui runner also builds RPMs in the overlay chroot, so concurrent agent jobs there need isolation before adoption.
 - **L5** (2026-10-15): Next step T1.
 - **L6** (2026-10-15, T1 evidence): `bats tests/lint-fhs.bats` RED 9 failing before `lib/lint.sh`, GREEN 9/9 after; `shellcheck -x lib/lint.sh` clean. Baseline over the 40 local RPMs: 1 violation, `lvm2-2.03.38-1.m264.x86_64.rpm: FHS-USR-LIB64: /usr/lib64/libdevmapper.so.1.02` (input for T3). The full package set lives on the build host; rerun there for a complete baseline. Next step: T2.
+- **L7** (2026-10-15, user, verbatim except the host name redacted per Engram #2690): "tambien hay que tener un stack web con lso repos y todo los rootfs igual para que developers peudan trabjar local, el ci con mi maquina [build host]. son tantas cosas. no se como empezar ni partir."
+- **L8** (2026-10-15, probes): `repo.glats.org/linux/maquilinux/` 200; `maquiroot.glats.org/latest/` 200 listing only `maquilinux-rootfs-latest.tar.gz` (3.6 GB, 2026-04-19); the documented `.tar.xz` URL 404; `maquiroot.glats.org/iso/latest/` 404; `maquilinux.org` no response. Decision: work is split into phases 0-3; Phase 0 (the developer/CI/web loop) goes first because every later phase ships through it. Next step: T13.
