@@ -59,6 +59,20 @@ Rules (Debian Policy 9.1.1 over FHS 3.0): `FHS-USR-LIB64` no files under
 Needs `rpm` on PATH (on NixOS: `nix shell nixpkgs#rpm -c ./mql lint fhs`).
 Tests: `nix shell nixpkgs#bats -c bats tests/`.
 
+```
+mql lint endpoints [--report] [file...]
+                                 Flag machine names and legacy domains in versioned
+                                 files (default: git-tracked files minus history dirs)
+```
+
+Public names never name machines, so URLs and hosts can change without
+editing the repository. Rules: `EP-HOST` mDNS machine names (`*.local`);
+`EP-LEGACY` domains listed in `MQL_LINT_LEGACY_DOMAINS` in `mql.conf` (contact
+emails are ignored); `EP-PRIVATE` patterns in `MQL_LINT_PRIVATE_PATTERNS`, which
+is set only in `mql.local` or a CI variable. `EP-HOST` and `EP-PRIVATE` never
+print the matched text because the repository is public. `--report` lists
+violations and exits 0.
+
 ## Backup
 
 ```

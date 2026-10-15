@@ -157,6 +157,8 @@ COMMANDS:
 
   lint                  Policy checks
     fhs [rpm...]        Debian filesystem rules on built RPMs (default: RPMS/)
+    endpoints [--report] [file...]
+                        Machine names / legacy domains in versioned files
 
   status                Show development environment status
   config                Show active configuration

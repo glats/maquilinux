@@ -74,13 +74,77 @@ lint_fhs() {
     [[ $count -eq 0 ]]
 }
 
+# ============================================================================
+# lint endpoints: public names never name machines (ODD distro-quality-stack S10)
+#   EP-HOST     mDNS machine names (*.local); the name is not printed
+#   EP-LEGACY   legacy public domains (MQL_LINT_LEGACY_DOMAINS); use canonical names
+#   EP-PRIVATE  patterns from MQL_LINT_PRIVATE_PATTERNS, set only in mql.local or
+#               CI variables; matches are not printed (the repository is public)
+# ============================================================================
+
+# Paths excluded from the default scan: history, design records, lint fixtures.
+readonly LINT_ENDPOINTS_EXCLUDE='^(openspec|sdd|\.sdd|specs|odd)/|^tests/lint-endpoints\.bats$'
+
+# endpoint_violations <file>
+endpoint_violations() {
+    local file="$1" d p re
+    grep -noIE '\b[A-Za-z0-9-]+\.local\b' "$file" 2>/dev/null \
+        | grep -vE ':mql\.local$' | cut -d: -f1 | sort -un \
+        | sed "s|^|$file:|; s|$|: EP-HOST|" || true
+
+    # Lines that configure this lint (MQL_LINT_*) name the legacy domains on purpose.
+    local skip
+    skip=" $( (grep -nE '^MQL_LINT_' "$file" 2>/dev/null || true) | cut -d: -f1 | tr '\n' ' ') "
+    for d in ${MQL_LINT_LEGACY_DOMAINS:-glats.org}; do
+        re="(^|[^@A-Za-z0-9.-])([A-Za-z0-9-]+\.)*${d//./\\.}"
+        grep -noIE "$re" "$file" 2>/dev/null \
+            | awk -F: -v skip="$skip" 'index(skip, " " $1 " ") == 0' \
+            | sed -E "s|^([0-9]+):[^A-Za-z0-9]?|$file:\1: EP-LEGACY: |" | sort -u || true
+    done
+
+    for p in ${MQL_LINT_PRIVATE_PATTERNS:-}; do
+        grep -nIE "$p" "$file" 2>/dev/null | cut -d: -f1 \
+            | sed "s|^|$file:|; s|$|: EP-PRIVATE|" || true
+    done
+}
+
+# lint_endpoints [--report] [file...]
+# Defaults to git-tracked files minus LINT_ENDPOINTS_EXCLUDE. Exit 1 on any
+# violation unless --report.
+lint_endpoints() {
+    local report=0
+    if [[ "${1:-}" == "--report" ]]; then
+        report=1
+        shift
+    fi
+
+    local files=("$@")
+    if [[ ${#files[@]} -eq 0 ]]; then
+        mapfile -t files < <(git -C "$MQL_PROJECT_ROOT" ls-files \
+            | grep -vE "$LINT_ENDPOINTS_EXCLUDE" | sed "s|^|$MQL_PROJECT_ROOT/|")
+    fi
+
+    local count=0 line f
+    for f in "${files[@]}"; do
+        [[ -f "$f" ]] || continue
+        while IFS= read -r line; do
+            echo "${line#"$MQL_PROJECT_ROOT"/}"
+            count=$((count + 1))
+        done < <(endpoint_violations "$f")
+    done
+
+    echo "lint endpoints: ${#files[@]} file(s), $count violation(s)"
+    [[ $report -eq 1 || $count -eq 0 ]]
+}
+
 mql_lint() {
     local subcmd="${1:-}"
     shift || true
     case "$subcmd" in
         fhs) lint_fhs "$@" ;;
+        endpoints) lint_endpoints "$@" ;;
         *)
-            log_error "Unknown lint subcommand: ${subcmd:-<none>} (available: fhs)"
+            log_error "Unknown lint subcommand: ${subcmd:-<none>} (available: fhs, endpoints)"
             return 1
             ;;
     esac

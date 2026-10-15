@@ -42,3 +42,7 @@
 # --- Setup D: Build server with NFS home ---
 # MQL_ROOTFS=/mnt/maquilinux
 # MQL_BACKUP_DIR=/mnt/maquilinux-backups
+
+# Private names (machines, server paths) that must never enter versioned
+# files. Space-separated extended regexes; used by `mql lint endpoints`.
+# MQL_LINT_PRIVATE_PATTERNS="mybuildhost /srv/mysite"
