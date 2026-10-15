@@ -1,0 +1,36 @@
+# lint.yml - Repository policy lints that need no build host.
+#
+# Runs on a GitHub-hosted runner with read-only permissions and no secrets,
+# so it is safe for pull requests from forks and independent of any machine.
+# `lint endpoints` runs in --report mode until the baseline is clean
+# (ODD distro-quality-stack T16/T17); then drop --report to make it blocking.
+
+name: lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats and shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bats shellcheck
+
+      - name: Unit tests
+        run: bats tests/
+
+      - name: Shellcheck lint library
+        run: shellcheck -x -P lib lib/lint.sh
+
+      - name: Endpoint portability (report only)
+        run: ./mql lint endpoints --report
