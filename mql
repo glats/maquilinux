@@ -155,6 +155,9 @@ COMMANDS:
   audit [options]       Distro health audit (--json|--brief|--fix)
   health                Alias for audit
 
+  lint                  Policy checks
+    fhs [rpm...]        Debian filesystem rules on built RPMs (default: RPMS/)
+
   status                Show development environment status
   config                Show active configuration
   help                  Show this help message
@@ -347,6 +350,11 @@ main() {
         audit|health)
             source "$MQL_PROJECT_ROOT/lib/audit.sh"
             mql_audit "$@"
+            ;;
+
+        lint)
+            source "$MQL_PROJECT_ROOT/lib/lint.sh"
+            mql_lint "$@"
             ;;
 
         init)

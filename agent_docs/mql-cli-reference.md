@@ -45,6 +45,20 @@ mql test vm                      Boot the live ISO in QEMU
 mql test smoke                   Run smoke tests against the chroot
 ```
 
+## Lint
+
+```
+mql lint fhs [rpm...]            Check built RPMs against Debian filesystem rules
+                                 (default: every RPM under RPMS/); exit 1 on violations
+```
+
+Rules (Debian Policy 9.1.1 over FHS 3.0): `FHS-USR-LIB64` no files under
+`/usr/lib64`; `FHS-LIB64` only the dynamic linker under `/lib64`;
+`FHS-TRIPLET` a package installs only into its own architecture triplet;
+`FHS-LIB32` no files under `/lib32` or `/usr/lib32`. `/usr/libexec` is allowed.
+Needs `rpm` on PATH (on NixOS: `nix shell nixpkgs#rpm -c ./mql lint fhs`).
+Tests: `nix shell nixpkgs#bats -c bats tests/`.
+
 ## Backup
 
 ```
