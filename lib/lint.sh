@@ -112,13 +112,32 @@ endpoint_violations() {
 # Defaults to git-tracked files minus LINT_ENDPOINTS_EXCLUDE. Exit 1 on any
 # violation unless --report.
 lint_endpoints() {
-    local report=0
-    if [[ "${1:-}" == "--report" ]]; then
-        report=1
-        shift
-    fi
+    local report=0 arg files=()
+    for arg in "$@"; do
+        case "$arg" in
+            --report) report=1 ;;
+            -*) log_error "Unknown option: $arg"; return 2 ;;
+            *)
+                if [[ ! -f "$arg" ]]; then
+                    log_error "No such file: $arg"
+                    return 2
+                fi
+                files+=("$arg")
+                ;;
+        esac
+    done
 
-    local files=("$@")
+    # A broken private pattern must fail the gate, never pass it silently.
+    local p rc
+    for p in ${MQL_LINT_PRIVATE_PATTERNS:-}; do
+        rc=0
+        grep -qE "$p" </dev/null 2>/dev/null || rc=$?
+        if [[ $rc -gt 1 ]]; then
+            log_error "Invalid pattern in MQL_LINT_PRIVATE_PATTERNS (entry hidden)"
+            return 2
+        fi
+    done
+
     if [[ ${#files[@]} -eq 0 ]]; then
         mapfile -t files < <(git -C "$MQL_PROJECT_ROOT" ls-files \
             | grep -vE "$LINT_ENDPOINTS_EXCLUDE" | sed "s|^|$MQL_PROJECT_ROOT/|")

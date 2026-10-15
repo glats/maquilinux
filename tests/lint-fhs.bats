@@ -93,3 +93,15 @@ make_rpm() {
     [[ "$output" == *"audit [options]"* ]]
     [[ "$output" == *"fhs [rpm...]"* ]]
 }
+
+@test "lookalike paths are not flagged" {
+    make_rpm look x86_64 /usr/lib64x/foo /usr/lib/i386-linux-gnux/a /usr/libexec/h
+    run "$ROOT/mql" lint fhs "$FIX/look.rpm"
+    [ "$status" -eq 0 ]
+}
+
+@test "loader lookalike in /lib64 is rejected" {
+    make_rpm ll x86_64 /lib64/ld-linux-x86-64.so.2x
+    run "$ROOT/mql" lint fhs "$FIX/ll.rpm"
+    [ "$status" -eq 1 ]
+}

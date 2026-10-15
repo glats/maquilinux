@@ -65,3 +65,36 @@ setup() {
     run "$ROOT/mql" help
     [[ "$output" == *"endpoints [--report]"* ]]
 }
+
+@test "--report accepted after file arguments" {
+    printf 'https://repo.glats.org/x\n' > "$W/r.md"
+    run "$ROOT/mql" lint endpoints "$W/r.md" --report
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"r.md:1: EP-LEGACY"* ]]
+}
+
+@test "unknown option is rejected" {
+    printf 'ok\n' > "$W/o.md"
+    run "$ROOT/mql" lint endpoints --bogus "$W/o.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"Unknown option"* ]]
+}
+
+@test "missing file argument is an error" {
+    run "$ROOT/mql" lint endpoints "$W/nope.md"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"No such file"* ]]
+}
+
+@test "invalid private pattern is an error, not a pass" {
+    printf 'x\n' > "$W/p.md"
+    MQL_LINT_PRIVATE_PATTERNS='[' run "$ROOT/mql" lint endpoints "$W/p.md"
+    [ "$status" -ne 0 ]
+}
+
+@test "legacy domains can be set from the environment" {
+    printf 'https://x.old.example.com/\n' > "$W/e.md"
+    MQL_LINT_LEGACY_DOMAINS='old.example.com' run "$ROOT/mql" lint endpoints "$W/e.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"e.md:1: EP-LEGACY: x.old.example.com"* ]]
+}
