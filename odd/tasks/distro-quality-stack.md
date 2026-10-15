@@ -21,7 +21,7 @@ Branch: `feat/distro-quality-stack` | Delivery: `ask-on-risk` | Test runner: `ba
 
 | ID | Specs | Route | Status | Evidence |
 |----|-------|-------|--------|----------|
-| T1 | S1, S2 | inline | done | `mql lint fhs`: Debian path policy over built RPM file lists; RED 9/9 fail, GREEN 9/9 pass (`tests/lint-fhs.bats`), shellcheck clean; commit: see Log L6 |
+| T1 | S1, S2 | inline | done | `mql lint fhs`: Debian path policy over built RPM file lists; RED 9/9 fail, GREEN 9/9 pass (`tests/lint-fhs.bats`), shellcheck clean; commit `0fde7e5` |
 | T2 | S2, S3 | inline | pending | `mql lint spec`: spec policy (Release tag, debug_package, multiarch block, no hardcoded lib64); wire into PR CI |
 | T3 | S2, S3 | TBD, high risk | pending | macros package setting `%_libdir`/`%_libexecdir` to Debian multiarch paths; gated on T1/T2 reports |
 | T4 | S1 | inline | pending | doc drift: spec-conventions, multiarch-guide counts, AGENTS.md dead links, acceptance multiarch check accepting `/usr/lib64` |
