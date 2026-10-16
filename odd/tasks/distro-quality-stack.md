@@ -46,7 +46,7 @@ Each phase closes a loop the next one relies on; desktop work starts only once t
 | T2 | 1 | S2, S3 | inline | done | `mql lint spec`: Release tag, debug_package, License, %changelog; wired into PR CI report-only; multiarch block and lib64 deferred to T3/T4 (see L15); commit `0d7b039` |
 | T19 | 1 | S3 | TBD, high risk | pending | fix the 5 Release tags without `.m264` (createrepo_c, dracut, libisoburn, libisofs, mtools); a Release change rebuilds and republishes those packages, then make `lint spec` blocking |
 | T4 | 1 | S1 | inline | done | doc drift fixed (spec-conventions, multiarch-guide, AGENTS.md, README index, `mql help`) + `mql lint docs` blocking in CI; acceptance multiarch check moved to T3, rootfs URL to T13; commit `b3c4cd1` |
-| T5 | 1 | S1 | inline | done (runtime load unverified) | `.opencode/agents/maqui/{spec-steward,fhs-auditor,release-engineer}.md` calling the gates; boot QA agent moved to T6 (needs the QEMU gate); commit see L17 |
+| T5 | 1 | S1 | inline | done (runtime load unverified) | `.opencode/agents/maqui/{spec-steward,fhs-auditor,release-engineer}.md` calling the gates; boot QA agent moved to T6 (needs the QEMU gate); commit `c8c887f` |
 | T11 | 1+ | S4 | inline | pending | Herd tool-adoption evaluation |
 | T6 | 2 | S5, S6 | TBD, high risk | pending | ISO pipeline defects (grub.cfg/label, rootfs.img vs squashfs.img, base vs overlay) + CI QEMU boot smoke |
 | T3 | 2 | S2, S3 | TBD, high risk | pending | macros package setting `%_libdir`/`%_libexecdir` to Debian multiarch paths; gated on T1/T2 reports; also `scripts/acceptance-test.sh` multiarch check accepting `/usr/lib64` (from T4) |
