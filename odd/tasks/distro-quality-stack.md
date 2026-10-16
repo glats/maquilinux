@@ -45,7 +45,7 @@ Each phase closes a loop the next one relies on; desktop work starts only once t
 | T1 | 1 | S1, S2 | inline | done | `mql lint fhs`: Debian path policy over built RPM file lists; RED 9/9 fail, GREEN 9/9 pass (`tests/lint-fhs.bats`), shellcheck clean; commit `0fde7e5` |
 | T2 | 1 | S2, S3 | inline | done | `mql lint spec`: Release tag, debug_package, License, %changelog; wired into PR CI report-only; multiarch block and lib64 deferred to T3/T4 (see L15); commit `0d7b039` |
 | T19 | 1 | S3 | TBD, high risk | pending | fix the 5 Release tags without `.m264` (createrepo_c, dracut, libisoburn, libisofs, mtools); a Release change rebuilds and republishes those packages, then make `lint spec` blocking |
-| T4 | 1 | S1 | inline | done | doc drift fixed (spec-conventions, multiarch-guide, AGENTS.md, README index, `mql help`) + `mql lint docs` blocking in CI; acceptance multiarch check moved to T3, rootfs URL to T13; commit see L16 |
+| T4 | 1 | S1 | inline | done | doc drift fixed (spec-conventions, multiarch-guide, AGENTS.md, README index, `mql help`) + `mql lint docs` blocking in CI; acceptance multiarch check moved to T3, rootfs URL to T13; commit `b3c4cd1` |
 | T5 | 1 | S1 | inline | pending | project agents in `.opencode/` (spec steward, FHS auditor, release engineer, boot QA) calling the gates |
 | T11 | 1+ | S4 | inline | pending | Herd tool-adoption evaluation |
 | T6 | 2 | S5, S6 | TBD, high risk | pending | ISO pipeline defects (grub.cfg/label, rootfs.img vs squashfs.img, base vs overlay) + CI QEMU boot smoke |
