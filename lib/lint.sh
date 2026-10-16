@@ -198,13 +198,15 @@ doc_violations() {
 }
 
 # lint_docs [--report] [file...]
-# Defaults to AGENTS.md, CONTRIBUTING.md, README.md, agent_docs/, docs/.
+# Defaults to AGENTS.md, CONTRIBUTING.md, README.md, agent_docs/, docs/,
+# and .opencode/agents/.
 lint_docs() {
     lint_parse_args "$@" || return 2
     local files=("${LINT_FILES[@]}")
     if [[ ${#files[@]} -eq 0 ]]; then
         mapfile -t files < <(git -C "$MQL_PROJECT_ROOT" ls-files \
             AGENTS.md CONTRIBUTING.md README.md 'agent_docs/*.md' 'docs/*.md' \
+            '.opencode/agents/*.md' \
             | sed "s|^|$MQL_PROJECT_ROOT/|")
     fi
 
