@@ -108,24 +108,82 @@ endpoint_violations() {
     done
 }
 
-# lint_endpoints [--report] [file...]
-# Defaults to git-tracked files minus LINT_ENDPOINTS_EXCLUDE. Exit 1 on any
-# violation unless --report.
-lint_endpoints() {
-    local report=0 arg files=()
+# lint_parse_args [--report] [file...]
+# Sets LINT_REPORT (0|1) and LINT_FILES. Unknown options and missing files
+# fail, so a typo can never produce a false green.
+lint_parse_args() {
+    LINT_REPORT=0
+    LINT_FILES=()
+    local arg
     for arg in "$@"; do
         case "$arg" in
-            --report) report=1 ;;
+            --report) LINT_REPORT=1 ;;
             -*) log_error "Unknown option: $arg"; return 2 ;;
             *)
                 if [[ ! -f "$arg" ]]; then
                     log_error "No such file: $arg"
                     return 2
                 fi
-                files+=("$arg")
+                LINT_FILES+=("$arg")
                 ;;
         esac
     done
+}
+
+# ============================================================================
+# lint spec: Maqui spec conventions (agent_docs/spec-conventions.md)
+#   SPEC-RELEASE    Release is N.m<YY><M> with optional %{?dist}, from MQL_RELEASEVER
+#   SPEC-DEBUG      debug packages disabled: %define|%global debug_package %{nil}
+#   SPEC-LICENSE    License: field present
+#   SPEC-CHANGELOG  %changelog section present
+# ============================================================================
+
+# spec_violations <spec> <tag>
+spec_violations() {
+    local spec="$1" tag="$2" release
+    release=$(sed -nE 's/^Release:[[:space:]]*//p' "$spec" | head -1 | sed -E 's/[[:space:]]+$//')
+    if [[ ! "$release" =~ ^[0-9]+\.${tag}(%\{\?dist\})?$ ]]; then
+        echo "SPEC-RELEASE: ${release:-<missing>} (want N.${tag})"
+    fi
+    grep -qE '^%(define|global)[[:space:]]+debug_package[[:space:]]+%\{nil\}' "$spec" \
+        || echo "SPEC-DEBUG: missing '%global debug_package %{nil}'"
+    grep -qE '^License:' "$spec" || echo "SPEC-LICENSE: missing License field"
+    grep -qE '^%changelog' "$spec" || echo "SPEC-CHANGELOG: missing %changelog"
+}
+
+# lint_spec [--report] [spec...]
+# Defaults to SPECS/*.spec. Exit 1 on any violation unless --report.
+lint_spec() {
+    lint_parse_args "$@" || return 2
+    local specs=("${LINT_FILES[@]}")
+    if [[ ${#specs[@]} -eq 0 ]]; then
+        shopt -s nullglob
+        specs=("$MQL_PROJECT_ROOT"/SPECS/*.spec)
+        shopt -u nullglob
+    fi
+
+    # 26.4 -> m264; 26.10 -> m2610
+    local tag="m${MQL_RELEASEVER:-26.4}"
+    tag="${tag//./}"
+
+    local count=0 spec line
+    for spec in "${specs[@]}"; do
+        while IFS= read -r line; do
+            echo "$(basename "$spec"): $line"
+            count=$((count + 1))
+        done < <(spec_violations "$spec" "$tag")
+    done
+
+    echo "lint spec: ${#specs[@]} spec(s), $count violation(s)"
+    [[ $LINT_REPORT -eq 1 || $count -eq 0 ]]
+}
+
+# lint_endpoints [--report] [file...]
+# Defaults to git-tracked files minus LINT_ENDPOINTS_EXCLUDE. Exit 1 on any
+# violation unless --report.
+lint_endpoints() {
+    lint_parse_args "$@" || return 2
+    local report=$LINT_REPORT files=("${LINT_FILES[@]}")
 
     # A broken private pattern must fail the gate, never pass it silently.
     local p rc
@@ -162,8 +220,9 @@ mql_lint() {
     case "$subcmd" in
         fhs) lint_fhs "$@" ;;
         endpoints) lint_endpoints "$@" ;;
+        spec) lint_spec "$@" ;;
         *)
-            log_error "Unknown lint subcommand: ${subcmd:-<none>} (available: fhs, endpoints)"
+            log_error "Unknown lint subcommand: ${subcmd:-<none>} (available: fhs, spec, endpoints)"
             return 1
             ;;
     esac

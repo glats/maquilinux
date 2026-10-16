@@ -60,6 +60,17 @@ Needs `rpm` on PATH (on NixOS: `nix shell nixpkgs#rpm -c ./mql lint fhs`).
 Tests: `nix shell nixpkgs#bats -c bats tests/`.
 
 ```
+mql lint spec [--report] [spec...]
+                                 Check specs against spec-conventions.md
+                                 (default: SPECS/*.spec)
+```
+
+Rules: `SPEC-RELEASE` Release is `N.m<tag>` with optional `%{?dist}`, where the
+tag comes from `MQL_RELEASEVER` (26.4 gives `m264`); `SPEC-DEBUG`
+`%global` or `%define debug_package %{nil}`; `SPEC-LICENSE` License field;
+`SPEC-CHANGELOG` `%changelog` section. Text-only, no rpm needed.
+
+```
 mql lint endpoints [--report] [file...]
                                  Flag machine names and legacy domains in versioned
                                  files (default: git-tracked files minus history dirs)

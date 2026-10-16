@@ -157,6 +157,8 @@ COMMANDS:
 
   lint                  Policy checks
     fhs [rpm...]        Debian filesystem rules on built RPMs (default: RPMS/)
+    spec [--report] [spec...]
+                        Maqui spec conventions (default: SPECS/*.spec)
     endpoints [--report] [file...]
                         Machine names / legacy domains in versioned files
 
