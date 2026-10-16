@@ -15,7 +15,10 @@ permissions:
     resource: "rpm -q*"
     effect: allow
   - action: shell
-    resource: "nix shell nixpkgs#rpm -c *"
+    resource: "nix shell nixpkgs#rpm -c ./mql lint *"
+    effect: allow
+  - action: shell
+    resource: "nix shell nixpkgs#rpm -c rpm -q*"
     effect: allow
 ---
 

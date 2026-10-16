@@ -140,9 +140,12 @@ lint_parse_args() {
 
 # spec_violations <spec> <tag>
 spec_violations() {
-    local spec="$1" tag="$2" release
+    local spec="$1" tag="$2" release nrel
+    nrel=$(grep -cE '^Release:' "$spec" || true)
     release=$(sed -nE 's/^Release:[[:space:]]*//p' "$spec" | head -1 | sed -E 's/[[:space:]]+$//')
-    if [[ ! "$release" =~ ^[0-9]+\.${tag}(%\{\?dist\})?$ ]]; then
+    if [[ $nrel -gt 1 ]]; then
+        echo "SPEC-RELEASE: duplicate Release headers ($nrel)"
+    elif [[ ! "$release" =~ ^[0-9]+\.${tag}(%\{\?dist\})?$ ]]; then
         echo "SPEC-RELEASE: ${release:-<missing>} (want N.${tag})"
     fi
     grep -qE '^%(define|global)[[:space:]]+debug_package[[:space:]]+%\{nil\}' "$spec" \
@@ -191,7 +194,7 @@ readonly LINT_DOC_ROOTS='(agent_docs|docs|lib|scripts|SPECS|SOURCES|tests|odd|\.
 doc_violations() {
     local file="$1" n path
     while IFS=: read -r n path; do
-        [[ "$path" == *[\*\<\>\$\{]* ]] && continue
+        [[ "$path" == *[\*\?\[\<\>\$\{]* ]] && continue
         [[ -e "$MQL_PROJECT_ROOT/$path" ]] || echo "$file:$n: DOC-PATH: $path"
     done < <(grep -noE "\`${LINT_DOC_ROOTS}[^\` ]+\`" "$file" 2>/dev/null \
         | sed -E 's/`//g' | grep -E "^[0-9]+:${LINT_DOC_ROOTS}" || true)

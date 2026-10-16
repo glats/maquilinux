@@ -66,7 +66,8 @@ rm -rf %{buildroot}%{_libdir}/pkgconfig
 
 ## Architecture Restriction
 
-Specs that build for i686 declare:
+Specs that build for i686 should declare the restriction below. It is not yet
+enforced and many i686 specs still lack it (`grep -L ExclusiveArch SPECS/*.spec`):
 
 ```spec
 ExclusiveArch: x86_64 i686

@@ -59,3 +59,25 @@ frontmatter() {
     n=$(git -C "$ROOT" ls-files AGENTS.md CONTRIBUTING.md README.md 'agent_docs/*.md' 'docs/*.md' '.opencode/agents/*.md' | wc -l)
     [[ "$output" == *"lint docs: $n file(s)"* ]]
 }
+
+# effective_shell <agent> <command>: last matching shell rule wins.
+effective_shell() {
+    local effect=unset pattern decision
+    while IFS=$'\t' read -r pattern decision; do
+        # shellcheck disable=SC2254
+        case "$2" in $pattern) effect=$decision ;; esac
+    done < <(awk '
+        /- action:/ { action=$3 }
+        /resource:/ { r=$0; sub(/^[^"]*"/, "", r); sub(/".*$/, "", r) }
+        /effect:/ && action == "shell" { print r "\t" $2 }' "$1")
+    echo "$effect"
+}
+
+@test "the FHS auditor shell policy allows only lint and rpm queries" {
+    f="$AGENTS/fhs-auditor.md"
+    [ "$(effective_shell "$f" 'nix shell nixpkgs#rpm -c bash -c true')" = deny ]
+    [ "$(effective_shell "$f" './mql chroot --promote')" = deny ]
+    [ "$(effective_shell "$f" './mql lint fhs RPMS/x86_64/a.rpm')" = allow ]
+    [ "$(effective_shell "$f" 'nix shell nixpkgs#rpm -c ./mql lint fhs')" = allow ]
+    [ "$(effective_shell "$f" 'rpm -qlp RPMS/x86_64/a.rpm')" = allow ]
+}

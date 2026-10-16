@@ -91,3 +91,11 @@ EOF
     run "$ROOT/mql" help
     [[ "$output" == *"spec [--report] [spec...]"* ]]
 }
+
+@test "duplicate Release headers are rejected" {
+    good_spec "$W/dup.spec"
+    sed -i '/^Release:/a Release: 2.m999' "$W/dup.spec"
+    run "$ROOT/mql" lint spec "$W/dup.spec"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"dup.spec: SPEC-RELEASE: duplicate Release headers"* ]]
+}

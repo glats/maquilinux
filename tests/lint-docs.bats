@@ -31,3 +31,10 @@ setup() {
         [ -f "$ROOT/$p" ] || { echo "missing: $p"; return 1; }
     done
 }
+
+@test "question-mark and bracket globs are skipped" {
+    printf '%s\n' '`SPECS/zli?.spec`' '`SPECS/[z]lib.spec`' > "$W/globs.md"
+    run "$ROOT/mql" lint docs "$W/globs.md"
+    [ "$status" -eq 0 ]
+    [ "$output" = 'lint docs: 1 file(s), 0 violation(s)' ]
+}
