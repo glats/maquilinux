@@ -178,6 +178,48 @@ lint_spec() {
     [[ $LINT_REPORT -eq 1 || $count -eq 0 ]]
 }
 
+# ============================================================================
+# lint docs: repository paths cited in agent docs must exist
+#   DOC-PATH  a backticked repo path (agent_docs/, docs/, lib/, scripts/,
+#             SPECS/, SOURCES/, tests/, odd/, .github/) that does not exist.
+#             Globs and <placeholders> are skipped.
+# ============================================================================
+
+readonly LINT_DOC_ROOTS='(agent_docs|docs|lib|scripts|SPECS|SOURCES|tests|odd|\.github)/'
+
+# doc_violations <file>
+doc_violations() {
+    local file="$1" n path
+    while IFS=: read -r n path; do
+        [[ "$path" == *[\*\<\>\$\{]* ]] && continue
+        [[ -e "$MQL_PROJECT_ROOT/$path" ]] || echo "$file:$n: DOC-PATH: $path"
+    done < <(grep -noE "\`${LINT_DOC_ROOTS}[^\` ]+\`" "$file" 2>/dev/null \
+        | sed -E 's/`//g' | grep -E "^[0-9]+:${LINT_DOC_ROOTS}" || true)
+}
+
+# lint_docs [--report] [file...]
+# Defaults to AGENTS.md, CONTRIBUTING.md, README.md, agent_docs/, docs/.
+lint_docs() {
+    lint_parse_args "$@" || return 2
+    local files=("${LINT_FILES[@]}")
+    if [[ ${#files[@]} -eq 0 ]]; then
+        mapfile -t files < <(git -C "$MQL_PROJECT_ROOT" ls-files \
+            AGENTS.md CONTRIBUTING.md README.md 'agent_docs/*.md' 'docs/*.md' \
+            | sed "s|^|$MQL_PROJECT_ROOT/|")
+    fi
+
+    local count=0 line f
+    for f in "${files[@]}"; do
+        while IFS= read -r line; do
+            echo "${line#"$MQL_PROJECT_ROOT"/}"
+            count=$((count + 1))
+        done < <(doc_violations "$f")
+    done
+
+    echo "lint docs: ${#files[@]} file(s), $count violation(s)"
+    [[ $LINT_REPORT -eq 1 || $count -eq 0 ]]
+}
+
 # lint_endpoints [--report] [file...]
 # Defaults to git-tracked files minus LINT_ENDPOINTS_EXCLUDE. Exit 1 on any
 # violation unless --report.
@@ -221,8 +263,9 @@ mql_lint() {
         fhs) lint_fhs "$@" ;;
         endpoints) lint_endpoints "$@" ;;
         spec) lint_spec "$@" ;;
+        docs) lint_docs "$@" ;;
         *)
-            log_error "Unknown lint subcommand: ${subcmd:-<none>} (available: fhs, spec, endpoints)"
+            log_error "Unknown lint subcommand: ${subcmd:-<none>} (available: fhs, spec, docs, endpoints)"
             return 1
             ;;
     esac

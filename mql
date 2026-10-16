@@ -159,6 +159,8 @@ COMMANDS:
     fhs [rpm...]        Debian filesystem rules on built RPMs (default: RPMS/)
     spec [--report] [spec...]
                         Maqui spec conventions (default: SPECS/*.spec)
+    docs [--report] [file...]
+                        Repository paths cited in docs must exist
     endpoints [--report] [file...]
                         Machine names / legacy domains in versioned files
 
@@ -185,8 +187,8 @@ EXAMPLES:
   MQL_ROOTFS=/mnt/maquilinux mql status   # Override mount point
 
 For full documentation:
-  docs/MANUAL-NIX.md
-  docs/MANUAL-STANDALONE.md
+  docs/agents/standalone-developer.md
+  agent_docs/mql-cli-reference.md
 EOF
 }
 

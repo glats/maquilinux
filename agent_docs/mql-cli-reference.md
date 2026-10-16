@@ -71,6 +71,17 @@ tag comes from `MQL_RELEASEVER` (26.4 gives `m264`); `SPEC-DEBUG`
 `SPEC-CHANGELOG` `%changelog` section. Text-only, no rpm needed.
 
 ```
+mql lint docs [--report] [file...]
+                                 Repository paths cited in docs must exist
+                                 (default: AGENTS.md, README.md, CONTRIBUTING.md,
+                                 agent_docs/, docs/)
+```
+
+Rule: `DOC-PATH` a backticked path under `agent_docs/`, `docs/`, `lib/`,
+`scripts/`, `SPECS/`, `SOURCES/`, `tests/`, `odd/`, or `.github/` that does not
+exist. Globs and `<placeholders>` are skipped. Blocking in CI.
+
+```
 mql lint endpoints [--report] [file...]
                                  Flag machine names and legacy domains in versioned
                                  files (default: git-tracked files minus history dirs)

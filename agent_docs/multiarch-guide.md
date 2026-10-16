@@ -1,9 +1,9 @@
 # Multiarch Guide
-<!-- stability: stable | last-reviewed: 2026-07-10 -->
+<!-- stability: stable | last-reviewed: 2026-10-16 -->
 
 Maqui supports x86_64 with i686 multilib via Debian-style library layout.
-Over 100 of 130 specs include i686 conditionals following a consistent
-pattern.
+Specs that build for both architectures include i686 conditionals following
+a consistent pattern (`grep -l '_target_cpu.*i686' SPECS/*.spec` lists them).
 
 ## Library Layout
 
@@ -12,8 +12,10 @@ pattern.
 | x86_64 | `/usr/lib/x86_64-linux-gnu` | 64-bit libraries |
 | i686 | `/usr/lib/i386-linux-gnu` | 32-bit libraries |
 
-No `/usr/lib64` or `/usr/lib32` directories. The layout is unified under
-`/usr/lib`.
+Packages install no files under `/usr/lib64` or `/usr/lib32`; the layout is
+unified under `/usr/lib`. Those paths, and `/lib64`, exist only as
+compatibility symlinks owned by `filesystem` (the loader must resolve at
+`/lib64/ld-linux-x86-64.so.2`). `mql lint fhs` enforces the rule on built RPMs.
 
 ## Spec Pattern
 
@@ -64,7 +66,7 @@ rm -rf %{buildroot}%{_libdir}/pkgconfig
 
 ## Architecture Restriction
 
-All specs declare:
+Specs that build for i686 declare:
 
 ```spec
 ExclusiveArch: x86_64 i686

@@ -33,6 +33,9 @@ jobs:
       - name: Shellcheck lint library
         run: shellcheck -x -P lib lib/lint.sh
 
+      - name: Documentation paths
+        run: ./mql lint docs
+
       - name: Spec conventions (report only)
         run: ./mql lint spec --report
 

@@ -24,6 +24,8 @@ mql build <spec> --both          Build 64+32 bit
 mql install <spec>               Install RPM in chroot
 mql repo update                  Regenerate repo metadata
 mql chroot --reset               Discard overlay changes
+mql lint spec|docs|endpoints     Repository quality gates (run before a PR)
+mql lint fhs                     Debian filesystem rules on built RPMs
 ```
 
 For the full CLI reference, see `agent_docs/mql-cli-reference.md`.
@@ -35,11 +37,11 @@ For the full CLI reference, see `agent_docs/mql-cli-reference.md`.
 
 2. **`mql chroot --promote` requires interactive confirmation.** Cannot be
    scripted silently. Manual alternative:
-   `sudo rsync -a $MQL_LFS/layers/upper/ $MQL_LFS/base/ && sudo rm -rf $MQL_LFS/layers/upper/*`
+   `sudo rsync -a $MQL_ROOTFS/layers/upper/ $MQL_ROOTFS/base/ && sudo rm -rf $MQL_ROOTFS/layers/upper/*`
 
 3. **Stale overlay mounts after crash.** Lazy unmount:
-   `sudo umount -l $MQL_LFS/merged/{mnt/repo,dev/shm,dev/pts,dev,run,sys,proc}`
-   then `sudo umount -l $MQL_LFS/merged`
+   `sudo umount -l $MQL_ROOTFS/merged/{mnt/repo,dev/shm,dev/pts,dev,run,sys,proc}`
+   then `sudo umount -l $MQL_ROOTFS/merged`
 
 4. **Sources must be in `SOURCES/` before building.** Use
    `scripts/fetch-spec-sources.sh <spec>` or place tarballs manually.
@@ -64,8 +66,8 @@ For the full CLI reference, see `agent_docs/mql-cli-reference.md`.
 
 Additional context:
 | `docs/DISTRO-IDENTITY.md` | Canonical distro definition (human reference) |
-| `docs/agents/runner-setup.md` | Self-hosted GitHub Actions runner |
-| `docs/agents/backup-system.md` | Rootfs backup strategy |
+| `scripts/setup-runner.sh` | Self-hosted GitHub Actions runner setup |
+| `agent_docs/backup-flow.md` | Rootfs backup strategy |
 | `docs/agents/standalone-developer.md` | Download rootfs, local development |
 
 ## Configuration
@@ -91,9 +93,9 @@ Show active config: `mql config`
 | `RPMS/` | Built RPMs (gitignored) |
 | `scripts/` | Build scripts |
 | `lib/` | `mql` CLI library (bash) |
-| `$MQL_LFS/base/` | Immutable rootfs (overlay lower) |
-| `$MQL_LFS/merged/` | Active overlay chroot |
-| `$MQL_LFS/repo/` | Local RPM repo |
+| `$MQL_ROOTFS/base/` | Immutable rootfs (overlay lower) |
+| `$MQL_ROOTFS/merged/` | Active overlay chroot |
+| `$MQL_ROOTFS/repo/` | Local RPM repo |
 
 ## Key URLs
 

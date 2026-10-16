@@ -131,13 +131,13 @@ See `SPECS/SPEC_TEMPLATE.md` for the full Gen3 spec template.
 
 | Document | Covers |
 | -------- | ------ |
-| `docs/GETTING-STARTED.md` | **Start here** — prerequisites, first build, daily workflow, troubleshooting |
-| `docs/MANUAL-NIX.md` | NixOS/Nix users: disk setup, nix develop, NixOS host config, release flow |
-| `docs/MANUAL-STANDALONE.md` | Without Nix: tool installation per distro, manual chroot, self-hosting |
-| `docs/DEVELOPMENT-SYSTEM-PLAN.md` | Full architecture: overlay system, CLI design, ISO pipeline, self-hosting |
-| `docs/DEVELOPMENT.md` | Contribution workflow, CODEOWNERS, branch protection |
-| `docs/PIPELINES.md` | Target CI/CD architecture (planned — not yet implemented) |
-| `docs/DECISION-FRAMEWORK.md` | Mandatory process before any tool/library decision |
-| `docs/DECISIONS.md` | Log of all tool and architecture decisions with rationale |
-| `SPECS/SPEC_TEMPLATE.md` | Gen3 spec template and authoring guide |
+| `docs/agents/standalone-developer.md` | **Start here**: tools (Nix or standalone), rootfs download, first chroot |
+| `AGENTS.md` | Agent entry point and index of `agent_docs/` |
+| `agent_docs/build-workflow.md` | Spec to RPM pipeline |
+| `agent_docs/spec-conventions.md` | Spec format, release tag, multiarch, lint |
+| `agent_docs/chroot-lifecycle.md` | Overlay chroot layers and state |
+| `agent_docs/release-engineering.md` | Rootfs and ISO release pipeline |
+| `agent_docs/mql-cli-reference.md` | Full `mql` CLI reference |
+| `CONTRIBUTING.md` | Contribution workflow |
+| `SPECS/SPEC_TEMPLATE.md` | Distro health requirements (REQ-01..16) |
 

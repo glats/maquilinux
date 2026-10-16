@@ -39,7 +39,7 @@ build from.
    and install the dependency before returning to the target package.
 
    Example: `package-a` needs `library-b`. No spec for `library-b`.
-   Create `SPECS/library-b.spec`. `library-b` needs `library-c`.
+   Create `SPECS/<library-b>.spec`. `library-b` needs `library-c`.
    `library-c` already has spec + RPM -- installed. Build `library-b`.
    Now `package-a`'s `library-b` dep is satisfied. Repeat for each
    missing dependency.
