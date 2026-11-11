@@ -1,6 +1,6 @@
 Name:           udev
 Version:        258.1
-Release:        1.m264%{?dist}
+Release:        2.m264%{?dist}
 Summary:        Userspace device management from systemd (standalone build)
 
 %define debug_package        %{nil}
@@ -28,6 +28,7 @@ BuildRequires:  libcap
 BuildRequires:  elfutils
 BuildRequires:  util-linux
 BuildRequires:  python3
+Requires:       openrc
 
 %description
 Udev provides the userspace components of the Linux device manager from
@@ -135,6 +136,48 @@ rm -f %{buildroot}/usr/share/man/man*/systemd* || :
 
 rm -f %{buildroot}/usr/share/info/dir || :
 
+install -vdm 755 %{buildroot}/etc/init.d %{buildroot}/etc/runlevels/sysinit
+cat > %{buildroot}/etc/init.d/udev << 'EOF'
+#!/usr/sbin/openrc-run
+
+description="Initialize device management"
+command=/usr/sbin/udevd
+
+depend()
+{
+    need dev-mount sysfs
+    provide dev
+    before network dhcpcd
+    keyword -docker -podman -lxc -prefix -systemd-nspawn -vserver -wsl
+}
+
+start()
+{
+    ebegin "Starting device management"
+    if ! "$command" --daemon; then
+        eend 1
+        return 1
+    fi
+    if udevadm trigger --action=add --type=subsystems &&
+        udevadm trigger --action=add --type=devices &&
+        udevadm settle --timeout=30; then
+        eend 0
+    else
+        udevadm control --exit
+        eend 1
+    fi
+}
+
+stop()
+{
+    ebegin "Stopping device management"
+    udevadm control --exit
+    eend $?
+}
+EOF
+chmod 755 %{buildroot}/etc/init.d/udev
+ln -sv ../../init.d/udev %{buildroot}/etc/runlevels/sysinit/udev
+
 cd %{buildroot}
 find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/udev-files.list
 
@@ -142,5 +185,8 @@ find . -type f -o -type l | sed 's|^\.||' > %{_builddir}/udev-files.list
 %defattr(-,root,root)
 
 %changelog
+* Fri Oct 23 2026 Maqui Linux <info@maquilinux.org> - 258.1-2.m264
+- Initialize and settle devices in the OpenRC sysinit runlevel.
+
 * Tue Dec 23 2025 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 258.1-1.m264
 - Standalone udev build from systemd 258.1 per Maqui Linux instructions.

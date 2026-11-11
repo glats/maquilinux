@@ -6,7 +6,7 @@
 
 Name:           maquilinux-release
 Version:        26.4
-Release:        1.m264%{?dist}
+Release:        2.m264%{?dist}
 Summary:        Maqui Linux release configuration
 BuildArch:      noarch
 License:        MIT
@@ -17,6 +17,7 @@ Source2:        maquilinux-resolv.conf
 
 Requires:       ca-certificates
 Requires:       dhcpcd
+Requires:       udev
 
 %description
 Maqui Linux release package. Ships the production DNF repository
@@ -58,9 +59,6 @@ if command -v rc-update >/dev/null 2>&1; then
     rc-update add dhcpcd default 2>/dev/null || true
 fi
 
-# Create cert.pem symlink for OpenSSL default path
-ln -sf /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem 2>/dev/null || true
-
 # Create .curlrc symlink so curl finds CA certs
 ln -sf /etc/curlrc /root/.curlrc 2>/dev/null || true
 
@@ -73,6 +71,9 @@ ln -sf /etc/curlrc /root/.curlrc 2>/dev/null || true
 /etc/profile.d/ssl-cert.sh
 
 %changelog
+* Fri Oct 23 2026 Maqui Linux <info@maquilinux.org> - 26.4-2.m264
+- Require device initialization and use the CA-owned OpenSSL trust link.
+
 * Fri May 29 2026 Maqui Linux <info@maquilinux.org> - 26.4-1.m264
 - Production repo file with gpgcheck=1 and GPG key path
 - Static DNS configuration (Cloudflare + Google fallback)

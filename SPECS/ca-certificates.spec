@@ -7,7 +7,7 @@
 
 Name:           ca-certificates
 Version:        20260319
-Release:        1.m264%{?dist}
+Release:        2.m264%{?dist}
 Summary:        Mozilla CA Certificate Bundle
 BuildArch:      noarch
 
@@ -34,6 +34,7 @@ install -vdm 755 %{buildroot}/etc/ssl/certs
 install -vdm 755 %{buildroot}/etc/pki/tls/certs
 
 install -vm 644 cacert.pem %{buildroot}/etc/ssl/certs/ca-certificates.crt
+ln -sv certs/ca-certificates.crt %{buildroot}/etc/ssl/cert.pem
 
 # Compatibility symlinks for Fedora/RHEL path conventions
 ln -sv /etc/ssl/certs/ca-certificates.crt %{buildroot}/etc/pki/tls/certs/ca-bundle.crt
@@ -47,9 +48,13 @@ ln -sv /etc/ssl/certs/ca-certificates.crt %{buildroot}/etc/pki/tls/certs/ca-bund
 %dir /etc/pki/tls
 %dir /etc/pki/tls/certs
 /etc/ssl/certs/ca-certificates.crt
+/etc/ssl/cert.pem
 /etc/pki/tls/certs/ca-bundle.crt
 /etc/pki/tls/certs/ca-bundle.trust.crt
 
 %changelog
+* Fri Oct 23 2026 Maqui Linux <info@maquilinux.org> - 20260319-2.m264
+- Own the default OpenSSL trust link in the CA package payload.
+
 * Tue Mar 24 2026 Juan Cuzmar <juan.cuzmar.s@gmail.com> - 20260319-1.m264
 - Initial RPM packaging from Mozilla CA bundle extracted by curl.se

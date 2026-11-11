@@ -72,6 +72,25 @@ mql chroot --exec "ldd /usr/lib/<lib>.so"  # Shared libs linked (if any)
 
 See [acceptance-tests.md](acceptance-tests.md) for full test specification.
 
+### Boot and TLS integration
+
+The `udev` package owns `/etc/init.d/udev` and its `sysinit` runlevel link.
+It starts the device daemon, triggers subsystem and device events, and waits
+up to 30 seconds for processing before network services proceed. A trigger or
+settle failure fails the service rather than claiming device readiness.
+
+The `ca-certificates` payload owns `/etc/ssl/cert.pem`, linked to
+`certs/ca-certificates.crt`. The existing `/etc/pki/tls/certs` compatibility
+links remain available. The release package requires both device management
+and CA data; its postinstall script does not recreate the CA-owned link.
+
+Run `python3 -B -m unittest discover -s tests -p test_boot_packaging.py -v`
+for focused packaging and service failure-path checks. These checks do not
+build RPMs or certify an image. Qualify the exact resulting image with normal
+OpenRC startup, automatic DHCP, DNS, certificate-verified HTTPS without curl
+configuration files, and guest-requested poweroff. Do not replace these checks
+with manual interface selection or disabled TLS verification.
+
 ### 8. Regenerate repo metadata
 
 ```bash
