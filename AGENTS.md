@@ -1,5 +1,5 @@
 # AGENTS.md -- Maqui Linux
-<!-- agent-context-version: "3" -->
+<!-- agent-context-version: "6" -->
 
 ## Project
 
@@ -121,6 +121,26 @@ when the agent's task matches that domain. Build tasks load `build-workflow.md`,
 `spec-conventions.md`, and `dependency-resolution.md`. Debug tasks load
 `troubleshooting.md`. `distro-identity.md` provides stable reference for any
 domain.
+
+## Project Skills
+
+Load the matching skill before the corresponding workflow. Skills reference
+the existing documentation; they do not grant mutation or delivery authority.
+
+| Workflow | Skill |
+|---|---|
+| Chroot failure diagnosis | [.agents/skills/maqui-chroot-debug/SKILL.md](.agents/skills/maqui-chroot-debug/SKILL.md) |
+| RPM spec quality gates | [.agents/skills/maqui-spec-gates/SKILL.md](.agents/skills/maqui-spec-gates/SKILL.md) |
+| Package build and dependency preparation | [.agents/skills/maqui-package-build/SKILL.md](.agents/skills/maqui-package-build/SKILL.md) |
+| Post-build package acceptance | [.agents/skills/maqui-acceptance-verify/SKILL.md](.agents/skills/maqui-acceptance-verify/SKILL.md) |
+| Multi-package distro build and resume | [.agents/skills/maqui-distro-build/SKILL.md](.agents/skills/maqui-distro-build/SKILL.md) |
+| Rootfs/ISO and guest verification | [.agents/skills/maqui-image-verify/SKILL.md](.agents/skills/maqui-image-verify/SKILL.md) |
+
+Keep one canonical copy in `.agents/skills/`, using portable `SKILL.md` metadata.
+OpenCode V2 and Codex discover this directory. Other agents can read these
+paths explicitly or configure their skill source; automatic discovery depends
+on the client. Keep `agent_docs/` with the skills because references are
+repository-relative. No vendor-specific tools or permission fields are required.
 
 ## Rules for This File
 
